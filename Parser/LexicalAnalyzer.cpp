@@ -1,6 +1,7 @@
+#include <regex>
 #include <vector>
-#include <iostream>
 #include <string>
+#include <iostream>
 #include <unordered_set>
 
 using namespace std;
@@ -74,13 +75,77 @@ public:
 		// set whitespaces
 		vector<string> ws = {" ", "\t", "\n"};
 		copy(ws.begin(), ws.end(), inserter(whitespaces, whitespaces.end()));
-
-
 	}
 
 	vector<pair<string, string>> analyze(); // return a list of tokens to the parser
+	bool is_var(string s); // return true if the given string can be an identifier (variable)
 };
 
-// vector<pair<string, string>> LexicalAnalyzer::analyze() {
+vector<pair<string, string>> LexicalAnalyzer::analyze() {
+	vector<pair<string, string>> res;
+	if (!text.size()) return res;
 
-// }
+	// use 2 pointers start and end to analyze the text
+	// when text.substr(start, end) is not a token but text.substr(start, end-1) is,
+	// add this token to res and move forward
+	int start = 0;
+	int end = 1;
+
+	// use a flag to see if the last substring is a token
+	string type;
+
+	while (end <= text.size()) {
+		string token = text.substr(start, end - start);
+
+		// keywords have higher priority than identifiers
+		if (others.find(token) != others.end()) {
+			pair<string, string> p = make_pair("others", token);
+			res.push_back(p);
+			start = end;
+		}
+		else if (keywords.find(token) != keywords.end() || operators.find(token) != operators.end() || is_var(token))
+			type = "keyword";
+		else if (operators.find(token) != operators.end())
+			type = "operator";
+		else if (is_var(token))
+			type = "identifier";
+
+		else {
+			// the substring is none of the above, that means the previous substring is a valid token we are going to choose
+			pair<string, string> p = make_pair(type, token.substr(0, token.size()-1));
+			res.push_back(p);
+			start = end;
+		}
+		end++;
+	}
+
+	return res;
+}
+
+bool LexicalAnalyzer::is_var(string input) {
+	// regular expression for identifiers: letter(letter + digit)*
+	// using this regular expression I generated NFA -> DFA
+	// the result DFA is as follows:
+	// there are 3 states, where A is the start state, L and D are both final states
+	// for A, if the input is a letter, it transits to L, otherwise false should be returned
+	// for L and D it transits to L if the input is a letter, and it transits to D if the input is a digit
+	// this is pretty simple so I'm not building a table for it
+
+	char state = 'A';
+	for (auto c : input) {
+		if (state == 'A') {
+			if (isalpha(c)) state = 'L';
+			else return false;
+		}
+		else {
+			if (isdigit(c))
+				state = 'D';
+			else if (isalpha(c))
+				state = 'L';
+			else return false;
+		}
+	}
+
+	if (state == 'L' || state == 'D') return true;
+	else return false;
+}
