@@ -76,27 +76,48 @@ vector<pair<string, string>> LexicalAnalyzer::analyze() {
 	while (end <= text.size()) {
 		string token = text.substr(start, end - start);
 
+		if (end == text.size()) {
+			pair<string, string> p = make_pair(type, token);
+			res.push_back(p);
+			break;
+		}
+
 		// keywords should have higher priority than identifiers
 		// so check if the token is keyword first, then identifier
+
+		// cout << "current token is: " << token << endl;
+
 		if (others.find(token) != others.end()) {
 			pair<string, string> p = make_pair("others", token);
 			res.push_back(p);
 			start = end;
 		}
-		else if (keywords.find(token) != keywords.end() || operators.find(token) != operators.end() || is_var(token))
+		else if (keywords.find(token) != keywords.end()) {
 			type = "keyword";
-		else if (operators.find(token) != operators.end())
+			// cout << "token is: " << token << ", type is: " << type << endl;
+		}
+		else if (operators.find(token) != operators.end()) {
 			type = "operator";
-		else if (whitespaces.find(token) != whitespaces.end())
+			// cout << "token is: " << token << ", type is: " << type << endl;
+		}
+		else if (whitespaces.find(token) != whitespaces.end()) {
 			type = "whitespace";
-		else if (is_var(token))
+			// cout << "token is: " << token << ", type is: " << type << endl;
+		}
+		else if (is_var(token)) {
 			type = "identifier";
-
+			// cout << "token is: " << token << ", type is: " << type << endl;
+		}
+		else if (is_num(token)) {
+			type = "number";
+			// cout << "token is: " << token << ", type is: " << type << endl;
+		}
 		else {
 			// the substring is none of the above, that means the previous substring is a valid token we are going to choose
 			pair<string, string> p = make_pair(type, token.substr(0, token.size()-1));
 			res.push_back(p);
-			start = end;
+			start = end - 1;
+			continue;
 		}
 		end++;
 	}
@@ -108,7 +129,7 @@ bool LexicalAnalyzer::is_var(string input) {
 	// regular expression for identifiers: letter(letter + digit)*
 	// using this regular expression I generated NFA -> DFA
 	// the result DFA is as follows:
-	// there are 3 states, where A is the start state, L and D are both final states
+	// there are 4 states, where A is the start state, L, D, U (underline) are all final states
 	// for A, if the input is a letter, it transits to L, otherwise false should be returned
 	// for L and D it transits to L if the input is a letter, and it transits to D if the input is a digit
 	// this is pretty simple so I'm not building a table for it
@@ -124,10 +145,38 @@ bool LexicalAnalyzer::is_var(string input) {
 				state = 'D';
 			else if (isalpha(c))
 				state = 'L';
+			else if (c == '_')
+				state = 'U';
 			else return false;
 		}
 	}
 
-	if (state == 'L' || state == 'D') return true;
+	if (state == 'L' || state == 'D' || state == 'U') return true;
 	else return false;
+}
+
+bool LexicalAnalyzer::is_num(string s) {
+    int i = 0;
+        
+    // check the significand
+    if(s[i] == '+' || s[i] == '-') i++; // skip the sign if exist
+    
+    int n_nm, n_pt;
+    for(n_nm = 0, n_pt = 0; (s[i] <= '9' && s[i] >= '0') || s[i] == '.'; i++)
+        s[i] == '.' ? n_pt++ : n_nm++;       
+    if(n_pt>1 || n_nm<1) // no more than one point, at least one digit
+        return false;
+    
+    // check the exponent if exist
+    if(s[i] == 'e') {
+        i++;
+        if(s[i] == '+' || s[i] == '-') i++; // skip the sign
+        
+        int n_nm = 0;
+        for(; s[i]>='0' && s[i]<='9'; i++, n_nm++) {}
+        if(n_nm<1)
+            return false;
+    }
+    
+    return s[i]==0;  // must reach the ending 0 of the string
 }

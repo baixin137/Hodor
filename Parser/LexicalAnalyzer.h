@@ -23,6 +23,7 @@ public:
 
 	vector<pair<string, string>> analyze(); // return a list of tokens to the parser
 	bool is_var(string s); // return true if the given string can be an identifier (variable)
+	bool is_num(string s); // return true if the given string is an integer / float
 };
 
 #endif
