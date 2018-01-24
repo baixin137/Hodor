@@ -97,7 +97,8 @@ vector<pair<string, string>> LexicalAnalyzer::analyze() {
 	while (end <= text.size()) {
 		string token = text.substr(start, end - start);
 
-		// keywords have higher priority than identifiers
+		// keywords should have higher priority than identifiers
+		// so check if the token is keyword first, then identifier
 		if (others.find(token) != others.end()) {
 			pair<string, string> p = make_pair("others", token);
 			res.push_back(p);
@@ -107,6 +108,8 @@ vector<pair<string, string>> LexicalAnalyzer::analyze() {
 			type = "keyword";
 		else if (operators.find(token) != operators.end())
 			type = "operator";
+		else if (whitespaces.find(token) != whitespaces.end())
+			type = "whitespace";
 		else if (is_var(token))
 			type = "identifier";
 
