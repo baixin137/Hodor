@@ -1,6 +1,6 @@
 #include <fstream>
 #include <streambuf>
-#include "LexicalAnalyzer.h"
+#include "Lexer.h"
 
 int main(int argc, char* argv[]) {
 	if (argc != 2) {
@@ -13,8 +13,8 @@ int main(int argc, char* argv[]) {
 	string buffer((istreambuf_iterator<char>(text)), istreambuf_iterator<char>());
 
 	// lexical analysis
-	LexicalAnalyzer* l_analyzer = new LexicalAnalyzer(buffer);
-	vector<pair<string, string>> tokens = l_analyzer->analyze();
+	Lexer* lexer = new Lexer(buffer);
+	vector<pair<string, string>> tokens = lexer->tokenize();
 
 	return 0;
 }

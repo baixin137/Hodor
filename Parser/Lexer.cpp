@@ -1,6 +1,6 @@
-#include "LexicalAnalyzer.h"
+#include "Lexer.h"
 
-LexicalAnalyzer::LexicalAnalyzer(string line) {
+Lexer::Lexer(string line) {
 	text = line;
 
 	// set other symbol in SQL
@@ -60,7 +60,7 @@ LexicalAnalyzer::LexicalAnalyzer(string line) {
 	copy(ws.begin(), ws.end(), inserter(whitespaces, whitespaces.end()));
 }
 
-vector<pair<string, string>> LexicalAnalyzer::analyze() {
+vector<pair<string, string>> Lexer::tokenize() {
 	vector<pair<string, string>> res;
 	if (!text.size()) return res;
 
@@ -94,7 +94,6 @@ vector<pair<string, string>> LexicalAnalyzer::analyze() {
 		}
 		else if (keywords.find(token) != keywords.end())
 			type = "keyword";
-		}
 		else if (operators.find(token) != operators.end())
 			type = "operator";
 		else if (whitespaces.find(token) != whitespaces.end())
@@ -116,7 +115,7 @@ vector<pair<string, string>> LexicalAnalyzer::analyze() {
 	return res;
 }
 
-bool LexicalAnalyzer::is_var(string input) {
+bool Lexer::is_var(string input) {
 	// regular expression for identifiers: letter(letter + digit)*
 	// using this regular expression I generated NFA -> DFA
 	// the result DFA is as follows:
@@ -146,7 +145,7 @@ bool LexicalAnalyzer::is_var(string input) {
 	else return false;
 }
 
-bool LexicalAnalyzer::is_num(string s) {
+bool Lexer::is_num(string s) {
     int i = 0;
         
     // check the significand

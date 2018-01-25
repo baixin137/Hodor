@@ -1,5 +1,5 @@
-#ifndef LEXICALANALYZER_H
-#define LEXICALANALYZER_H
+#ifndef LEXER_H
+#define LEXER_H
 
 #include <regex>
 #include <vector>
@@ -9,7 +9,7 @@
 
 using namespace std;
 
-class LexicalAnalyzer {
+class Lexer {
 private:
 	string text;
 
@@ -19,9 +19,9 @@ private:
 	unordered_set<string> whitespaces;
 
 public:
-	LexicalAnalyzer(string line);
+	Lexer(string line);
 
-	vector<pair<string, string>> analyze(); // return a list of tokens to the parser
+	vector<pair<string, string>> tokenize(); // return a list of tokens to the parser
 	bool is_var(string s); // return true if the given string can be an identifier (variable)
 	bool is_num(string s); // return true if the given string is an integer / float
 };

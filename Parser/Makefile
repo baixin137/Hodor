@@ -1,5 +1,5 @@
-parser: Parser.cpp LexicalAnalyzer.cpp LexicalAnalyzer.h
-	g++ -std=c++11 -o Parser Parser.cpp LexicalAnalyzer.cpp
+parser: Parser.cpp Lexer.cpp Lexer.h
+	g++ -std=c++11 -o Parser Parser.cpp Lexer.cpp
 
 clean:
 	rm Parser
