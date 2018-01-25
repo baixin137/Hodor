@@ -92,26 +92,17 @@ vector<pair<string, string>> LexicalAnalyzer::analyze() {
 			res.push_back(p);
 			start = end;
 		}
-		else if (keywords.find(token) != keywords.end()) {
+		else if (keywords.find(token) != keywords.end())
 			type = "keyword";
-			// cout << "token is: " << token << ", type is: " << type << endl;
 		}
-		else if (operators.find(token) != operators.end()) {
+		else if (operators.find(token) != operators.end())
 			type = "operator";
-			// cout << "token is: " << token << ", type is: " << type << endl;
-		}
-		else if (whitespaces.find(token) != whitespaces.end()) {
+		else if (whitespaces.find(token) != whitespaces.end())
 			type = "whitespace";
-			// cout << "token is: " << token << ", type is: " << type << endl;
-		}
-		else if (is_var(token)) {
+		else if (is_var(token))
 			type = "identifier";
-			// cout << "token is: " << token << ", type is: " << type << endl;
-		}
-		else if (is_num(token)) {
+		else if (is_num(token))
 			type = "number";
-			// cout << "token is: " << token << ", type is: " << type << endl;
-		}
 		else {
 			// the substring is none of the above, that means the previous substring is a valid token we are going to choose
 			pair<string, string> p = make_pair(type, token.substr(0, token.size()-1));
@@ -129,7 +120,7 @@ bool LexicalAnalyzer::is_var(string input) {
 	// regular expression for identifiers: letter(letter + digit)*
 	// using this regular expression I generated NFA -> DFA
 	// the result DFA is as follows:
-	// there are 4 states, where A is the start state, L, D, U (underline) are all final states
+	// there are 4 states, where A is the start state, L (is letter), D (is digit) , U (is underline) are all final states
 	// for A, if the input is a letter, it transits to L, otherwise false should be returned
 	// for L and D it transits to L if the input is a letter, and it transits to D if the input is a digit
 	// this is pretty simple so I'm not building a table for it
