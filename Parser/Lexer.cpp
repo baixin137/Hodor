@@ -1,5 +1,35 @@
 #include "Lexer.h"
 
+Token::Token(string tp, string tk) {
+	type = tp;
+	token = tk;
+}
+
+bool Token::is_keyword() {
+	return type == "keyword";
+}
+
+bool Token::is_whitespace() {
+	return type == "whitespace";
+}
+
+bool Token::is_others() {
+	return type == "others";
+}
+
+bool Token::is_operator() {
+	return type == "operator";
+}
+
+bool Token::is_identifier() {
+	return type == "identifier";
+}
+
+bool Token::is_number() {
+	return type == "number";
+}
+
+
 Lexer::Lexer(string line) {
 	text = line;
 
@@ -60,8 +90,8 @@ Lexer::Lexer(string line) {
 	copy(ws.begin(), ws.end(), inserter(whitespaces, whitespaces.end()));
 }
 
-vector<pair<string, string>> Lexer::tokenize() {
-	vector<pair<string, string>> res;
+vector<Token> Lexer::tokenize() {
+	vector<Token> res;
 	if (!text.size()) return res;
 
 	// use 2 pointers start and end to analyze the text
@@ -77,8 +107,8 @@ vector<pair<string, string>> Lexer::tokenize() {
 		string token = text.substr(start, end - start);
 
 		if (end == text.size()) {
-			pair<string, string> p = make_pair(type, token);
-			res.push_back(p);
+			Token t(type, token);
+			res.push_back(t);
 			break;
 		}
 
@@ -88,8 +118,8 @@ vector<pair<string, string>> Lexer::tokenize() {
 		// cout << "current token is: " << token << endl;
 
 		if (others.find(token) != others.end()) {
-			pair<string, string> p = make_pair("others", token);
-			res.push_back(p);
+			Token t("others", token);
+			res.push_back(t);
 			start = end;
 		}
 		else if (keywords.find(token) != keywords.end())
@@ -104,8 +134,8 @@ vector<pair<string, string>> Lexer::tokenize() {
 			type = "number";
 		else {
 			// the substring is none of the above, that means the previous substring is a valid token we are going to choose
-			pair<string, string> p = make_pair(type, token.substr(0, token.size()-1));
-			res.push_back(p);
+			Token t(type, token.substr(0, token.size() - 1));
+			res.push_back(t);
 			start = end - 1;
 			continue;
 		}
@@ -114,6 +144,14 @@ vector<pair<string, string>> Lexer::tokenize() {
 
 	return res;
 }
+
+// vector<Token> Lexer::normalize(vector<Token>& tokens) {
+// 	// this is basically just remove the duplicate whitespaces for now
+// 	int p = 0;
+// 	while (p < tokens.size()) {
+// 		if (tokens[p++].is_keyword())
+// 	}
+// }
 
 bool Lexer::is_var(string input) {
 	// regular expression for identifiers: letter(letter + digit)*

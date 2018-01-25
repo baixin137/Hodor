@@ -14,7 +14,7 @@ int main(int argc, char* argv[]) {
 
 	// lexical analysis
 	Lexer* lexer = new Lexer(buffer);
-	vector<pair<string, string>> tokens = lexer->tokenize();
+	vector<Token> tokens = lexer->tokenize();
 
 	return 0;
 }

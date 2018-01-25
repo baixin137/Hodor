@@ -9,6 +9,22 @@
 
 using namespace std;
 
+class Token {
+private:
+	string type;
+	string token;
+
+public:
+	Token(string tp, string tk);
+
+	bool is_keyword();
+	bool is_whitespace();
+	bool is_operator();
+	bool is_others();
+	bool is_identifier();
+	bool is_number();
+};
+
 class Lexer {
 private:
 	string text;
@@ -21,7 +37,8 @@ private:
 public:
 	Lexer(string line);
 
-	vector<pair<string, string>> tokenize(); // return a list of tokens to the parser
+	vector<Token> tokenize(); // return a list of tokens to the parser
+	vector<Token> normalize(vector<Token>& tokens); // normalize the input SQL text
 	bool is_var(string s); // return true if the given string can be an identifier (variable)
 	bool is_num(string s); // return true if the given string is an integer / float
 };
