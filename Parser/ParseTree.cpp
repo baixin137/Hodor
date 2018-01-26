@@ -173,6 +173,10 @@ ParseTree::~ParseTree() {
 }
 
 void ParseTree::build_tree() {
+	int save = next;
+	if (querysfw()) return;
 
+	next = save;
+	if (querysf()) return;
 }
 
