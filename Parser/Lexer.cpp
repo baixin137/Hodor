@@ -5,6 +5,14 @@ Token::Token(string tp, string tk) {
 	token = tk;
 }
 
+string Token::get_type() {
+	return type;
+}
+
+string Token::get_token() {
+	return token;
+}
+
 bool Token::is_keyword() {
 	return type == "keyword";
 }
@@ -90,9 +98,8 @@ Lexer::Lexer(string line) {
 	copy(ws.begin(), ws.end(), inserter(whitespaces, whitespaces.end()));
 }
 
-vector<Token> Lexer::tokenize() {
-	vector<Token> res;
-	if (!text.size()) return res;
+void Lexer::tokenize() {
+	if (!text.size()) return;
 
 	// use 2 pointers start and end to analyze the text
 	// when text.substr(start, end) is not a token but text.substr(start, end-1) is,
@@ -108,7 +115,7 @@ vector<Token> Lexer::tokenize() {
 
 		if (end == text.size()) {
 			Token t(type, token);
-			res.push_back(t);
+			tokens.push_back(t);
 			break;
 		}
 
@@ -119,7 +126,7 @@ vector<Token> Lexer::tokenize() {
 
 		if (others.find(token) != others.end()) {
 			Token t("others", token);
-			res.push_back(t);
+			tokens.push_back(t);
 			start = end;
 		}
 		else if (keywords.find(token) != keywords.end())
@@ -135,23 +142,41 @@ vector<Token> Lexer::tokenize() {
 		else {
 			// the substring is none of the above, that means the previous substring is a valid token we are going to choose
 			Token t(type, token.substr(0, token.size() - 1));
-			res.push_back(t);
+			tokens.push_back(t);
 			start = end - 1;
 			continue;
 		}
 		end++;
 	}
 
-	return res;
+	return;
 }
 
-// vector<Token> Lexer::normalize(vector<Token>& tokens) {
-// 	// this is basically just remove the duplicate whitespaces for now
-// 	int p = 0;
-// 	while (p < tokens.size()) {
-// 		if (tokens[p++].is_keyword())
-// 	}
-// }
+void Lexer::normalize() {
+	vector<Token> res;
+
+	// this is basically just remove the duplicate whitespaces for now
+	int p = 0;
+
+	// remove starting whitespaces
+	while (p < tokens.size() && tokens[p].is_whitespace()) {
+		if (tokens[p].is_whitespace()) p++;
+	}
+
+	while (p < tokens.size()) {
+		if (!tokens[p].is_whitespace())
+			res.push_back(tokens[p++]);
+		else {
+			Token t("whitespace", " ");
+			res.push_back(t);
+
+			while (p < tokens.size() && tokens[p].is_whitespace()) {
+				p++;
+			}
+		}
+	}
+	tokens = res;
+}
 
 bool Lexer::is_var(string input) {
 	// regular expression for identifiers: letter(letter + digit)*

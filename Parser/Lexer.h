@@ -1,7 +1,6 @@
 #ifndef LEXER_H
 #define LEXER_H
 
-#include <regex>
 #include <vector>
 #include <string>
 #include <iostream>
@@ -16,6 +15,9 @@ private:
 
 public:
 	Token(string tp, string tk);
+
+	string get_type();
+	string get_token();
 
 	bool is_keyword();
 	bool is_whitespace();
@@ -34,11 +36,13 @@ private:
 	unordered_set<string> operators;
 	unordered_set<string> whitespaces;
 
+	vector<Token> tokens; // tokenized SQL statement
+
 public:
 	Lexer(string line);
 
-	vector<Token> tokenize(); // return a list of tokens to the parser
-	vector<Token> normalize(vector<Token>& tokens); // normalize the input SQL text
+	void tokenize(); // return a list of tokens to the parser
+	void normalize(); // normalize the input SQL text
 	bool is_var(string s); // return true if the given string can be an identifier (variable)
 	bool is_num(string s); // return true if the given string is an integer / float
 };

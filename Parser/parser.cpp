@@ -16,5 +16,17 @@ int main(int argc, char* argv[]) {
 	Lexer* lexer = new Lexer(buffer);
 	vector<Token> tokens = lexer->tokenize();
 
+	cout << "tokenized" << endl;
+	
+	lexer->normalize(tokens);
+
+	cout << "normalized" << endl;
+
+	for (auto t : tokens) {
+		cout << t.get_token();
+	}
+
+	cout << endl;
+
 	return 0;
 }

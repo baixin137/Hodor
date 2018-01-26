@@ -1,0 +1,47 @@
+<asterisk> ::= *
+
+<comma> ::= ,
+
+<period> ::= .
+
+<left paren> ::= (
+
+<right paren> ::= )
+
+<query specification> ::= SELECT [ <set quantifier> ] <select list> <table expression>
+
+<set quantifier> ::= DISTINCT | ALL
+
+<select list> ::= <asterisk> | <select sublist> [ { <comma> <select sublist> }... ]
+
+<select sublist> ::= <derived column> | <qualified asterisk>
+
+<derived column> ::= <value expression> [ <as clause> ]
+
+<as clause> ::= [ AS ] <column name>
+
+<qualified asterisk> ::=
+		<asterisked identifier chain> <period> <asterisk>
+	|	<all fields reference>
+
+<asterisked identifier chain> ::= <asterisked identifier> [ { <period> <asterisked identifier> }... ]
+
+<asterisked identifier> ::= <identifier>
+
+<all fields reference> ::= <value expression primary> <period> <asterisk>
+
+<table expression> ::= <from clause> [ <where clause> ] [ <group by clause> ] [ <having clause> ]
+
+<from clause> ::= FROM <table reference list>
+
+<table reference list> ::= <table reference> [ { <comma> <table reference> }... ]
+
+<table reference> ::= <table primary> | <joined table>
+
+<table primary> ::=
+		<table or query name> [ [ AS ] <correlation name> [ <left paren> <derived column list> <right paren> ] ]
+	|	<derived table> [ AS ] <correlation name> [ <left paren> <derived column list> <right paren> ]
+	|	<lateral derived table> [ AS ] <correlation name> [ <left paren> <derived column list> <right paren> ]
+	|	<collection derived table> [ AS ] <correlation name> [ <left paren> <derived column list> <right paren> ]
+	|	<only spec> [ [ AS ] <correlation name> [ <left paren> <derived column list> <right paren> ] ]
+	|	<left paren> <joined table> <right paren>

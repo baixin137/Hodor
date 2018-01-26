@@ -1,1 +1,5 @@
 1. Add lexical error detector to lexer
+
+2. Refine the Token class
+
+3. Separate the hard coded keywords, operators and so on from the Lexer class
