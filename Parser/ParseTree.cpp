@@ -40,6 +40,14 @@ bool ParseTree::isin() {
 	return true;
 }
 
+bool ParseTree::islike() {
+	Token t = tokens[next];
+	if (t.type != "keyword" || t.token != "LIKE")
+		return false;
+	next++;
+	return true;
+}
+
 bool ParseTree::iscomma() {
 	Token t = tokens[next];
 	if (t.type != "operator" || t.token != ",")
@@ -56,8 +64,82 @@ bool ParseTree::isidentifier() {
 	return true;
 }
 
-bool ParseTree::singleattr() {
-	
+bool ParseTree::isparen_l() {
+	Token t = tokens[next];
+	if (t.type != "others" || t.token != "(")
+		return false;
+	next++;
+	return true;
+}
+
+bool ParseTree::isparen_r() {
+	Token t = tokens[next];
+	if (t.type != "operator" || t.token != ")")
+		return false;
+	next++;
+	return true;
+}
+
+bool ParseTree::attributes() {
+	Token t = tokens[next];
+	while (isidentifier()) {
+		if (tokens[next].get_type() == "keyword") {
+			return true;
+		}
+		else if (tokens[next].get_token() == ",")
+			next++;
+		else return false;
+	}
+}
+
+bool ParseTree::tables() {
+	Token t = tokens[next];
+	while (isidentifier()) {
+		if (tokens[next].get_type() == "keyword") {
+			return true;
+		}
+		else if (tokens[next].get_token() == ",")
+			next++;
+		else return false;
+	}
+}
+
+bool iscondition() {
+	int save = next;
+	if (attributes() &&
+		isin() &&
+		issubquery() &&
+		next == tokens.size())
+		return true;
+
+	next = save;
+	if (attributes() &&
+		islike() &&
+		ispattern() &&
+		next == tokens.size())
+		return true;
+
+	next = save;
+	return false;
+}
+
+bool issubquery() {
+	int save = next;
+	if (isparen_l() &&
+	    querysf() &&
+	    isparen_r() &&
+	    next == tokens.size())
+	    return true;
+
+	next = save;
+	if (isparen_l() &&
+	    querysfw() &&
+	    isparen_r() &&
+	    next == tokens.size())
+	    return true;
+
+	next = save;
+	return false;
 }
 
 bool ParseTree::querysf() {

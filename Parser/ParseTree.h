@@ -14,6 +14,7 @@ class ParseTreeNode {
 private:
 	string type;
 	bool terminal;
+	ParseTreeNode* parent;
 
 public:
 	ParseTreeNode(const string & tp, bool tm);
@@ -128,17 +129,17 @@ private:
 	bool iswhere();
 	bool isasterisk();
 	bool isin();
+	bool islike();
 	bool iscomma();
 	bool isidentifier();
+	bool isparen_l();
+	bool isparen_r();
 
-	bool singleattr();
-	bool multiattrs();
-	bool singletable();
-	bool multitables();
+	bool attributes();
+	bool tables();
 
-	bool issellist();
-	bool isfromlist();
 	bool iscondition();
+	bool issubquery();
 
 	bool querysf(); // select from
 	bool querysfw(); // select from where

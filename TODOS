@@ -5,3 +5,5 @@
 3. Separate the hard coded keywords, operators and so on from the Lexer class
 
 4. Write a parser for Grammar.bnf
+
+5. Do i really need a parent pointer in the parse tree node?
