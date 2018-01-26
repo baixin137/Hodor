@@ -141,8 +141,10 @@ void Lexer::tokenize() {
 			type = "number";
 		else {
 			// the substring is none of the above, that means the previous substring is a valid token we are going to choose
-			Token t(type, token.substr(0, token.size() - 1));
-			tokens.push_back(t);
+			if (type != "whitespace") {
+				Token t(type, token.substr(0, token.size() - 1));
+				tokens.push_back(t);
+			}
 			start = end - 1;
 			continue;
 		}

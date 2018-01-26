@@ -1,148 +1,96 @@
 #include "ParseTree.h"
 
-ParseTreeNode::ParseTreeNode(const string & tp, bool tm) {
-	type = tp;
-	terminal = tm;
+bool ParseTree::isselect() {
+	Token t = tokens[next];
+	if (t.type != "keyword" || t.token != "SELECT")
+		return false;
+	next++;
+	return true;
 }
 
-ParseTreeNode::is_terminal() {
-	return terminal;
+bool ParseTree::issfrom() {
+	Token t = tokens[next];
+	if (t.type != "keyword" || t.token != "FROM")
+		return false;
+	next++;
+	return true;
 }
 
-Query::Query(const string & tp, bool tm) {
-	type = tp;
-	terminal = tm;
-
-	swf = new SWF();
+bool ParseTree::iswhere() {
+	Token t = tokens[next];
+	if (t.type != "keyword" || t.token != "WHERE")
+		return false;
+	next++;
+	return true;
 }
 
-Query::~Query() {
-	delete swf;
+bool ParseTree::isasterisk() {
+	Token t = tokens[next];
+	if (t.type != "operator" || t.token != "*")
+		return false;
+	next++;
+	return true;
 }
 
-SWF::SWF(const string & tp, bool tm) {
-	type = tp;
-	terminal = tm;
-
-	select = new ParseTreeNode("SELECT", true);
-	sellist = new SelList();
-	from = new ParseTreeNode("FROM", true);
-	fromlist = new FromList();
-	where = new ParseTreeNode("WHERE", true);
-	condition = new Condition();
+bool ParseTree::isin() {
+	Token t = tokens[next];
+	if (t.type != "keyword" || t.token != "IN")
+		return false;
+	next++;
+	return true;
 }
 
-SWF::~SWF() {
-	delete select;
-	delete sellist;
-	delete from;
-	delete fromlist;
-	delete where;
-	delete condition;
+bool ParseTree::iscomma() {
+	Token t = tokens[next];
+	if (t.type != "operator" || t.token != ",")
+		return false;
+	next++;
+	return true;
 }
 
-SelList::SelList(const string & tp, bool tm) {
-	type = tp;
-	terminal = tm;
+bool ParseTree::isidentifier() {
+	Token t = tokens[next];
+	if (t.type != "identifier")
+		return false;
+	next++;
+	return true;
 }
 
-SelList::~SelList() {
-	for (auto iter = attributes.begin(); iter < attributes.end(); iter++) {
-		delete *iter;
-	}
+bool ParseTree::singleattr() {
+	
 }
 
-Attribute::Attribute(const string & tp, bool tm) {
-	type = tp;
-	terminal = tm;
-
-	attribute = new ParseTreeNode("attribute", true);
+bool ParseTree::querysf() {
+	return isselect() &&
+		   issellist() &&
+		   isfrom() &&
+		   isfromlist() &&
+		   next == tokens.size();
 }
 
-Attribute::~Attribute() {
-	delete attribute;
+bool ParseTree::querysfw() {
+	return isselect() &&
+		   issellist() &&
+		   isfrom() &&
+		   isfromlist() &&
+		   iswhere() &&
+		   iscondition() &&
+		   next == tokens.size();
 }
 
-FromList::FromList(const string & tp, bool tm) {
-	type = tp;
-	terminal = tm;
-}
+ParseTree::ParseTree(vector<Token> ts) {
+	root = new Query();
+	tokens = ts;
 
-FromList::~FromList() {
-	for (auto iter = relnames.begin(); iter < relnames.end(); iter++) {
-		delete *iter;
-	}
-}
-
-RelName::RelName(const string & tp, bool tm) {
-	type = tp;
-	terminal = tm;
-
-	relname = new RelName();
-}
-
-RelName::~RelName() {
-	delete relname;
-}
-
-Condition::Condition(const string & tp, bool tm) {
-	type = tp;
-	terminal = tm;
-
-	tuple = new Tuple();
-	in = new ParseTreeNode("IN", true);
-	subquery = new Subquery();
-}
-
-Condition::~Condition() {
-	delete tuple;
-	delete in;
-	delete subquery;
-}
-
-Tuple::Tuple(const string & tp, bool tm) {
-	type = tp;
-	terminal = tm;
-}
-
-Tuple::~Tuple() {
-	for (auto iter = attributes.begin(); iter < attributes.end(); iter++) {
-		delete *iter;
-	}
-}
-
-Subquery::Subquery(const string & tp, bool tm) {
-	type = tp;
-	terminal = tm;
-
-	paren_l = new ParseTreeNode("(", true);
-	paren_r = new ParseTreeNode(")", true);
-	query = new Query();
-}
-
-Subquery::~Subquery() {
-	delete paren_l;
-	delete paren_r;
-	delete query;
-}
-
-string ParseTreeNode::get_label() {
-	return label;
-}
-
-void ParseTreeNode::add_child(ParseTreeNode* node) {
-	children->push_back(node);
-}
-
-ParseTree::Parsetree(vector<Token> t) {
-	root = new ParseTreeNode("<Query>");
-	tokens = t;
+	next = 0;
 }
 
 ParseTree::~ParseTree() {
 	delete root;
+
 }
 
 void ParseTree::build_tree() {
 
 }
+

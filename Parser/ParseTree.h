@@ -18,6 +18,9 @@ private:
 public:
 	ParseTreeNode(const string & tp, bool tm);
 	virtual ~ParseTreeNode();
+
+	bool is_terminal();
+	string get_type();
 };
 
 class Query : public ParseTreeNode {
@@ -113,12 +116,34 @@ public:
 class ParseTree {
 private:
 	ParseTreeNode* root;
-	vector<Tokens> tokens;
+	vector<Token> tokens;
 
+	ParseTreeNode* curr // keeps track of current node in the building parse tree
 	int next; // keeps track of correctly assigned tokens in the backtracking process
 
+	// recursive functions for backtracking
+	// nonterminals
+	bool isselect();
+	bool isfrom();
+	bool iswhere();
+	bool isasterisk();
+	bool isin();
+	bool iscomma();
+	bool isidentifier();
+
+	bool singleattr();
+	bool multiattrs();
+	bool singletable();
+	bool multitables();
+
+	bool issellist();
+	bool isfromlist();
+	bool iscondition();
+
+	bool querysf(); // select from
+	bool querysfw(); // select from where
 public:
-	ParseTree();
+	ParseTree(vector<Token> ts);
 	~ParseTree();
 
 	void build_tree(); // uses the top-down method here to build a parse tree

@@ -17,16 +17,19 @@ int main(int argc, char* argv[]) {
 	vector<Token> tokens = lexer->tokenize();
 
 	cout << "tokenized" << endl;
-	
-	lexer->normalize(tokens);
 
-	cout << "normalized" << endl;
+	// lexer->normalize(tokens);
 
-	for (auto t : tokens) {
-		cout << t.get_token();
-	}
+	// cout << "normalized" << endl;
 
-	cout << endl;
+	// for (auto t : tokens) {
+	// 	cout << t.get_token();
+	// }
+
+	// cout << endl;
+
+	// start to build tree
+	ParseTree* tree = new ParseTree(tokens);
 
 	return 0;
 }
