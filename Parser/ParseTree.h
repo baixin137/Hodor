@@ -16,36 +16,40 @@ private:
 	bool terminal;
 
 public:
-	ParseTreeNode(const & string tp, bool tm);
+	ParseTreeNode(const string & tp, bool tm);
+	virtual ~ParseTreeNode();
 };
 
 class Query : public ParseTreeNode {
 private:
-	ParseTreeNode* SFW;
+	ParseTreeNode* swf;
 
 public:
-	Query(const & string tp = "<Query>", bool tm = false);
+	Query(const string & tp = "<Query>", bool tm = false);
+	~Query();
 };
 
 class SWF : public ParseTreeNode {
 private:
 	ParseTreeNode* select;
-	ParseTreeNode* selist;
+	ParseTreeNode* sellist;
 	ParseTreeNode* from;
 	ParseTreeNode* fromlist;
 	ParseTreeNode* where;
 	ParseTreeNode* condition;
 
 public:
-	SWF(const & string tp = "<SWF>", bool tm = false);
+	SWF(const string & tp = "<SWF>", bool tm = false);
+	~SWF();
 };
 
-class : public ParseTreeNode {
+class SelList: public ParseTreeNode {
 private:
 	vector<ParseTreeNode*> attributes; // a list that contains one or more attributes
 
 public:
-	SelList(const & string tp = "<SelList>", bool tm = false);
+	SelList(const string & tp = "<SelList>", bool tm = false);
+	~SelList();
 };
 
 class Attribute : public ParseTree {
@@ -53,7 +57,8 @@ private:
 	ParseTreeNode* attribute;
 
 public:
-	Attribute(const & string tp = "<Attribute>", bool tm = false);
+	Attribute(const string & tp = "<Attribute>", bool tm = false);
+	~Attribute();
 };
 
 class FromList : public ParseTreeNode {
@@ -61,7 +66,8 @@ private:
 	vector<ParseTreeNode*> relnames; // a list of table names
 
 public:
-	FromList(const & string tp = "<FromList>", bool tm = false);
+	FromList(const string & tp = "<FromList>", bool tm = false);
+	~FromList();
 };
 
 class RelName : public ParseTreeNode {
@@ -69,7 +75,8 @@ private:
 	ParseTreeNode* relname;
 
 public:
-	RelName(const & string tp = "<RelName>", bool tm = false);
+	RelName(const string & tp = "<RelName>", bool tm = false);
+	~RelName();
 };
 
 class Condition : public ParseTreeNode {
@@ -79,7 +86,8 @@ private:
 	ParseTreeNode* subquery;
 
 public:
-	Condition(const & string tp = "<Condition>", bool tm = false);
+	Condition(const string & tp = "<Condition>", bool tm = false);
+	~Condition();
 };
 
 class Tuple : public ParseTreeNode {
@@ -87,7 +95,8 @@ private:
 	vector<ParseTreeNode*> attributes;
 
 public:
-	Tuple(const & string tp = "<Tuple>", bool tm = false);
+	Tuple(const string & tp = "<Tuple>", bool tm = false);
+	~Tuple();
 };
 
 class Subquery : public ParseTreeNode {
@@ -97,7 +106,8 @@ private:
 	ParseTreeNode* query;
 
 public:
-	Subquery(const & string tp = "<Subquery>", bool tm = false)
+	Subquery(const string & tp = "<Subquery>", bool tm = false)
+	~Subquery();
 };
 
 class ParseTree {
