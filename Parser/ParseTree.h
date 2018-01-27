@@ -56,7 +56,7 @@ public:
 	~SelList();
 };
 
-class Attribute : public ParseTree {
+class Attribute : public ParseTreeNode {
 private:
 	ParseTreeNode* attribute;
 
@@ -110,7 +110,7 @@ private:
 	ParseTreeNode* query;
 
 public:
-	Subquery(const string & tp = "<Subquery>", bool tm = false)
+	Subquery(const string & tp = "<Subquery>", bool tm = false);
 	~Subquery();
 };
 
@@ -119,7 +119,7 @@ private:
 	ParseTreeNode* root;
 	vector<Token> tokens;
 
-	ParseTreeNode* curr // keeps track of current node in the building parse tree
+	ParseTreeNode* curr; // keeps track of current node in the building parse tree
 	int next; // keeps track of correctly assigned tokens in the backtracking process
 
 	// recursive functions for backtracking
@@ -143,11 +143,12 @@ private:
 
 	bool querysf(); // select from
 	bool querysfw(); // select from where
+
 public:
 	ParseTree(vector<Token> ts);
 	~ParseTree();
 
 	void build_tree(); // uses the top-down method here to build a parse tree
-}
+};
 
 #endif

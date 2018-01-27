@@ -1,6 +1,7 @@
 #include <fstream>
 #include <streambuf>
 #include "Lexer.h"
+#include "ParseTree.h"
 
 int main(int argc, char* argv[]) {
 	if (argc != 2) {
@@ -14,7 +15,7 @@ int main(int argc, char* argv[]) {
 
 	// lexical analysis
 	Lexer* lexer = new Lexer(buffer);
-	vector<Token> tokens = lexer->tokenize();
+	lexer->tokenize();
 
 	cout << "tokenized" << endl;
 
@@ -29,7 +30,7 @@ int main(int argc, char* argv[]) {
 	// cout << endl;
 
 	// start to build tree
-	ParseTree* tree = new ParseTree(tokens);
+	ParseTree* tree = new ParseTree(lexer->get_tokens());
 
 	return 0;
 }

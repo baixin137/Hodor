@@ -45,6 +45,7 @@ public:
 	void normalize(); // normalize the input SQL text
 	bool is_var(string s); // return true if the given string can be an identifier (variable)
 	bool is_num(string s); // return true if the given string is an integer / float
+	vector<Token> get_tokens();
 };
 
 #endif

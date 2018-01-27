@@ -235,3 +235,7 @@ bool Lexer::is_num(string s) {
     
     return s[i]==0;  // must reach the ending 0 of the string
 }
+
+vector<Token> Lexer::get_tokens() {
+	return tokens;
+}
