@@ -1,0 +1,7 @@
+1. Tuples are stored in cvs pages, each cvs only stores one of the attributes. Attributes that belong to the same tuple has the same line number in the cvs file. This is for easy column manipulation, and it's more efficient for join operations
+
+2. Each table has a cvs file, each line has several page numbers, each page stores one of an attributes in the table. The last element in the line is the number of slots left in the page
+
+3. The file system should support insertion, deletion and update of tuples. I don't know if there's a better way to do deletion and update than copying the old data to a new file for now, I'll come back for it later
+
+4. a file called tables should be maintained to store which tables are in this database and what attributes do they have
