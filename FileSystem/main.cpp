@@ -11,11 +11,11 @@ int main() {
 	bf->fetch(1);
 	bf->fetch(2);
 
-	bf->buffer->display();
+	bf->getbuffer()->display();
 
 	bf->flush(1);
 
-	bf->buffer->display();
+	bf->getbuffer()->display();
 
 	return 0;
 }

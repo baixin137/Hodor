@@ -91,16 +91,20 @@ public:
     LRUCache(size_t capacity);
     Page* get(int key); // get page from cache
     void set(int key, Page* value); // set/insert page in cache
+    void remove(int key);
 
     void display();
 };
 
 class BufferManager {
-public:
+private:
 	LRUCache* buffer;
+
+public:
+	LRUCache* getbuffer();
 	BufferManager(size_t capacity);
 	void fetch(int pn); // fetch page from disk
-	void flush(int pn); //flush the page to disk
+	void flush(int pn); //flush the page to disk and remove from memory
 };
 
 #endif

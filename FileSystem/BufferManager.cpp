@@ -315,6 +315,14 @@ void LRUCache::set(int key, Page* value) {
     map[key] = linkedlist.begin();       //create correspondence between key and node
 }
 
+void LRUCache::remove(int key) {
+	auto found_iter = map.find(key);
+	if (found_iter != map.end()) {
+		linkedlist.erase(found_iter->second);
+		map.erase(found_iter);
+	}
+}
+
 void LRUCache::display() {
 	cout << "Buffer size: " << map.size() << endl << endl;
 
@@ -325,6 +333,10 @@ void LRUCache::display() {
 
 BufferManager::BufferManager(size_t c) {
 	buffer = new LRUCache(c);
+}
+
+LRUCache* BufferManager::getbuffer() {
+	return buffer;
 }
 
 void BufferManager::fetch(int pn) {
@@ -395,6 +407,6 @@ void BufferManager::flush(int pn) {
 			page->write(page_name);
 		}
 
-	buffer->set(pn, page);
+	buffer->remove(pn);
 	}
 }
