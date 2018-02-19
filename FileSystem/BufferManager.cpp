@@ -318,8 +318,8 @@ void LRUCache::set(int key, Page* value) {
 void LRUCache::display() {
 	cout << "Buffer size: " << map.size() << endl << endl;
 
-	for (auto it = map.begin(); it != map.end(); it++) {
-		it->second->second->display();
+	for (auto it = linkedlist.begin(); it != linkedlist.end(); it++) {
+		it->second->display();
 	}
 }
 
@@ -379,7 +379,7 @@ void BufferManager::flush(int pn) {
 		return;
 	}
 
-	if (!page->isdirty()) return; // no need to modify the file in memory
+	if (page->isdirty()) return; // no need to modify the file in memory
 	else {
 		string page_name = to_string(pn);
 		int zeros = 10 - page_name.size();
@@ -388,11 +388,13 @@ void BufferManager::flush(int pn) {
 			page_name = '0' + page_name;
 		page_name = "data/" + page_name + ".csv";
 
-		if (!remove(page_name.c_str())) { // remove old file from disk
+		if (remove(page_name.c_str())) { // remove old file from disk
 			cerr << "Failed to remove file " << page_name << endl;
 		}
 		else { // flush data from memory to disk
 			page->write(page_name);
 		}
+
+	buffer->set(pn, page);
 	}
 }

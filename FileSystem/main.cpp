@@ -13,5 +13,9 @@ int main() {
 
 	bf->buffer->display();
 
+	bf->flush(1);
+
+	bf->buffer->display();
+
 	return 0;
 }
