@@ -5,3 +5,15 @@
 3. The file system should support insertion, deletion and update of tuples. I don't know if there's a better way to do deletion and update than copying the old data to a new file for now, I'll come back for it later
 
 4. a file called tables should be maintained to store which tables are in this database and what attributes do they have
+
+5. each page has a header:
+	<table>,<attribute>,<type>,<slots>
+
+---------------------
+Buffer Manager
+
+1. page number is between 0 and 2 to the 32 - 1, can't handle overflow for now
+
+DONE 2. check if file exists
+
+3. look up how database handles NULL for different type values

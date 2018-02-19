@@ -4,49 +4,58 @@ FileManager::FileManager() {
 	// fetch the table names from the table file
 	// use the tables hash table to store which table has which attributes
 	ifstream table_attr("data/tables.csv");
-	string line;
-
-	while (getline(table_attr, line)) {
-		istringstream iss(line);
-
-		string table;
-		string attribute;
-		vector<string> attributes;
-
-	 	getline(iss, table, ',');
-		while (getline(iss, attribute, ',')) {
-			attributes.push_back(attribute);
-		}
-
-		tables[table] = attributes;
+	if (!table_attr) {
+		cerr << "Unable to find table information." << endl;
 	}
+	else {
+		string line;
 
-	// cout << "begin" << endl;
-	// use pages to store which tables are stored in which pages
-	for (auto it = tables.begin(); it != tables.end(); it++) {
-		string t_name = it->first;
-		string directory = "data/" + t_name + ".csv";
-		ifstream table_loc(directory);
+		while (getline(table_attr, line)) {
+			istringstream iss(line);
 
-		string pages_attr;
-		while (getline(table_loc, pages_attr)) {
-			istringstream iss(pages_attr);
-			string pnumber;
-			vector<int> page_num;
-			string slots;
+			string table;
+			string attribute;
+			vector<string> attributes;
 
-			getline(iss, slots, ',');
-			while (getline(iss, pnumber, ',')) {
-				page_num.push_back(stoi(pnumber));
+		 	getline(iss, table, ',');
+			while (getline(iss, attribute, ',')) {
+				attributes.push_back(attribute);
 			}
 
-			pair<int, vector<int>> page_info = make_pair(stoi(slots), page_num);
-			pages[t_name].push_back(page_info);
+			tables[table] = attributes;
 		}
-	}
-	// cout << "end" << endl;
 
-	// use the pages hash table to store which tables are stored in which pages
+		// cout << "begin" << endl;
+		// use pages to store which tables are stored in which pages
+		for (auto it = tables.begin(); it != tables.end(); it++) {
+			string t_name = it->first;
+			string directory = "data/" + t_name + ".csv";
+			ifstream table_loc(directory);
+			if (!table_loc) {
+				cerr << "Unable to find page information of table " << t_name << "." << endl;
+			}
+			else {
+				string pages_attr;
+				while (getline(table_loc, pages_attr)) {
+					istringstream iss(pages_attr);
+					string pnumber;
+					vector<int> page_num;
+					string slots;
+
+					getline(iss, slots, ',');
+					while (getline(iss, pnumber, ',')) {
+						page_num.push_back(stoi(pnumber));
+					}
+
+					pair<int, vector<int>> page_info = make_pair(stoi(slots), page_num);
+					pages[t_name].push_back(page_info);
+				}
+			}
+		}
+		// cout << "end" << endl;
+
+		// use the pages hash table to store which tables are stored in which pages
+	}
 }
 
 void FileManager::display_t() {
