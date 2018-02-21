@@ -6,6 +6,7 @@ all: library
 BIN        = bin
 SRC        = src
 SRCPARSER  = src/parser
+HDB        = ../../..
 
 INSTALL     = /usr/local
 

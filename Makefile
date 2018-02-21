@@ -27,4 +27,4 @@ $(HYRISE_SO): $(SRCHYRISE)/SQLParser.h $(SRCHYRISE)/SQLParserResult.h
 	make -C $(HYRISE) library
 
 clean:
-	rm -f */*.o $(HYRISE_SO)
+	rm -f */*.o */*/*.o $(HYRISE_SO)
