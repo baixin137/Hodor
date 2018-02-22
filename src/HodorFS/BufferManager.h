@@ -10,6 +10,8 @@
 #include <iostream>
 #include <unordered_map>
 
+#include "HodorFS.h"
+
 using namespace std;
 
 class Page {

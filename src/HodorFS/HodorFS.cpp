@@ -1,9 +1,15 @@
 #include "HodorFS.h"
+#include "Tables.h"
+
+string DATAPATH = "src/HodorFS/data/";
 
 FileManager::FileManager() {
 	// fetch the table names from the table file
 	// use the tables hash table to store which table has which attributes
-	ifstream table_attr("data/tables.csv");
+
+	// each file in tables.csv is a table and looks like this:
+	// <table name>,<number of tuples>,<number of attributes>,<attr1>,...,<attr1 type>,...
+	ifstream table_attr(DATAPATH + "tables.csv");
 	if (!table_attr) {
 		cerr << "Unable to find table information." << endl;
 	}
@@ -14,22 +20,39 @@ FileManager::FileManager() {
 			istringstream iss(line);
 
 			string table;
-			string attribute;
-			vector<string> attributes;
+			string tuples;
+			string cols;
 
 		 	getline(iss, table, ',');
-			while (getline(iss, attribute, ',')) {
-				attributes.push_back(attribute);
-			}
+		 	getline(iss, tuples, ',');
+		 	getline(iss, cols, ',');
 
-			tables[table] = attributes;
+		 	tables[table] = new Table(table, stoi(tuples), stoi(cols));
+
+		 	string attr;
+		 	vector<string> attrs;
+		 	for (size_t i = 0; i  < stoi(cols); i++) {
+		 		getline(iss, attr, ',');
+		 		attrs.push_back(attr);
+		 	}
+
+		 	string attrtype;
+		 	for (size_t i = 0; i < stoi(cols); i++) {
+		 		getline(iss, attrtype, ',');
+		 		Attribute* attr_n = new Attribute(attrs[i], attrtype, table);
+		 		tables[table]->attributes.push_back(attr_n);
+		 	}
 		}
 
 		// cout << "begin" << endl;
 		// use pages to store which tables are stored in which pages
 		for (auto it = tables.begin(); it != tables.end(); it++) {
 			string t_name = it->first;
-			string directory = "data/" + t_name + ".csv";
+
+			TableStorage* ts = new TableStorage(t_name);
+			pages[t_name] = ts;
+
+			string directory = DATAPATH + t_name + ".csv";
 			ifstream table_loc(directory);
 			if (!table_loc) {
 				cerr << "Unable to find page information of table " << t_name << "." << endl;
@@ -43,26 +66,24 @@ FileManager::FileManager() {
 					string slots;
 
 					getline(iss, slots, ',');
+					PageSet* ps = new PageSet(stoi(slots));
+
 					while (getline(iss, pnumber, ',')) {
-						page_num.push_back(stoi(pnumber));
+						ps->pageset.push_back(stoi(pnumber));
 					}
 
-					pair<int, vector<int>> page_info = make_pair(stoi(slots), page_num);
-					pages[t_name].push_back(page_info);
+					pages[t_name]->pages.push_back(ps);
 				}
 			}
 		}
-		// cout << "end" << endl;
-
-		// use the pages hash table to store which tables are stored in which pages
 	}
 }
 
 void FileManager::display_t() {
 	for (auto it = tables.begin(); it != tables.end(); it++) {
 		cout << it->first << ", ";
-		for (auto attr : it->second) {
-			cout << attr << ", ";
+		for (auto attr : it->second->attributes) {
+			cout << attr->name() << ", ";
 		}
 		cout << endl;
 	}
@@ -71,39 +92,64 @@ void FileManager::display_t() {
 void FileManager::display_p() {
 	for (auto it = pages.begin(); it != pages.end(); it++) {
 		cout << "Table: " << it->first << endl;
-		for (auto t : it->second) {
-			cout << "Slots: " << t.first << ", ";
-			for (auto a : t.second) {
-				cout << a << ", ";
-			}
-			cout << endl;
+		for (auto t : it->second->pages) {
+			cout << "Slots: " << t->slot() << ", ";
+			for (auto k : t->pageset) 
+				cout << k << ", ";
 		}
 		cout << endl;
 	}
+	cout << endl;
 }
 
-// FileManager::sort(string key, string table) {
+Attribute::Attribute(string n, string t, string ta) {
+	attrname  = n;
+	attrtype  = t;
+	tablename = ta;
+}
 
-// }
+string Attribute::name() {
+	return attrname;
+}
 
-// FileManager::insert(string tuple, string table) {
-// 	istringstream iss(tuple);
+string Attribute::type() {
+	return attrtype;
+}
 
-// 	for (string attribute : tables[table]) {
-// 		string val;
-// 		string filename = table + "_" + attribute + ".cvs";
-// 		ofstream outfile;
-// 		outfile.open(filename, ios_base::app);
+string Attribute::table() {
+	return tablename;
+}
 
-// 	 iss >> val;
-// 		outfile << '\n' << val << ",";
-// 	}
-// }
+Table::Table(string n, size_t s, size_t c) {
+	tablename = n;
+	tuples = s;
+	cols = c;
+}
 
-// FileManager::remove(vector<string> key, string table) {
+string Table::name() {
+	return tablename;
+}
 
-// }
+size_t Table::size() {
+	return tuples;
+}
 
-// FileManager::update(vector<string> key, string table) {
+size_t Table::columns() {
+	return cols;
+}
 
-// }
+PageSet::PageSet(size_t s) {
+	emptyslots = s;
+}
+
+size_t PageSet::slot() {
+	return emptyslots;
+}
+
+TableStorage::TableStorage(string t) {
+	tablename = t;
+}
+
+string TableStorage::table() {
+	return tablename;
+}

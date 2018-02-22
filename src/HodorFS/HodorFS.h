@@ -1,6 +1,9 @@
 #ifndef HFS_H
 #define HFS_H
 
+#include "Tables.h"
+#include "BufferManager.h"
+
 #include <vector>
 #include <string>
 #include <fstream>
@@ -8,12 +11,14 @@
 #include <iostream>
 #include <unordered_map>
 
+extern string DATAPATH;
+
 using namespace std;
 
 class FileManager {
 private:
-	unordered_map<string, vector<string>> tables; // this unordered map stores all the table names in the database
-	unordered_map<string, vector<pair<int, vector<int>>>> pages;
+	unordered_map<string, Table*> tables; // this unordered map stores all the table names in the database
+	unordered_map<string, TableStorage*> pages;
 
 public:
 	FileManager();

@@ -345,7 +345,7 @@ void BufferManager::fetch(int pn) {
 
 	for (size_t i = 0; i < zeros; i++) 
 		page_name = '0' + page_name;
-	page_name = "data/" + page_name + ".csv";
+	page_name = DATAPATH + page_name + ".csv";
 
 	ifstream infile(page_name);
 	if (!infile) {
@@ -398,7 +398,7 @@ void BufferManager::flush(int pn) {
 
 		for (size_t i = 0; i < zeros; i++) 
 			page_name = '0' + page_name;
-		page_name = "data/" + page_name + ".csv";
+		page_name = DATAPATH + page_name + ".csv";
 
 		if (remove(page_name.c_str())) { // remove old file from disk
 			cerr << "Failed to remove file " << page_name << endl;
