@@ -12,6 +12,7 @@
 #include <unordered_map>
 
 extern string DATAPATH;
+extern string TABLESCSV;
 
 using namespace std;
 
@@ -24,6 +25,7 @@ public:
 	FileManager();
 
 	void sort(string key, string table);
+	void addtable(Table* table);
 	// void insert(string tuple, string table);
 	// void remove(vector<string> key, string table);
 	// void update(vector<string> key, string table);

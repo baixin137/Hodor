@@ -1,4 +1,1 @@
-Movie,20,5,Date,Star,Rating,BoxOffice,Director,STRING,STRING,DOUBLE,INT,STRING
-University,50,5,Name,Year,President,NumofColleges,Ranking,STRING,STRING,STRING,INT,INT
-Phone,40,7,Company,Color,Camera,Screen,Carrier,Date,Price,STRING,STRING,STRING,STRING,STRING,STRING,DOUBLE
-Laptop,832,4,Company,Storage,OperatingSystem,Price,STRING,INT,STRING,DOUBLE
+Movie,0,4,year,month,day,rating,INT,INT,INT,DOUBLE

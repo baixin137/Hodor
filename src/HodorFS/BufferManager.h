@@ -38,6 +38,7 @@ public:
 	virtual void display() = 0;
 };
 
+// String handles CHAR, DATE, TIME AND TIMESTAMP NOW
 class StringPage : public Page {
 private:
 	vector<string> content;

@@ -2,6 +2,7 @@
 #include "Tables.h"
 
 string DATAPATH = "src/HodorFS/data/";
+string TABLESCSV = "tables.csv";
 
 FileManager::FileManager() {
 	// fetch the table names from the table file
@@ -9,7 +10,7 @@ FileManager::FileManager() {
 
 	// each file in tables.csv is a table and looks like this:
 	// <table name>,<number of tuples>,<number of attributes>,<attr1>,...,<attr1 type>,...
-	ifstream table_attr(DATAPATH + "tables.csv");
+	ifstream table_attr(DATAPATH + TABLESCSV);
 	if (!table_attr) {
 		cerr << "Unable to find table information." << endl;
 	}
@@ -77,6 +78,30 @@ FileManager::FileManager() {
 			}
 		}
 	}
+}
+
+void FileManager::addtable(Table* table) {
+	if (tables.find(table->name()) != tables.end()) {
+		cout << "Table already exists." << endl;
+		return;
+	}
+
+	string tablemeta = DATAPATH + TABLESCSV;
+
+	ofstream outfile;
+	outfile.open(tablemeta, ios_base::app);
+	outfile << table->name() << "," << table->size() << "," << table->columns() << ",";
+
+	for (size_t i = 0; i < table->columns(); i++) {
+		outfile << table->attributes[i]->name() << ",";
+	}
+	for (size_t i = 0; i < table->columns(); i++) {
+		if (i != table->columns() - 1)
+			outfile << table->attributes[i]->type() << ",";
+		else 
+			outfile << table->attributes[i]->type() << endl;
+	}
+	tables[table->name()] = table;
 }
 
 void FileManager::display_t() {
