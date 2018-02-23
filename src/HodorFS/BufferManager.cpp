@@ -51,7 +51,6 @@ int Page::getpinned() {
 
 StringPage::StringPage() {
 	type = "STRING";
-
 }
 
 IntPage::IntPage() {
@@ -64,6 +63,7 @@ DoublePage::DoublePage() {
 
 StringPage::StringPage(int pn, string ta, string at) {
 	type = "STRING";
+	page_num = pn;
 	table = ta;
 	attribute = at;
 	slots = PAGESIZE;
@@ -71,6 +71,7 @@ StringPage::StringPage(int pn, string ta, string at) {
 
 IntPage::IntPage(int pn, string ta, string at) {
 	type = "INT";
+	page_num = pn;
 	table = ta;
 	attribute = at;
 	slots = PAGESIZE;
@@ -78,6 +79,7 @@ IntPage::IntPage(int pn, string ta, string at) {
 
 DoublePage::DoublePage(int pn, string ta, string at) {
 	type = "DOUBLE";
+	page_num = pn;
 	table = ta;
 	attribute = at;
 	slots = PAGESIZE;
