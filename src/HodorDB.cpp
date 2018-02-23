@@ -33,10 +33,15 @@ int main() {
 			}
 			else if (statement->isType(hsql::kStmtInsert)) {
 				parser->ParseINSERT(statement);
+
+				auto l = bf->getbuffer()->linkedlist;
+				for (auto it : l) {
+					it.second->write();
+				}
 			}
-			else if (statement->isType(hsql::kStmtSelect)) {
-				parser->ParserSELECT(statement);
-			}
+			// else if (statement->isType(hsql::kStmtSelect)) {
+			// 	parser->ParserSELECT(statement);
+			// }
 			// write metainfo of new table to disk
 		}
 		else 

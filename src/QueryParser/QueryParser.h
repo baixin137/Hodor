@@ -1,7 +1,7 @@
 #ifndef QUERYPARSER_H
 #define QUERYPARSER_H
 
-#include "../HodorFS/HodorFS/HodorFS.H"
+#include "../HodorFS/HodorFS.H"
 #include "../third_party/hyrise_sqlparser/src/SQLParser.h"
 
 using namespace std;
@@ -15,11 +15,11 @@ public:
 	QueryParser(FileManager* fs, BufferManager* bf);
 
 	// parse incoming CREATE statement
-	void ParseCREATE(hsql::SQLStatement* statement);
+	void ParseCREATE(const hsql::SQLStatement* statement);
 	// parse incoming INSERT statement
-	void ParseINSERT(hsql::SQLStatement* statement);
+	void ParseINSERT(const hsql::SQLStatement* statement);
 	// parse incoming SELECT statement
-	void ParseSELECT(hsql::SQLStatement* statement);
+	// void ParseSELECT(const hsql::SQLStatement* statement);
 };
 
 #endif

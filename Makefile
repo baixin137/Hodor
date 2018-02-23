@@ -1,15 +1,16 @@
 all: HodorDB
 
-BIN        = bin
-SRC        = src
-HODORFS    = src/HodorFS
-HYRISE     = src/third_party/hyrise_sqlparser
-SRCHYRISE  = src/third_party/hyrise_sqlparser/src
-SRCPARSER  = src/third_party/hyrise_sqlparser/src/parser
-HYRISE_H   = $(SRCHYRISE)/SQLParser.h    $(SRCHYRISE)/SQLParserResult.h
-HYRISE_SO  = $(HYRISE)/libsqlparser.so
+BIN         = bin
+SRC         = src
+HODORFS     = src/HodorFS
+QUERYPARSER = src/QueryParser
+HYRISE      = src/third_party/hyrise_sqlparser
+SRCHYRISE   = src/third_party/hyrise_sqlparser/src
+SRCPARSER   = src/third_party/hyrise_sqlparser/src/parser
+HYRISE_H    = $(SRCHYRISE)/SQLParser.h    $(SRCHYRISE)/SQLParserResult.h
+HYRISE_SO   = $(HYRISE)/libsqlparser.so
 
-MY_CPP    = $(HODORFS)/HodorFS.cpp $(HODORFS)/BufferManager.cpp $(SRC)/HodorDB.cpp
+MY_CPP    = $(HODORFS)/HodorFS.cpp $(HODORFS)/BufferManager.cpp $(QUERYPARSER)/QueryParser.cpp $(SRC)/HodorDB.cpp
 MY_H      = $(shell find $(SRC) -name '*.h' -not -path "src/third_party/*")
 MY_OBJ    = $(MY_CPP:%.cpp=%.o)
 

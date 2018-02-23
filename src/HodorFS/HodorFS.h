@@ -14,6 +14,7 @@
 
 extern string DATAPATH;
 extern string TABLESCSV;
+extern int PAGESIZE;
 
 using namespace std;
 

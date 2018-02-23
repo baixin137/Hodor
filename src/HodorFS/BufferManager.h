@@ -20,6 +20,7 @@ public:
 	Tuple(bool n, int i);
 	Tuple(bool n, double d);
 	Tuple(bool n);
+	Tuple();
 
 	bool isnull;
 	string sval;
@@ -57,6 +58,8 @@ public:
 class StringPage : public Page {
 public:
 	StringPage();
+	StringPage(int pn, string ta, string at);
+
 	void read(int p, string pn, vector<string> property);
 	void write();
 	void display();
@@ -65,6 +68,8 @@ public:
 class IntPage : public Page {
 public:
 	IntPage();
+	IntPage(int pn, string ta, string at);
+
 	void read(int p, string pn, vector<string> property);
 	void write();
 	void display();
@@ -73,6 +78,8 @@ public:
 class DoublePage : public Page {
 public:
 	DoublePage();
+	DoublePage(int pn, string ta, string at);
+
 	void read(int p, string pn, vector<string> property);
 	void write();
 	void display();
@@ -88,16 +95,14 @@ public:
 
 // Least recently used cache
 class LRUCache {
-private:
+public:
     size_t capacity;
     unordered_map<int,  list<pair<int, Page*>>::iterator> map; //map_iter->first: key, m_map_iter->second: list iterator;
     list<pair<int, Page*>> linkedlist; //linkedlist_iter->first: key, linkedlist_iter->second: value;
-
-public:
     LRUCache(size_t capacity);
     Page* get(int key); // get page from cache
     void set(int key, Page* value); // set/insert page in cache
-    void (int key);
+    void remove(int key);
 
     // TODO: we should flush every dirty page to disk like every 1 minute
 

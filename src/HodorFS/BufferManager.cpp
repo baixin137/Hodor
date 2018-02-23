@@ -19,6 +19,8 @@ Tuple::Tuple(bool n) {
 	isnull = n;
 }
 
+Tuple::Tuple() {}
+
 int Page::getnum() {
 	return page_num;
 }
@@ -64,18 +66,21 @@ StringPage::StringPage(int pn, string ta, string at) {
 	type = "STRING";
 	table = ta;
 	attribute = at;
+	slots = PAGESIZE;
 }
 
 IntPage::IntPage(int pn, string ta, string at) {
 	type = "INT";
 	table = ta;
 	attribute = at;
+	slots = PAGESIZE;
 }
 
 DoublePage::DoublePage(int pn, string ta, string at) {
 	type = "DOUBLE";
 	table = ta;
 	attribute = at;
+	slots = PAGESIZE;
 }
 
 // BooleanPage::BooleanPage() {
@@ -211,8 +216,15 @@ void DoublePage::read(int pn, string page_name, vector<string> property) {
 // }
 
 void StringPage::write() {
+	string page_name = to_string(page_num);
+	int zeros = 10 - page_name.size();
+
+	for (size_t i = 0; i < zeros; i++) 
+		page_name = '0' + page_name;
+	page_name = DATAPATH + page_name + ".csv";
+
 	ofstream outfile;
-	outfile.open(page_num);
+	outfile.open(page_name);
 	outfile << table << ',' << attribute << ','
 			<< type << ',' << to_string(slots)
 			<< endl;
@@ -235,8 +247,15 @@ void StringPage::write() {
 }
 
 void IntPage::write() {
+	string page_name = to_string(page_num);
+	int zeros = 10 - page_name.size();
+
+	for (size_t i = 0; i < zeros; i++) 
+		page_name = '0' + page_name;
+	page_name = DATAPATH + page_name + ".csv";
+
 	ofstream outfile;
-	outfile.open(page_num);
+	outfile.open(page_name);
 	outfile << table << ',' << attribute << ','
 			<< type << ',' << to_string(slots)
 			<< endl;
@@ -259,8 +278,15 @@ void IntPage::write() {
 }
 
 void DoublePage::write() {
+		string page_name = to_string(page_num);
+	int zeros = 10 - page_name.size();
+
+	for (size_t i = 0; i < zeros; i++) 
+		page_name = '0' + page_name;
+	page_name = DATAPATH + page_name + ".csv";
+
 	ofstream outfile;
-	outfile.open(page_num);
+	outfile.open(page_name);
 	outfile << table << ',' << attribute << ','
 			<< type << ',' << to_string(slots)
 			<< endl;
@@ -385,7 +411,7 @@ void LRUCache::set(int key, Page* value) {
        int key_to_del = linkedlist.back().first; 
        // flush to disk
        Page* p_to_flush = linkedlist.back().second;
-       p_to_flush.write();
+       p_to_flush->write();
 
        linkedlist.pop_back();            //remove node in list;
        map.erase(key_to_del);      //remove key in map
@@ -398,7 +424,7 @@ void LRUCache::remove(int key) {
 	auto found_iter = map.find(key);
 	if (found_iter != map.end()) {
 		// flush to disk
-		found_iter->second.second.write();
+		found_iter->second->second->write();
 		linkedlist.erase(found_iter->second);
 		map.erase(found_iter);
 	}
@@ -499,7 +525,7 @@ void BufferManager::flush(int pn) {
 			cerr << "Failed to remove file " << page_name << endl;
 		}
 		else { // flush data from memory to disk
-			page->write(page_name);
+			page->write();
 		}
 
 	buffer->remove(pn);

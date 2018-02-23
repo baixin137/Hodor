@@ -3,12 +3,13 @@
 
 string DATAPATH = "src/HodorFS/data/";
 string TABLESCSV = "tables.csv";
+int PAGESIZE = 1000;
 
 FileManager::FileManager() {
 	ifstream empty_pages(DATAPATH + "availablepages.csv");
 	if (!empty_pages) {
 		ofstream apages(DATAPATH + "availablepages.csv");
-		outfile << "0" << endl;
+		apages << "0" << endl;
 		apages.close();
 	}
 	else {
@@ -20,7 +21,7 @@ FileManager::FileManager() {
 		istringstream ps(line);
 		string p;
 
-		while (getline(ps, p, ",")) {
+		while (getline(ps, p, ',')) {
 			emptypages.insert(stoi(p));
 		}
 	}
@@ -61,8 +62,8 @@ FileManager::FileManager() {
 		 	for (size_t i = 0; i < stoi(cols); i++) {
 		 		getline(iss, attrtype, ',');
 		 		Attribute* attr_n = new Attribute(attrs[i], attrtype, table);
-		 		tables[table]->attributes[attrs[i] = (attr_n);
-		 		attr_order.push_back(attrs[i]);
+		 		tables[table]->attributes[attrs[i]] = (attr_n);
+		 		tables[table]->attr_order.push_back(attrs[i]);
 		 	}
 		}
 
@@ -94,7 +95,7 @@ FileManager::FileManager() {
 						ps->pageset.push_back(stoi(pnumber));
 					}
 
-					pages[t_name]->pages.push_back(ps);
+					pages[t_name]->pageset.push_back(ps);
 				}
 			}
 		}
@@ -115,13 +116,13 @@ void FileManager::add(Table* table) {
 	outfile << table->name() << "," << table->size() << "," << table->columns() << ",";
 
 	for (size_t i = 0; i < table->columns(); i++) {
-		outfile << table->attributes[attr_order[i]]->name() << ",";
+		outfile << table->attributes[table->attr_order[i]]->name() << ",";
 	}
 	for (size_t i = 0; i < table->columns(); i++) {
 		if (i != table->columns() - 1)
-			outfile << table->attributes[attr_order[i]]->type() << ",";
+			outfile << table->attributes[table->attr_order[i]]->type() << ",";
 		else 
-			outfile << table->attributes[attr_order[i]]->type() << endl;
+			outfile << table->attributes[table->attr_order[i]]->type() << endl;
 	}
 
 	// store table in memeory
@@ -134,8 +135,8 @@ void FileManager::add(Table* table) {
 void FileManager::display_t() {
 	for (auto it = tables.begin(); it != tables.end(); it++) {
 		cout << it->first << ", ";
-		for (auto attr : it->second->attributes) {
-			cout << attr->name() << ", ";
+		for (auto attr : it->second->attr_order) {
+			cout << attr << ", ";
 		}
 		cout << endl;
 	}
@@ -144,7 +145,7 @@ void FileManager::display_t() {
 void FileManager::display_p() {
 	for (auto it = pages.begin(); it != pages.end(); it++) {
 		cout << "Table: " << it->first << endl;
-		for (auto t : it->second->pages) {
+		for (auto t : it->second->pageset) {
 			cout << "Slots: " << t->slot() << ", ";
 			for (auto k : t->pageset) 
 				cout << k << ", ";
@@ -191,11 +192,11 @@ size_t Table::columns() {
 }
 
 PageSet::PageSet(size_t s) {
-	emptyslots = s;
+	slots = s;
 }
 
 size_t PageSet::slot() {
-	return emptyslots;
+	return slots;
 }
 
 TableStorage::TableStorage(string t) {

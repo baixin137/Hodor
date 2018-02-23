@@ -5,7 +5,7 @@ QueryParser::QueryParser(FileManager* fs, BufferManager* bf) {
 	buffer = bf;
 }
 
-void QueryParser::ParseCREATE(hsql::SQLStatement* statement) {
+void QueryParser::ParseCREATE(const hsql::SQLStatement* statement) {
 	const hsql::CreateStatement* create = (const hsql::CreateStatement*) statement;
 
 	// traverse the columns
@@ -32,8 +32,8 @@ void QueryParser::ParseCREATE(hsql::SQLStatement* statement) {
 	filesystem->add(table);
 }
 
-void QueryParser::ParseINSERT(hsql::SQLStatement* statement) {
-	const hsql::CreateStatement* insert = (const hsql::InsertStatement*) statement;
+void QueryParser::ParseINSERT(const hsql::SQLStatement* statement) {
+	const hsql::InsertStatement* insert = (const hsql::InsertStatement*) statement;
 	string table(insert->tableName);
 
 	// TODO: handle the error that data type doesn't match the correct order
@@ -41,7 +41,7 @@ void QueryParser::ParseINSERT(hsql::SQLStatement* statement) {
 		PageSet* pset;
 
 		bool pagesetfound = false;
-		for (auto p : filesystem->pages[table].pageset) {
+		for (auto p : filesystem->pages[table]->pageset) {
 			if (p->slot() > 0) {
 				pset = p;
 				pagesetfound = true;
@@ -51,11 +51,11 @@ void QueryParser::ParseINSERT(hsql::SQLStatement* statement) {
 
 		if (!pagesetfound) { // allocate a new page
 			// TODO
-			int count = tables[table].size();
-			PageSet* p = new PageSet(count);
+			int count = filesystem->tables[table]->size();
+			PageSet* p = new PageSet(PAGESIZE);
 			// check if there are released pages to be recycled
-			for (auto attrname : filesystem->tables[table].attr_order) {
-				Attribute* attr = filesystem->table[table].attributes[attrname];
+			for (auto attrname : filesystem->tables[table]->attr_order) {
+				Attribute* attr = filesystem->tables[table]->attributes[attrname];
 				int pnumber;
 
 				if (filesystem->emptypages.size() > 0) {
@@ -67,16 +67,18 @@ void QueryParser::ParseINSERT(hsql::SQLStatement* statement) {
 				else {
 					pnumber = filesystem->nextpage;
 					p->pageset.push_back(pnumber);
-					filesystem.nextpage++;
+					filesystem->nextpage++;
 				}
 				buffer->add(pnumber, attr->type(), attr->table(), attr->name());
 			}
 			pset = p;
-			filesystem->pages[table].push_back(pset);
+			filesystem->pages[table]->pageset.push_back(pset);
 		}
 
 		pset->slots -= 1;
 		for (size_t i = 0; i < insert->values->size(); i++) {
+			auto val = (*insert->values)[i];
+
 			if (filesystem->pages.size() > 0) { // look for a page that can store this tuple
 				int page_num = pset->pageset[i];
 				Page* page2modify = buffer->getbuffer()->get(page_num);
@@ -84,17 +86,17 @@ void QueryParser::ParseINSERT(hsql::SQLStatement* statement) {
 				page2modify->slots -= 1;
 
 				if (val->type == hsql::kExprLiteralString) {
-					string sval(insert->values[i]->name);
+					string sval(val->name);
 					Tuple* newtup = new Tuple(false, sval);
 					page2modify->content.push_back(newtup);
 				}
 				else if (val->type == hsql::kExprLiteralInt) {
-					int ival = insert->values[i]->ival;
+					int ival = val->ival;
 					Tuple* newtup = new Tuple(false, ival);
 					page2modify->content.push_back(newtup);
 				}
 				else if (val->type == hsql::kExprLiteralFloat) {
-					double dval = insert->values[i]->fval;
+					double dval = val->fval;
 					Tuple* newtup = new Tuple(false, dval);
 					page2modify->content.push_back(newtup);
 				}
