@@ -29,7 +29,7 @@ void QueryParser::ParseCREATE(hsql::SQLStatement* statement) {
 		table->attributes[attr] = (attribute);
 		table->attr_order.push_back(attr);
 	}
-	fm->add(table);
+	filesystem->add(table);
 }
 
 void QueryParser::ParseINSERT(hsql::SQLStatement* statement) {
@@ -48,6 +48,7 @@ void QueryParser::ParseINSERT(hsql::SQLStatement* statement) {
 				break;
 			}
 		}
+
 		if (!pagesetfound) { // allocate a new page
 			// TODO
 			int count = tables[table].size();

@@ -49,6 +49,7 @@ int Page::getpinned() {
 
 StringPage::StringPage() {
 	type = "STRING";
+
 }
 
 IntPage::IntPage() {
@@ -59,9 +60,27 @@ DoublePage::DoublePage() {
 	type = "DOUBLE";
 }
 
-BooleanPage::BooleanPage() {
-	type = "BNOOLEAN";
+StringPage::StringPage(int pn, string ta, string at) {
+	type = "STRING";
+	table = ta;
+	attribute = at;
 }
+
+IntPage::IntPage(int pn, string ta, string at) {
+	type = "INT";
+	table = ta;
+	attribute = at;
+}
+
+DoublePage::DoublePage(int pn, string ta, string at) {
+	type = "DOUBLE";
+	table = ta;
+	attribute = at;
+}
+
+// BooleanPage::BooleanPage() {
+// 	type = "BNOOLEAN";
+// }
 
 void StringPage::read(int pn, string page_name, vector<string> property) {
  	page_num = pn;
@@ -397,7 +416,19 @@ LRUCache* BufferManager::getbuffer() {
 }
 
 void BufferManager::add(int pn, string type, string table, string attribute) {
-	
+	Page* page;
+
+	if (type == "INT") {
+		page = new IntPage(pn, table, attribute);
+	}
+	else if (type == "DOUBLE") {
+		page = new DoublePage(pn, table, attribute);
+	}
+	else { // is string
+		page = new StringPage(pn, table, attribute);
+	}
+
+	buffer->set(pn, page);
 }
 
 void BufferManager::fetch(int pn) {
@@ -427,14 +458,12 @@ void BufferManager::fetch(int pn) {
 
 		Page* page;
 
-		if (property[2] == "STRING")
-			page = new StringPage();
-		else if (property[2] == "INT")
+		if (property[2] == "INT")
 			page = new IntPage();
 		else if (property[2] == "DOUBLE")
 			page = new DoublePage();
 		else
-			page = new BooleanPage();
+			page = new StringPage();
 
 		page->read(pn, page_name, property); // read page from disk
 

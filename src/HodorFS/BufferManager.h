@@ -111,6 +111,7 @@ private:
 public:
 	LRUCache* getbuffer();
 	BufferManager(size_t capacity);
+	void add(int pn, string type, string table, string attribute); // create a new page and add to buffer
 	void fetch(int pn); // fetch page from disk
 	void flush(int pn); //flush the page to disk and remove from memory
 };
