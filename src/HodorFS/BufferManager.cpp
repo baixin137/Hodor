@@ -210,9 +210,9 @@ void DoublePage::read(int pn, string page_name, vector<string> property) {
 // 	}
 // }
 
-void StringPage::write(string pn) {
+void StringPage::write() {
 	ofstream outfile;
-	outfile.open(pn);
+	outfile.open(page_num);
 	outfile << table << ',' << attribute << ','
 			<< type << ',' << to_string(slots)
 			<< endl;
@@ -234,9 +234,9 @@ void StringPage::write(string pn) {
 	outfile.close();
 }
 
-void IntPage::write(string pn) {
+void IntPage::write() {
 	ofstream outfile;
-	outfile.open(pn);
+	outfile.open(page_num);
 	outfile << table << ',' << attribute << ','
 			<< type << ',' << to_string(slots)
 			<< endl;
@@ -258,9 +258,9 @@ void IntPage::write(string pn) {
 	outfile.close();
 }
 
-void DoublePage::write(string pn) {
+void DoublePage::write() {
 	ofstream outfile;
-	outfile.open(pn);
+	outfile.open(page_num);
 	outfile << table << ',' << attribute << ','
 			<< type << ',' << to_string(slots)
 			<< endl;
@@ -381,9 +381,12 @@ void LRUCache::set(int key, Page* value) {
         found_iter->second->second = value;                        //update value of the node
         return;
     }
-    if (map.size() == capacity) //reached capacity
-    {
+    if (map.size() == capacity) { //reached capacity
        int key_to_del = linkedlist.back().first; 
+       // flush to disk
+       Page* p_to_flush = linkedlist.back().second;
+       p_to_flush.write();
+
        linkedlist.pop_back();            //remove node in list;
        map.erase(key_to_del);      //remove key in map
     }
@@ -394,6 +397,8 @@ void LRUCache::set(int key, Page* value) {
 void LRUCache::remove(int key) {
 	auto found_iter = map.find(key);
 	if (found_iter != map.end()) {
+		// flush to disk
+		found_iter->second.second.write();
 		linkedlist.erase(found_iter->second);
 		map.erase(found_iter);
 	}

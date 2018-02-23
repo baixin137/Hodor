@@ -49,7 +49,7 @@ public:
 	int getpinned();
 
 	virtual void read(int p, string pn, vector<string> property) = 0;
-	virtual void write(string pn) = 0;
+	virtual void write() = 0;
 	virtual void display() = 0;
 };
 
@@ -58,7 +58,7 @@ class StringPage : public Page {
 public:
 	StringPage();
 	void read(int p, string pn, vector<string> property);
-	void write(string pn);
+	void write();
 	void display();
 };
 
@@ -66,7 +66,7 @@ class IntPage : public Page {
 public:
 	IntPage();
 	void read(int p, string pn, vector<string> property);
-	void write(string pn);
+	void write();
 	void display();
 };
 
@@ -74,7 +74,7 @@ class DoublePage : public Page {
 public:
 	DoublePage();
 	void read(int p, string pn, vector<string> property);
-	void write(string pn);
+	void write();
 	void display();
 };
 
@@ -97,7 +97,7 @@ public:
     LRUCache(size_t capacity);
     Page* get(int key); // get page from cache
     void set(int key, Page* value); // set/insert page in cache
-    void remove(int key);
+    void (int key);
 
     // TODO: we should flush every dirty page to disk like every 1 minute
 
