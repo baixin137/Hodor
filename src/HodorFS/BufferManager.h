@@ -16,6 +16,11 @@ using namespace std;
 
 class Tuple {
 public:
+	Tuple(bool n, string s);
+	Tuple(bool n, int i);
+	Tuple(bool n, double d);
+	Tuple(bool n);
+
 	bool isnull;
 	string sval;
 	int ival;
@@ -28,13 +33,13 @@ protected:
 	string table; // the table it belongs to
 	string attribute; // which attribute it stores
 	string type; // type of the attribute
-	int slots; // number of empty slots in this page
-	bool dirty; // the page is dirty of not
-	int pinned; // the buffer manager shouldn't flush a paged pinned by some threads
-
-	vector<Tuple*> content;
 
 public:
+	bool dirty; // the page is dirty of not
+	int pinned; // the buffer manager shouldn't flush a paged pinned by some threads
+	vector<Tuple*> content;
+	int slots; // number of empty slots in this page
+
 	int getnum();
 	string gettable();
 	string getattr();
@@ -93,6 +98,8 @@ public:
     Page* get(int key); // get page from cache
     void set(int key, Page* value); // set/insert page in cache
     void remove(int key);
+
+    // TODO: we should flush every dirty page to disk like every 1 minute
 
     void display();
 };

@@ -24,7 +24,7 @@ FileManager::FileManager() {
 			emptypages.insert(stoi(p));
 		}
 	}
-	
+
 	// fetch the table names from the table file
 	// use the tables hash table to store which table has which attributes
 
@@ -61,7 +61,8 @@ FileManager::FileManager() {
 		 	for (size_t i = 0; i < stoi(cols); i++) {
 		 		getline(iss, attrtype, ',');
 		 		Attribute* attr_n = new Attribute(attrs[i], attrtype, table);
-		 		tables[table]->attributes.push_back(attr_n);
+		 		tables[table]->attributes[attrs[i] = (attr_n);
+		 		attr_order.push_back(attrs[i]);
 		 	}
 		}
 
@@ -114,13 +115,13 @@ void FileManager::add(Table* table) {
 	outfile << table->name() << "," << table->size() << "," << table->columns() << ",";
 
 	for (size_t i = 0; i < table->columns(); i++) {
-		outfile << table->attributes[i]->name() << ",";
+		outfile << table->attributes[attr_order[i]]->name() << ",";
 	}
 	for (size_t i = 0; i < table->columns(); i++) {
 		if (i != table->columns() - 1)
-			outfile << table->attributes[i]->type() << ",";
+			outfile << table->attributes[attr_order[i]]->type() << ",";
 		else 
-			outfile << table->attributes[i]->type() << endl;
+			outfile << table->attributes[attr_order[i]]->type() << endl;
 	}
 
 	// store table in memeory

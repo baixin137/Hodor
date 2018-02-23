@@ -1,5 +1,24 @@
 #include "BufferManager.h"
 
+Tuple::Tuple(bool n, string s) {
+	isnull = n;
+	sval = s;
+}
+
+Tuple::Tuple(bool n, int i) {
+	isnull = n;
+	ival = i;
+}
+
+Tuple::Tuple(bool n, double d) {
+	isnull = n;
+	dval = d;
+}
+
+Tuple::Tuple(bool n) {
+	isnull = n;
+}
+
 int Page::getnum() {
 	return page_num;
 }
@@ -375,6 +394,10 @@ BufferManager::BufferManager(size_t c) {
 
 LRUCache* BufferManager::getbuffer() {
 	return buffer;
+}
+
+void BufferManager::add(int pn, string type, string table, string attribute) {
+	
 }
 
 void BufferManager::fetch(int pn) {

@@ -33,16 +33,15 @@ public:
 	size_t size();
 	size_t columns();
 
-	vector<Attribute*> attributes;
+	vector<string> attr_order;
+	unordered_map<string, Attribute*> attributes;
 };
 
 class PageSet {
-private:
-	size_t emptyslots;
-
 public:
 	PageSet(size_t s);
 
+	size_t slots;
 	size_t slot();
 	vector<int> pageset;
 
@@ -56,7 +55,7 @@ public:
 	TableStorage(string t);
 
 	string table();
-	vector<PageSet*> pages;
+	vector<PageSet*> pageset;
 };
 
 #endif

@@ -18,19 +18,18 @@ extern string TABLESCSV;
 using namespace std;
 
 class FileManager {
-private:
+public:
 	unordered_map<string, Table*> tables; // this unordered map stores all the table names in the database
 	unordered_map<string, TableStorage*> pages;
 
 	// next page points to the next page number to use
 	int nextpage;
-	
+
 	// when a used page is released, its page number got stored in emptypages
 	// so when you want to assign a new page you should check the emptypages first
 	// if it's empty, go to the next page
 	unordered_set<int> emptypages;
 
-public:
 	FileManager();
 
 	void sort(string key, string table);
