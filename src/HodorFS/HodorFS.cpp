@@ -5,6 +5,26 @@ string DATAPATH = "src/HodorFS/data/";
 string TABLESCSV = "tables.csv";
 
 FileManager::FileManager() {
+	ifstream empty_pages(DATAPATH + "availablepages.csv");
+	if (!empty_pages) {
+		ofstream apages(DATAPATH + "availablepages.csv");
+		outfile << "0" << endl;
+		apages.close();
+	}
+	else {
+		string line;
+		getline(empty_pages, line);
+		nextpage = stoi(line); // store next page
+
+		getline(empty_pages, line);
+		istringstream ps(line);
+		string p;
+
+		while (getline(ps, p, ",")) {
+			emptypages.insert(stoi(p));
+		}
+	}
+	
 	// fetch the table names from the table file
 	// use the tables hash table to store which table has which attributes
 
@@ -80,12 +100,13 @@ FileManager::FileManager() {
 	}
 }
 
-void FileManager::addtable(Table* table) {
+void FileManager::add(Table* table) {
 	if (tables.find(table->name()) != tables.end()) {
 		cout << "Table already exists." << endl;
 		return;
 	}
 
+	// add table metainfo into disk
 	string tablemeta = DATAPATH + TABLESCSV;
 
 	ofstream outfile;
@@ -101,7 +122,12 @@ void FileManager::addtable(Table* table) {
 		else 
 			outfile << table->attributes[i]->type() << endl;
 	}
+
+	// store table in memeory
 	tables[table->name()] = table;
+
+	// the table is just created and no data is in it
+	// so the pages doesn't have this table's information yet
 }
 
 void FileManager::display_t() {

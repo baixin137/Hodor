@@ -14,6 +14,14 @@
 
 using namespace std;
 
+class Tuple {
+public:
+	bool isnull;
+	string sval;
+	int ival;
+	double dval;
+};
+
 class Page {
 protected:
 	int page_num; // page number, 4 bytes, from 0 to 4,294,967,296
@@ -23,6 +31,8 @@ protected:
 	int slots; // number of empty slots in this page
 	bool dirty; // the page is dirty of not
 	int pinned; // the buffer manager shouldn't flush a paged pinned by some threads
+
+	vector<Tuple*> content;
 
 public:
 	int getnum();
@@ -40,9 +50,6 @@ public:
 
 // String handles CHAR, DATE, TIME AND TIMESTAMP NOW
 class StringPage : public Page {
-private:
-	vector<string> content;
-
 public:
 	StringPage();
 	void read(int p, string pn, vector<string> property);
@@ -51,9 +58,6 @@ public:
 };
 
 class IntPage : public Page {
-private:
-	vector<int> content;
-
 public:
 	IntPage();
 	void read(int p, string pn, vector<string> property);
@@ -62,9 +66,6 @@ public:
 };
 
 class DoublePage : public Page {
-private:
-	vector<double> content;
-
 public:
 	DoublePage();
 	void read(int p, string pn, vector<string> property);
@@ -72,16 +73,13 @@ public:
 	void display();
 };
 
-class BooleanPage : public Page {
-private:
-	vector<bool> content;
-
-public:
-	BooleanPage();
-	void read(int p, string pn, vector<string> property);
-	void write(string pn);
-	void display();
-};
+// class BooleanPage : public Page {
+// public:
+// 	BooleanPage();
+// 	void read(int p, string pn, vector<string> property);
+// 	void write(string pn);
+// 	void display();
+// };
 
 // Least recently used cache
 class LRUCache {

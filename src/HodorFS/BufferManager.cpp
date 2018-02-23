@@ -58,14 +58,21 @@ void StringPage::read(int pn, string page_name, vector<string> property) {
 		cerr << "Unable to find page " << page_name << "." << endl;
 	}
 	else {
-		string line;
+		string token;
 
-		getline(infile, line); // get rid of the header
-		while (getline(infile, line)) {
-			if (line == "NULL")
-				content.push_back("");
-			else
-				content.push_back(line);
+		getline(infile, token); // get rid of the header
+		while (getline(infile, token)) {
+			Tuple* tuple = new Tuple();
+
+			if (token == "NULL") {
+				tuple->isnull = true;
+				content.push_back(tuple);
+			}
+			else {
+				tuple->isnull = false;
+				tuple->sval = token;
+				content.push_back(tuple);
+			}
 		}
 	}
 }
@@ -85,14 +92,20 @@ void IntPage::read(int pn, string page_name, vector<string> property) {
 		cerr << "Unable to find page " << page_name << "." << endl;
 	}
 	else {
-		string line;
+		string token;
 
-		getline(infile, line); // get rid of the header
-		while (getline(infile, line)) {
-			if (line == "NULL")
-				content.push_back(0);
-			else
-				content.push_back(stoi(line));
+		getline(infile, token); // get rid of the header
+		while (getline(infile, token)) {
+			Tuple* tuple = new Tuple();
+			if (token == "NULL") {
+				tuple->isnull = true;
+				content.push_back(tuple);
+			}
+			else {
+				tuple->isnull = false;
+				tuple->ival = stoi(token);
+				content.push_back(tuple);
+			}
 		}
 	}
 }
@@ -112,46 +125,52 @@ void DoublePage::read(int pn, string page_name, vector<string> property) {
 		cerr << "Unable to find page " << page_name << "." << endl;
 	}
 	else {
-		string line;
+		string token;
 
-		getline(infile, line); // get rid of the header
-		while (getline(infile, line)) {
-			if (line == "NULL")
-				content.push_back(0.0);
-			else
-				content.push_back(stod(line));
+		getline(infile, token); // get rid of the header
+		while (getline(infile, token)) {
+			Tuple* tuple = new Tuple();
+			if (token == "NULL") {
+				tuple->isnull = true;
+				content.push_back(tuple);
+			}
+			else {
+				tuple->isnull = false;
+				tuple->dval = stod(token);
+				content.push_back(tuple);
+			}
 		}
 	}
 }
 
-void BooleanPage::read(int pn, string page_name, vector<string> property) {
-	page_num = pn;
-	table = property[0];
-	attribute = property[1];
-	slots = stoi(property[3]);
+// void BooleanPage::read(int pn, string page_name, vector<string> property) {
+// 	page_num = pn;
+// 	table = property[0];
+// 	attribute = property[1];
+// 	slots = stoi(property[3]);
 
-	dirty = false; // fetched a new page, clean
-	pinned = 0; // new page, not pinned by any thread
+// 	dirty = false; // fetched a new page, clean
+// 	pinned = 0; // new page, not pinned by any thread
 
-	ifstream infile(page_name);
+// 	ifstream infile(page_name);
 
-	if (!infile) {
-		cerr << "Unable to find page " << page_name << "." << endl;
-	}
-	else {
-		string line;
+// 	if (!infile) {
+// 		cerr << "Unable to find page " << page_name << "." << endl;
+// 	}
+// 	else {
+// 		string line;
 
-		getline(infile, line); // get rid of the header
-		while (getline(infile, line)) {
-			if (line == "0") 
-				content.push_back(false);
-			else if (line == "NULL")
-				content.push_back(false);
-			else
-				content.push_back(true);
-		}
-	}
-}
+// 		getline(infile, line); // get rid of the header
+// 		while (getline(infile, line)) {
+// 			if (line == "0") 
+// 				content.push_back(false);
+// 			else if (line == "NULL")
+// 				content.push_back(false);
+// 			else
+// 				content.push_back(true);
+// 		}
+// 	}
+// }
 
 void StringPage::write(string pn) {
 	ofstream outfile;
@@ -161,12 +180,19 @@ void StringPage::write(string pn) {
 			<< endl;
 
 	for (size_t i = 0; i < content.size(); i++) {
-		if (i != content.size() - 1)
-			outfile << content[i] << endl;
-		else
-			outfile << content[i];
+		if (i != content.size() - 1) {
+			if (!content[i]->isnull)
+				outfile << content[i]->sval << endl;
+			else
+				outfile << "NULL" << endl;
+		}
+		else {
+			if (!content[i]->isnull)
+				outfile << content[i]->sval;
+			else 
+				outfile << "NULL";
+		}
 	}
-
 	outfile.close();
 }
 
@@ -178,12 +204,19 @@ void IntPage::write(string pn) {
 			<< endl;
 
 	for (size_t i = 0; i < content.size(); i++) {
-		if (i != content.size() - 1)
-			outfile << content[i] << endl;
-		else
-			outfile << content[i];
+		if (i != content.size() - 1) {
+			if (!content[i]->isnull)
+				outfile << content[i]->ival << endl;
+			else
+				outfile << "NULL" <<endl;
+		}
+		else {
+			if (!content[i]->isnull)
+				outfile << content[i]->ival;
+			else 
+				outfile << "NULL";
+		}
 	}
-
 	outfile.close();
 }
 
@@ -195,31 +228,36 @@ void DoublePage::write(string pn) {
 			<< endl;
 
 	for (size_t i = 0; i < content.size(); i++) {
-		if (i != content.size() - 1)
-			outfile << content[i] << endl;
+		if (i != content.size() - 1) {
+			if (!content[i]->isnull)
+				outfile << content[i]->dval << endl;
+			else
+				outfile << "NULL" << endl;
+		}
 		else
-			outfile << content[i];
+			if (!content[i]->isnull)
+				outfile << content[i]->dval;
+			else
+				outfile << "NULL";
 	}
-
 	outfile.close();
 }
 
-void BooleanPage::write(string pn) {
-	ofstream outfile;
-	outfile.open(pn);
-	outfile << table << ',' << attribute << ','
-			<< type << ',' << to_string(slots)
-			<< endl;
+// void BooleanPage::write(string pn) {
+// 	ofstream outfile;
+// 	outfile.open(pn);
+// 	outfile << table << ',' << attribute << ','
+// 			<< type << ',' << to_string(slots)
+// 			<< endl;
 
-	for (size_t i = 0; i < content.size(); i++) {
-		if (i != content.size() - 1)
-			outfile << content[i] << endl;
-		else
-			outfile << content[i];
-	}
-
-	outfile.close();
-}
+// 	for (size_t i = 0; i < content.size(); i++) {
+// 		if (i != content.size() - 1)
+// 			outfile << content[i] << endl;
+// 		else
+// 			outfile << content[i];
+// 	}
+// 	outfile.close();
+// }
 
 void StringPage::display() {
 	cout << "Page number: " << page_num << endl;
@@ -231,7 +269,7 @@ void StringPage::display() {
 	cout << "Dirty: " << d << endl;
 
 	for (auto c : content) 
-		cout << c << endl;
+		cout << c->sval << endl;
 
 	cout << endl;
 }
@@ -246,7 +284,7 @@ void IntPage::display() {
 	cout << "Dirty: " << d << endl;
 
 	for (auto c : content) 
-		cout << c << endl;
+		cout << c->ival << endl;
 
 	cout << endl;
 }
@@ -261,29 +299,29 @@ void DoublePage::display() {
 	cout << "Dirty: " << d << endl;
 
 	for (auto c : content) 
-		cout << c << endl;
+		cout << c->dval << endl;
 
 	cout << endl;
 }
 
-void BooleanPage::display() {
-	cout << "Page number: " << page_num << endl;
-	cout << "Table: " << table << endl;;
-	cout << "Attribute: " << attribute << endl;
-	cout << "Type: " << type << endl;
-	cout << "Empty slots: " << slots << endl;
-	string d = dirty ? "true" : "false";
-	cout << "Dirty: " << d << endl;
+// void BooleanPage::display() {
+// 	cout << "Page number: " << page_num << endl;
+// 	cout << "Table: " << table << endl;;
+// 	cout << "Attribute: " << attribute << endl;
+// 	cout << "Type: " << type << endl;
+// 	cout << "Empty slots: " << slots << endl;
+// 	string d = dirty ? "true" : "false";
+// 	cout << "Dirty: " << d << endl;
 
-	for (auto c : content) {
-		if (c)
-			cout << "True" << endl;
-		else
-			cout << "False" << endl;
-	}
+// 	for (auto c : content) {
+// 		if (c)
+// 			cout << "True" << endl;
+// 		else
+// 			cout << "False" << endl;
+// 	}
 
-	cout << endl;
-}
+// 	cout << endl;
+// }
 
 LRUCache::LRUCache(size_t c) {
 	capacity = c;

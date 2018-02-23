@@ -7,3 +7,5 @@
 4. Write a parser for Grammar.bnf
 
 5. Do i really need a parent pointer in the parse tree node?
+
+6. keep the information of next page and empty pages
