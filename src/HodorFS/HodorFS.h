@@ -9,12 +9,10 @@
 #include <fstream>
 #include <sstream>
 #include <iostream>
+#include <unistd.h>
+#include <pthread.h>
 #include <unordered_map>
 #include <unordered_set>
-
-extern string DATAPATH;
-extern string TABLESCSV;
-extern int PAGESIZE;
 
 using namespace std;
 
@@ -42,6 +40,29 @@ public:
 
 	void display_t();
 	void display_p();
+};
+
+class AutoSave { // periodically save data to disk
+public:
+   AutoSave(BufferManager* bf);
+
+   // Returns true if the thread was successfully started
+   bool StartInternalThread();
+
+   // Will not return until the internal thread has exited.
+   void WaitForInternalThreadToExit()
+   {
+      (void) pthread_join(_thread, NULL);
+   }
+
+protected:
+   void FlushBuffer();
+
+private:
+   static void * FlushBufferFunc(void * This) {((AutoSave *)This)->FlushBuffer(); return NULL;}
+
+   pthread_t _thread;
+   BufferManager* buffer;
 };
 
 #endif

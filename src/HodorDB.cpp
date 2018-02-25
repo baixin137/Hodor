@@ -9,14 +9,10 @@ int main() {
 
 	// parse incoming queries and act accordingly
 	QueryParser* parser = new QueryParser(fm, bf);
-	// bf->fetch(1);
-	// bf->fetch(2);
 
-	// bf->getbuffer()->display();
-
-	// bf->flush(1);
-
-	// bf->getbuffer()->display();
+	// Periodically flush dirty pages to disk
+	AutoSave* save = new AutoSave(bf);
+	save->StartInternalThread();
 
 	while (true) {
 		string query;
@@ -48,13 +44,5 @@ int main() {
 			cout << "Invalid query" << endl;
 	}
 
-	// string query = "SELECT * FROM Movie";
-
-	// hsql::SQLParserResult result;
-	// hsql::SQLParser::parse(query, &result);
-
-	// if (result.isValid() && result.size() > 0) {
-	// 	cout << "lalala wo cheng gong la!" << endl;
-	// }
 	return 0;
 }

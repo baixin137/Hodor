@@ -1,7 +1,7 @@
 #ifndef QUERYPARSER_H
 #define QUERYPARSER_H
 
-#include "../HodorFS/HodorFS.H"
+#include "../HodorFS/HodorFS.h"
 #include "../third_party/hyrise_sqlparser/src/SQLParser.h"
 
 using namespace std;

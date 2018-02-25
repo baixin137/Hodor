@@ -1,10 +1,6 @@
 #include "HodorFS.h"
 #include "Tables.h"
 
-string DATAPATH = "src/HodorFS/data/";
-string TABLESCSV = "tables.csv";
-int PAGESIZE = 1000;
-
 FileManager::FileManager() {
 	ifstream empty_pages(DATAPATH + "availablepages.csv");
 	if (!empty_pages) {
@@ -205,4 +201,33 @@ TableStorage::TableStorage(string t) {
 
 string TableStorage::table() {
 	return tablename;
+}
+
+AutoSave::AutoSave(BufferManager* bf) {
+	buffer = bf;
+}
+
+bool AutoSave::StartInternalThread() {
+	return (pthread_create(&_thread, NULL, FlushBufferFunc, this) == 0);
+
+}
+
+void AutoSave::FlushBuffer() {
+	LRUCache* cache = buffer->getbuffer();
+
+	while (true) {
+		sleep(CHECKPERIOD);
+
+		cout << "Ready to flush." << endl;
+
+		for (auto it = cache->linkedlist.begin(); it != cache->linkedlist.end(); it++) {
+			Page* page = it->second;
+			if (page->dirty) {
+				page->write();
+				page->dirty = false;
+
+				cout << "Flushing page: " << page->getnum() << endl;
+			}
+		}
+	}
 }

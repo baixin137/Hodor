@@ -1,11 +1,1 @@
-1. Add lexical error detector to lexer
-
-2. Refine the Token class
-
-3. Separate the hard coded keywords, operators and so on from the Lexer class
-
-4. Write a parser for Grammar.bnf
-
-5. Do i really need a parent pointer in the parse tree node?
-
-6. keep the information of next page and empty pages
+1. create a thread to flush dirty pages every few seconds

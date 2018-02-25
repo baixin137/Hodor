@@ -1,5 +1,11 @@
 #include "BufferManager.h"
 
+string DATAPATH = "src/HodorFS/data/";
+string TABLESCSV = "tables.csv";
+int PAGESIZE = 1000;
+pthread_mutex_t Lock = PTHREAD_MUTEX_INITIALIZER;
+int CHECKPERIOD = 20;
+
 Tuple::Tuple(bool n, string s) {
 	isnull = n;
 	sval = s;

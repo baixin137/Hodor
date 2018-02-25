@@ -8,11 +8,16 @@
 #include <fstream>
 #include <sstream>
 #include <iostream>
+#include <pthread.h>
 #include <unordered_map>
 
-#include "HodorFS.h"
-
 using namespace std;
+
+extern string DATAPATH;
+extern string TABLESCSV;
+extern int PAGESIZE;
+extern pthread_mutex_t Lock;
+extern int CHECKPERIOD;
 
 class Tuple {
 public:
