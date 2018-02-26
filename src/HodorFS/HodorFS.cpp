@@ -148,7 +148,9 @@ FileManager::FileManager() {
 }
 
 void FileManager::add(Table* table) {
-	if (tables.find(table->name()) != tables.end()) {
+	string t_name = user->name() + "::" + table->name();
+
+	if (tables.find(t_name) != tables.end()) {
 		cout << "Table already exists." << endl;
 		return;
 	}
@@ -158,12 +160,17 @@ void FileManager::add(Table* table) {
 
 	ofstream outfile;
 	outfile.open(tablemeta, ios_base::app);
-	outfile << table->name() << "," << table->size() << "," << table->columns() << ",";
+	outfile << t_name             << "," 
+			<< table->user()      << ","
+			<< table->timestamp() << ","
+			<< table->size()      << "," 
+			<< table->columns()   << ",";
 
 	for (size_t i = 0; i < table->columns(); i++) {
 		outfile << table->attributes[table->attr_order[i]]->name() << ",";
 	}
 	for (size_t i = 0; i < table->columns(); i++) {
+		cout << "type is: " << table->attributes[table->attr_order[i]]->type() << endl;
 		if (i != table->columns() - 1)
 			outfile << table->attributes[table->attr_order[i]]->type() << ",";
 		else 
@@ -171,7 +178,9 @@ void FileManager::add(Table* table) {
 	}
 
 	// store table in memeory
-	tables[table->name()] = table;
+	tables[t_name] = table;
+	user->table_names.push_back(table->name());
+	user->tables[table->name()] = table;
 
 	// the table is just created and no data is in it
 	// so the pages doesn't have this table's information yet
@@ -329,6 +338,7 @@ void AutoSave::FlushBuffer() {
 					else
 						tables_info << tb->second->attributes[tb->second->attr_order[i]]->name() << endl;
 				}
+				cout << "table " << tb->first << " flushed" << endl;
 			}
 		}
 		tables_info.close();
@@ -352,6 +362,7 @@ void AutoSave::FlushBuffer() {
 				else 
 					db_info << db->second->table_names[i] << endl;
 			}
+			cout << "database " << db->first << " flushed" << endl;
 		}
 		db_info.close();
 	}

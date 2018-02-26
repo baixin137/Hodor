@@ -17,7 +17,6 @@ void QueryParser::ParseCREATE(const hsql::SQLStatement* statement) {
 	string timestamp(ctime(&t));
 	timestamp.erase(remove(timestamp.begin(), timestamp.end(), '\n'), timestamp.end());
 
-
 	size_t cols = create->columns->size();
 
 	Table* table = new Table(tablename, user, timestamp,0, cols);
@@ -34,7 +33,7 @@ void QueryParser::ParseCREATE(const hsql::SQLStatement* statement) {
 			type = "STRING";
 
 		Attribute* attribute = new Attribute(attr, type, tablename);
-		table->attributes[attr] = (attribute);
+		table->attributes[attr] = attribute;
 		table->attr_order.push_back(attr);
 	}
 	filesystem->add(table);

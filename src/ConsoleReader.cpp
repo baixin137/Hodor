@@ -21,6 +21,8 @@ void ConsoleReader::ReadCommand() {
 		hsql::SQLParser::parse(command, &result);
 
 		if (!result.isValid()) { // database command
+			// cout << "Invalid statement" << endl;
+			// cout << result.errorMsg() << endl;
 			if (isSelectDatabase(command)) {
 				SetDatabase(command);
 			}
@@ -33,6 +35,7 @@ void ConsoleReader::ReadCommand() {
 			}
 			const hsql::SQLStatement* statement = result.getStatement(0);
 			if (statement->isType(hsql::kStmtCreate)) {
+				// cout << "CREATE..." << endl;
 				parser->ParseCREATE(statement);
 			}
 			else if (statement->isType(hsql::kStmtInsert)) {
