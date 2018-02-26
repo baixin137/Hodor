@@ -69,7 +69,8 @@ private:
 	string date;
 
 public:
-	vector<Table*> tables;
+	vector<string> table_names;
+	unordered_map<string, Table*> tables;
 
 	Database(string username, size_t s, string t);
 	string name();

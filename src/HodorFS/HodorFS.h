@@ -47,7 +47,7 @@ public:
 
 class AutoSave { // periodically save data to disk
 public:
-   AutoSave(BufferManager* bf);
+   AutoSave(BufferManager* bf, FileManager* fs);
 
    // Returns true if the thread was successfully started
    bool StartInternalThread();
@@ -66,6 +66,7 @@ private:
 
    pthread_t _thread;
    BufferManager* buffer;
+   FileManager* filesystem;
 };
 
 #endif

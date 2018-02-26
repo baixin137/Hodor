@@ -11,7 +11,7 @@ int main() {
 	QueryParser* parser = new QueryParser(fm, bf);
 
 	// Periodically flush dirty pages to disk
-	AutoSave* save = new AutoSave(bf);
+	AutoSave* save = new AutoSave(bf, fm);
 	save->StartInternalThread();
 
 	while (true) {

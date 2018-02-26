@@ -112,8 +112,6 @@ public:
     void set(int key, Page* value); // set/insert page in cache
     void remove(int key);
 
-    // TODO: we should flush every dirty page to disk like every 1 minute
-
     void display();
 };
 

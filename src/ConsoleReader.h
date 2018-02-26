@@ -18,5 +18,4 @@ public:
 	void SetDatabase(string command);
 };
 
-
 #endif

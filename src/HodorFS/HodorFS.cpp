@@ -30,7 +30,7 @@ FileManager::FileManager() {
 	// <table name>,<username>,<timestamp>,<number of tuples>,<number of attributes>,<attr1>,...,<attr1 type>,...
 	ifstream table_attr(DATAPATH + TABLESCSV);
 	if (!table_attr) {
-		cerr << "Unable to find table information." << endl;
+		ofstream outfile(DATAPATH + TABLESCSV);
 	}
 	else {
 		string line;
@@ -80,10 +80,8 @@ FileManager::FileManager() {
 
 			string directory = DATAPATH + t_name + ".csv";
 			ifstream table_loc(directory);
-			if (!table_loc) {
-				cerr << "Unable to find page information of table " << t_name << "." << endl;
-			}
-			else {
+
+			if (table_loc) {
 				string pages_attr;
 				while (getline(table_loc, pages_attr)) {
 					istringstream iss(pages_attr);
@@ -131,7 +129,8 @@ FileManager::FileManager() {
 
 			string t_name;
 			while (getline(iss, t_name, ',')) {
-				newDB->tables.push_back(tables[db_name + "::" + t_name]);
+				newDB->tables[t_name] = (tables[db_name + "::" + t_name]);
+				newDB->table_names.push_back(t_name);
 			}
 			users[db_name] = newDB;
 		}
@@ -239,6 +238,14 @@ string Table::name() {
 	return tablename;
 }
 
+string Table::user() {
+	return database;
+}
+
+string Table::timestamp() {
+	return date;
+}
+
 size_t Table::size() {
 	return tuples;
 }
@@ -263,8 +270,9 @@ string TableStorage::table() {
 	return tablename;
 }
 
-AutoSave::AutoSave(BufferManager* bf) {
+AutoSave::AutoSave(BufferManager* bf, FileManager* fs) {
 	buffer = bf;
+	filesystem = fs;
 }
 
 bool AutoSave::StartInternalThread() {
@@ -280,6 +288,7 @@ void AutoSave::FlushBuffer() {
 
 		cout << "Ready to flush." << endl;
 
+		// flush dirty pages
 		for (auto it = cache->linkedlist.begin(); it != cache->linkedlist.end(); it++) {
 			Page* page = it->second;
 			if (page->dirty) {
@@ -289,5 +298,46 @@ void AutoSave::FlushBuffer() {
 				cout << "Flushing page: " << page->getnum() << endl;
 			}
 		}
+
+		// flush table information
+		ofstream tables_info(DATAPATH + TABLESCSV);
+
+		for (auto db = filesystem->users.begin(); db != filesystem->users.end(); db++) {
+			for (auto tb = db->second->tables.begin(); tb != db->second->tables.end(); tb++) {
+				tables_info << tb->first          << "," // table name
+					   << db->first               << "," // user name
+					   << tb->second->timestamp() << "," // time stamp
+					   << tb->second->size()      << "," // table size
+					   << tb->second->columns()   << ","; // table attributes
+
+				for (auto attr = tb->second->attr_order.begin(); attr != tb->second->attr_order.end(); attr++) {
+					tables_info << *attr << ",";
+				}
+				for (size_t i = 0; i < tb->second->attr_order.size(); i++) {
+					if (i != tb->second->attr_order.size() - 1)
+						tables_info << tb->second->attributes[tb->second->attr_order[i]]->name() << ",";
+					else
+						tables_info << tb->second->attributes[tb->second->attr_order[i]]->name() << endl;
+				}
+			}
+		}
+		tables_info.close();
+
+		// flush users information
+		ofstream db_info(DATAPATH + DBCSV);
+
+		for (auto db = filesystem->users.begin(); db != filesystem->users.end(); db++) {
+			db_info << db->first               << ","
+					<< db->second->size()      << ","
+					<< db->second->timestamp() << ",";
+
+			for (size_t i = 0; i < db->second->table_names.size(); i++) {
+				if (i != db->second->table_names.size() - 1)
+					db_info << db->second->table_names[i] << ",";
+				else 
+					db_info << db->second->table_names[i] << endl;
+			}
+		}
+		db_info.close();
 	}
 }
