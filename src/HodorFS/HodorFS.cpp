@@ -2,6 +2,8 @@
 #include "Tables.h"
 
 FileManager::FileManager() {
+	user = nullptr; // current user initialized as null
+
 	ifstream empty_pages(DATAPATH + "availablepages.csv");
 	if (!empty_pages) {
 		ofstream apages(DATAPATH + "availablepages.csv");
@@ -26,7 +28,7 @@ FileManager::FileManager() {
 	// use the tables hash table to store which table has which attributes
 
 	// each file in tables.csv is a table and looks like this:
-	// <table name>,<number of tuples>,<number of attributes>,<attr1>,...,<attr1 type>,...
+	// <table name>,<username>,<timestamp>,<number of tuples>,<number of attributes>,<attr1>,...,<attr1 type>,...
 	ifstream table_attr(DATAPATH + TABLESCSV);
 	if (!table_attr) {
 		cerr << "Unable to find table information." << endl;
@@ -38,14 +40,20 @@ FileManager::FileManager() {
 			istringstream iss(line);
 
 			string table;
+			string user;
+			string ts;
 			string tuples;
 			string cols;
 
-		 	getline(iss, table, ',');
-		 	getline(iss, tuples, ',');
-		 	getline(iss, cols, ',');
+		 	getline(iss, table,  ",");
+		 	getline(iss, user,   ",");
+		 	getline(iss, ts,     ",")
+		 	getline(iss, tuples, ",");
+		 	getline(iss, cols,   ",");
 
-		 	tables[table] = new Table(table, stoi(tuples), stoi(cols));
+		 	table = user + "::" + table;
+
+		 	tables[table] = new Table(table, user, ts, stoi(tuples), stoi(cols));
 
 		 	string attr;
 		 	vector<string> attrs;
@@ -94,6 +102,39 @@ FileManager::FileManager() {
 					pages[t_name]->pageset.push_back(ps);
 				}
 			}
+		}
+	}
+
+	// read meta info of databases
+	string path_DB = DATAPATH + DBCSV;
+
+	// the meta information should look like:
+	// <database1>,<size>,<timestamp>,<table1>,<table2>...
+	ifstream infile_DB(path_DB);
+	if (!infile_DB) {
+		ofstream Database(path_DB);
+		Database.close();
+	}
+	else {
+		string line;
+
+		while (getline(infile, line)) {
+			istringstream iss;
+			string db_name;
+			string db_size;
+			string db_time;
+
+			getline(iss, db_name, ",");
+			getline(iss, db_size, ",");
+			getline(iss, db_time, ",");
+
+			Database* newDB = new Database(db_name, stoi(db_size), db_time);
+
+			string t_name;
+			while (getline(iss, t_name, ",")) {
+				newDB->tables.push_back(tables[db_name + "::" + t_name]);
+			}
+			users[db_name] = newDB;
 		}
 	}
 }
@@ -151,8 +192,10 @@ void FileManager::display_p() {
 	cout << endl;
 }
 
-Database::Database() { // when first start, read meta information from disk
-	string path = DATAPATH + DBCSV;
+Database::Database(string nm, size_t s, string time) { // when first start, read meta information from disk
+	database = nm;
+	dbsize = s;
+	date = time;
 }
 
 string Database::name() { // return the name of current database
@@ -161,6 +204,10 @@ string Database::name() { // return the name of current database
 
 size_t size() { // return the number of tables stored in this database
 	return dbsize;
+}
+
+string Database::timestamp() {
+	return date;
 }
 
 Attribute::Attribute(string n, string t, string ta) {
@@ -181,8 +228,10 @@ string Attribute::table() {
 	return tablename;
 }
 
-Table::Table(string n, size_t s, size_t c) {
+Table::Table(string n, string user, string ts, size_t s, size_t c) {
 	tablename = n;
+	database = user;
+	date = timestamp;
 	tuples = s;
 	cols = c;
 }

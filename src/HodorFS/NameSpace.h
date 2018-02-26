@@ -8,8 +8,9 @@ using namespace std;
 
 class Database {
 private: 
-	string databse;
+	string database;
 	size_t dbsize;
+	string date;
 
 public:
 	vector<Table*> tables;
@@ -17,6 +18,7 @@ public:
 	Database();
 	string name();
 	size_t size();
+	string timestamp();
 }
 
 class Attribute {
@@ -36,6 +38,8 @@ public:
 class Table {
 private:
 	string tablename;
+	string databse;
+	string date;
 	size_t tuples;
 	size_t cols;
 
@@ -43,6 +47,8 @@ public:
 	Table(string n, size_t s, size_t c);
 
 	string name();
+	string user();
+	string timestamp();
 	size_t size();
 	size_t columns();
 
