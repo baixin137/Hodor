@@ -15,7 +15,7 @@ private:
 public:
 	vector<Table*> tables;
 
-	Database();
+	Database(string username, size_t s, string t);
 	string name();
 	size_t size();
 	string timestamp();

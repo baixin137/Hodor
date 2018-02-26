@@ -19,6 +19,11 @@ void ConsoleReader::ReadCommand() {
 			}
 		}
 		else if (result.size() > 0) {
+			if (!filesystem->user) {
+				cout << "PLEASE ENTER THE USERNAME" << endl;
+				cout << "Usage: <USE> <USERNAME>" << endl;
+				continue;
+			}
 			const hsql::SQLStatement* statement = result.getStatement(0);
 			if (statement->isType(hsql::kStmtCreate)) {
 				parser->ParseCREATE(statement);
@@ -52,6 +57,26 @@ bool ConsoleReader::isSelectDatabase(string command) {
 	else return false;
 }
 
-void SetDatabase(string command) {
-	
+void ConsoleReader::SetDatabase(string command) {
+	// username can't have white space in it
+	istringstream iss(command);
+	string username;
+
+	getline(iss, username, " ");
+	getline(iss, username, " ");
+
+	if (filesystem->users.find(username) != filesystem->users.end()) { // check if username already in system
+		// if username exists
+		filesystem->user = filesystem->users[username];
+	}
+	else { // create a new entry
+		auto curr_time = chrono::system_clock::now();
+		time_t t = chrono::system_clock::to_time_t(curr_time);
+
+		string timestamp(ctime(&t));
+
+		Database* DB = new Database(username, 0, timestamp);
+		filesystem->users[username] = DB;
+		filesystem->user = DB;
+	}
 }
