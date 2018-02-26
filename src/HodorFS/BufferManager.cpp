@@ -2,6 +2,7 @@
 
 string DATAPATH = "src/HodorFS/data/";
 string TABLESCSV = "tables.csv";
+string DBCSV = "databases.csv";
 int PAGESIZE = 1000;
 pthread_mutex_t Lock = PTHREAD_MUTEX_INITIALIZER;
 int CHECKPERIOD = 20;

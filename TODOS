@@ -1,1 +1,9 @@
 1. create a thread to flush dirty pages every few seconds
+
+2. create a console reader
+
+3. use a datastructure to store namespaces
+
+4. signal handler, flush when process exits
+
+5. adjust tables map

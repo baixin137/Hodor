@@ -6,6 +6,19 @@
 
 using namespace std;
 
+class Database {
+private: 
+	string databse;
+	size_t dbsize;
+
+public:
+	vector<Table*> tables;
+
+	Database();
+	string name();
+	size_t size();
+}
+
 class Attribute {
 private:
 	string attrname;

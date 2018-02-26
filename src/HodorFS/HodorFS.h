@@ -20,6 +20,9 @@ class FileManager {
 public:
 	unordered_map<string, Table*> tables; // this unordered map stores all the table names in the database
 	unordered_map<string, TableStorage*> pages;
+	unordered_map<string, Database*> users;
+
+	Database* user;
 
 	// next page points to the next page number to use
 	int nextpage;

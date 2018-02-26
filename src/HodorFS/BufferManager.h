@@ -15,6 +15,7 @@ using namespace std;
 
 extern string DATAPATH;
 extern string TABLESCSV;
+extern string DBCSV;
 extern int PAGESIZE;
 extern pthread_mutex_t Lock;
 extern int CHECKPERIOD;

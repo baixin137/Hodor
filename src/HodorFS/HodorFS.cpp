@@ -151,6 +151,18 @@ void FileManager::display_p() {
 	cout << endl;
 }
 
+Database::Database() { // when first start, read meta information from disk
+	string path = DATAPATH + DBCSV;
+}
+
+string Database::name() { // return the name of current database
+	return database;
+}
+
+size_t size() { // return the number of tables stored in this database
+	return dbsize;
+}
+
 Attribute::Attribute(string n, string t, string ta) {
 	attrname  = n;
 	attrtype  = t;
