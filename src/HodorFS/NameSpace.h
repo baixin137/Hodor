@@ -1,25 +1,10 @@
-#ifndef TABLES_H
-#define TABLES_H
+#ifndef NAMESPACE_H
+#define NAMESPACE_H
 
 #include <string>
 #include "BufferManager.h"
 
 using namespace std;
-
-class Database {
-private: 
-	string database;
-	size_t dbsize;
-	string date;
-
-public:
-	vector<Table*> tables;
-
-	Database(string username, size_t s, string t);
-	string name();
-	size_t size();
-	string timestamp();
-}
 
 class Attribute {
 private:
@@ -38,13 +23,13 @@ public:
 class Table {
 private:
 	string tablename;
-	string databse;
+	string database;
 	string date;
 	size_t tuples;
 	size_t cols;
 
 public:
-	Table(string n, size_t s, size_t c);
+	Table(string n, string user, string ts, size_t s, size_t c);
 
 	string name();
 	string user();
@@ -75,6 +60,21 @@ public:
 
 	string table();
 	vector<PageSet*> pageset;
+};
+
+class Database {
+private: 
+	string database;
+	size_t dbsize;
+	string date;
+
+public:
+	vector<Table*> tables;
+
+	Database(string username, size_t s, string t);
+	string name();
+	size_t size();
+	string timestamp();
 };
 
 #endif

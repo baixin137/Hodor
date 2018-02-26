@@ -1,5 +1,4 @@
 #include "HodorFS.h"
-#include "Tables.h"
 
 FileManager::FileManager() {
 	user = nullptr; // current user initialized as null
@@ -45,11 +44,11 @@ FileManager::FileManager() {
 			string tuples;
 			string cols;
 
-		 	getline(iss, table,  ",");
-		 	getline(iss, user,   ",");
-		 	getline(iss, ts,     ",")
-		 	getline(iss, tuples, ",");
-		 	getline(iss, cols,   ",");
+		 	getline(iss, table,  ',');
+		 	getline(iss, user,   ',');
+		 	getline(iss, ts,     ',');
+		 	getline(iss, tuples, ',');
+		 	getline(iss, cols,   ',');
 
 		 	table = user + "::" + table;
 
@@ -118,20 +117,20 @@ FileManager::FileManager() {
 	else {
 		string line;
 
-		while (getline(infile, line)) {
+		while (getline(infile_DB, line)) {
 			istringstream iss;
 			string db_name;
 			string db_size;
 			string db_time;
 
-			getline(iss, db_name, ",");
-			getline(iss, db_size, ",");
-			getline(iss, db_time, ",");
+			getline(iss, db_name, ',');
+			getline(iss, db_size, ',');
+			getline(iss, db_time, ',');
 
 			Database* newDB = new Database(db_name, stoi(db_size), db_time);
 
 			string t_name;
-			while (getline(iss, t_name, ",")) {
+			while (getline(iss, t_name, ',')) {
 				newDB->tables.push_back(tables[db_name + "::" + t_name]);
 			}
 			users[db_name] = newDB;
@@ -202,7 +201,7 @@ string Database::name() { // return the name of current database
 	return database;
 }
 
-size_t size() { // return the number of tables stored in this database
+size_t Database::size() { // return the number of tables stored in this database
 	return dbsize;
 }
 
@@ -231,7 +230,7 @@ string Attribute::table() {
 Table::Table(string n, string user, string ts, size_t s, size_t c) {
 	tablename = n;
 	database = user;
-	date = timestamp;
+	date = ts;
 	tuples = s;
 	cols = c;
 }

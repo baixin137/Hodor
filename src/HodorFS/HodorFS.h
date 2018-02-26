@@ -1,7 +1,7 @@
 #ifndef HFS_H
 #define HFS_H
 
-#include "Tables.h"
+#include "NameSpace.h"
 #include "BufferManager.h"
 
 #include <vector>

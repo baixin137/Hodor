@@ -10,9 +10,15 @@ void QueryParser::ParseCREATE(const hsql::SQLStatement* statement) {
 
 	// traverse the columns
 	string tablename(create->tableName);
+	string user = filesystem->user->name();
+
+	auto curr_time = chrono::system_clock::now();
+	time_t t = chrono::system_clock::to_time_t(curr_time);
+	string timestamp(ctime(&t));
+
 	size_t cols = create->columns->size();
 
-	Table* table = new Table(tablename, 0, cols);
+	Table* table = new Table(tablename, user, timestamp,0, cols);
 
 	for (auto col : *(create->columns)) {
 		string attr(col->name);
