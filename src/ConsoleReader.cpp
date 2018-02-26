@@ -1,3 +1,5 @@
+#include "ConsoleReader.h"
+
 ConsoleReader::ConsoleReader(FileManager* fs, BufferManager* bf, QueryParser* p) {
 	filesystem = fs;
 	buffer = bf;
@@ -31,7 +33,7 @@ void ConsoleReader::ReadCommand() {
 			else if (statement->isType(hsql::kStmtInsert)) {
 				parser->ParseINSERT(statement);
 
-				auto l = bf->getbuffer()->linkedlist;
+				auto l = buffer->getbuffer()->linkedlist;
 				for (auto it : l) {
 					it.second->write();
 				}
@@ -50,8 +52,8 @@ bool ConsoleReader::isSelectDatabase(string command) {
 	istringstream iss(command);
 	string keyword;
 
-	getline(iss, keyword, " ");
-	transform(data.begin(), data.end(), data.begin(), ::tolower);
+	getline(iss, keyword, ' ');
+	transform(keyword.begin(), keyword.end(), keyword.begin(), ::tolower);
 	if (keyword == "use")
 		return true;
 	else return false;
@@ -62,8 +64,8 @@ void ConsoleReader::SetDatabase(string command) {
 	istringstream iss(command);
 	string username;
 
-	getline(iss, username, " ");
-	getline(iss, username, " ");
+	getline(iss, username, ' ');
+	getline(iss, username, ' ');
 
 	if (filesystem->users.find(username) != filesystem->users.end()) { // check if username already in system
 		// if username exists
@@ -78,5 +80,7 @@ void ConsoleReader::SetDatabase(string command) {
 		Database* DB = new Database(username, 0, timestamp);
 		filesystem->users[username] = DB;
 		filesystem->user = DB;
+
+		cout << "Stored user: " << username << " to database" << endl;
 	}
 }

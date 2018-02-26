@@ -286,7 +286,7 @@ void AutoSave::FlushBuffer() {
 	while (true) {
 		sleep(CHECKPERIOD);
 
-		cout << "Ready to flush." << endl;
+		// cout << "Ready to flush." << endl;
 
 		// flush dirty pages
 		for (auto it = cache->linkedlist.begin(); it != cache->linkedlist.end(); it++) {
@@ -327,6 +327,8 @@ void AutoSave::FlushBuffer() {
 		ofstream db_info(DATAPATH + DBCSV);
 
 		for (auto db = filesystem->users.begin(); db != filesystem->users.end(); db++) {
+			cout << "Flush database: " << db->first << " to disk..." << endl;
+			
 			db_info << db->first               << ","
 					<< db->second->size()      << ","
 					<< db->second->timestamp() << ",";

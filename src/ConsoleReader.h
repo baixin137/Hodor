@@ -2,7 +2,7 @@
 #define CONSOLEREADER_H
 
 #include "HodorFS/HodorFS.h"
-#include "QueryParser/QueryParserh"
+#include "QueryParser/QueryParser.h"
 
 class ConsoleReader {
 private:

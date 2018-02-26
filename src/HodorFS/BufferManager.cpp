@@ -5,7 +5,7 @@ string TABLESCSV = "tables.csv";
 string DBCSV = "databases.csv";
 int PAGESIZE = 1000;
 pthread_mutex_t Lock = PTHREAD_MUTEX_INITIALIZER;
-int CHECKPERIOD = 20;
+int CHECKPERIOD = 5;
 
 Tuple::Tuple(bool n, string s) {
 	isnull = n;
