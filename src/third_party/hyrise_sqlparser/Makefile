@@ -39,7 +39,7 @@ PARSER_CPP = $(SRCPARSER)/bison_parser.cpp  $(SRCPARSER)/flex_lexer.cpp
 PARSER_H   = $(SRCPARSER)/bison_parser.h    $(SRCPARSER)/flex_lexer.h
 LIB_CFLAGS = -std=c++1z -Wall -Werror $(OPT_FLAG)
 
-static ?= no
+static ?= yes
 ifeq ($(static), yes)
 	LIB_BUILD  = lib$(NAME).a
 	LIBLINKER = $(AR)
