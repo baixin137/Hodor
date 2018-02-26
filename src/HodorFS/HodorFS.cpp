@@ -23,6 +23,8 @@ FileManager::FileManager() {
 		}
 	}
 
+	cout << "avalable pages read." << endl;
+
 	// fetch the table names from the table file
 	// use the tables hash table to store which table has which attributes
 
@@ -102,6 +104,8 @@ FileManager::FileManager() {
 		}
 	}
 
+	cout << "Tables read." << endl;
+
 	// read meta info of databases
 	string path_DB = DATAPATH + DBCSV;
 
@@ -116,7 +120,7 @@ FileManager::FileManager() {
 		string line;
 
 		while (getline(infile_DB, line)) {
-			istringstream iss;
+			istringstream iss(line);
 			string db_name;
 			string db_size;
 			string db_time;
@@ -124,6 +128,10 @@ FileManager::FileManager() {
 			getline(iss, db_name, ',');
 			getline(iss, db_size, ',');
 			getline(iss, db_time, ',');
+
+			// cout << "database name is: " << db_name << endl;
+			// cout << "database size is: " << db_size << endl;
+			// cout << "database created at: " << db_time << endl;
 
 			Database* newDB = new Database(db_name, stoi(db_size), db_time);
 
@@ -135,6 +143,8 @@ FileManager::FileManager() {
 			users[db_name] = newDB;
 		}
 	}
+
+	cout << "Databases read." << endl;
 }
 
 void FileManager::add(Table* table) {
@@ -327,11 +337,14 @@ void AutoSave::FlushBuffer() {
 		ofstream db_info(DATAPATH + DBCSV);
 
 		for (auto db = filesystem->users.begin(); db != filesystem->users.end(); db++) {
-			cout << "Flush database: " << db->first << " to disk..." << endl;
-			
+			// cout << "Flush database: " << db->first << " to disk..." << endl;
+
 			db_info << db->first               << ","
 					<< db->second->size()      << ","
 					<< db->second->timestamp() << ",";
+
+			if (!db->second->table_names.size())
+				db_info << endl;
 
 			for (size_t i = 0; i < db->second->table_names.size(); i++) {
 				if (i != db->second->table_names.size() - 1)

@@ -9,7 +9,12 @@ ConsoleReader::ConsoleReader(FileManager* fs, BufferManager* bf, QueryParser* p)
 void ConsoleReader::ReadCommand() {
 	while (true) {
 		string command;
-		cout << "$ ";
+
+		if (filesystem->user)
+			cout << filesystem->user->name() << "$ ";
+		else
+			cout << "$ ";
+
 		getline(cin, command);
 
 		hsql::SQLParserResult result;
@@ -76,6 +81,7 @@ void ConsoleReader::SetDatabase(string command) {
 		time_t t = chrono::system_clock::to_time_t(curr_time);
 
 		string timestamp(ctime(&t));
+		timestamp.erase(remove(timestamp.begin(), timestamp.end(), '\n'), timestamp.end());
 
 		Database* DB = new Database(username, 0, timestamp);
 		filesystem->users[username] = DB;
