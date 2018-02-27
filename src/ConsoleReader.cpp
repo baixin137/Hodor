@@ -23,9 +23,20 @@ void ConsoleReader::ReadCommand() {
 		if (!result.isValid()) { // database command
 			// cout << "Invalid statement" << endl;
 			// cout << result.errorMsg() << endl;
-			if (isSelectDatabase(command)) {
-				SetDatabase(command);
+			istringstream iss(command);
+			string keyword;
+
+			if (!getline(iss, keyword, ' ')) {
+				cerr << "Unsupported Command." << endl;
+				continue;
 			}
+
+			transform(keyword.begin(), keyword.end(), keyword.begin(), ::tolower);
+			
+			if (keyword == "use")
+				SetDatabase(command);
+			else if (keyword == "partition")
+				PartitionTable(command);
 		}
 		else if (result.size() > 0) {
 			if (!filesystem->user) {
@@ -56,17 +67,6 @@ void ConsoleReader::ReadCommand() {
 	}
 }
 
-bool ConsoleReader::isSelectDatabase(string command) {
-	istringstream iss(command);
-	string keyword;
-
-	getline(iss, keyword, ' ');
-	transform(keyword.begin(), keyword.end(), keyword.begin(), ::tolower);
-	if (keyword == "use")
-		return true;
-	else return false;
-}
-
 void ConsoleReader::SetDatabase(string command) {
 	// username can't have white space in it
 	istringstream iss(command);
@@ -92,4 +92,16 @@ void ConsoleReader::SetDatabase(string command) {
 
 		cout << "Stored user: " << username << " to database" << endl;
 	}
+}
+
+void ConsoleReader::PartitionTable(string command) {
+	// command should look like:
+	// PARTITION <table name> <partition criteria>
+	istringstream iss(command);
+	string table;
+	string partition;
+
+	getline(iss, table,     ' ');
+	getline(iss, table,     ' '); // get table name
+	getline(iss, partition, ' '); // get partition criteria
 }

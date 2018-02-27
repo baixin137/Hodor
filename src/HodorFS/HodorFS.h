@@ -6,6 +6,7 @@
 
 #include <vector>
 #include <string>
+#include <csignal>
 #include <fstream>
 #include <sstream>
 #include <iostream>
@@ -47,26 +48,23 @@ public:
 
 class AutoSave { // periodically save data to disk
 public:
-   AutoSave(BufferManager* bf, FileManager* fs);
+	AutoSave(BufferManager* bf, FileManager* fs);
 
-   // Returns true if the thread was successfully started
-   bool StartInternalThread();
+	// Returns true if the thread was successfully started
+	bool StartInternalThread();
 
-   // Will not return until the internal thread has exited.
-   void WaitForInternalThreadToExit()
-   {
-      (void) pthread_join(_thread, NULL);
-   }
-
-protected:
-   void FlushBuffer();
+	// Will not return until the internal thread has exited.
+	void WaitForInternalThreadToExit()
+	{
+		(void) pthread_join(_thread, NULL);
+	}
+	void FlushBuffer();
 
 private:
-   static void * FlushBufferFunc(void * This) {((AutoSave *)This)->FlushBuffer(); return NULL;}
+	static void * FlushBufferFunc(void * This) {((AutoSave *)This)->FlushBuffer(); return NULL;}
 
-   pthread_t _thread;
-   BufferManager* buffer;
-   FileManager* filesystem;
+	pthread_t _thread;
+	BufferManager* buffer;
+	FileManager* filesystem;
 };
-
 #endif

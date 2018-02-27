@@ -6,6 +6,4 @@
 
 4. signal handler, flush when process exits
 
-5. adjust tables map
-
-6. also flush meta information
+5. add time stamp to tuples

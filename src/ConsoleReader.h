@@ -14,8 +14,9 @@ public:
 	ConsoleReader(FileManager* fs, BufferManager* bf, QueryParser* p);
 
 	void ReadCommand();
-	bool isSelectDatabase(string command);
+
 	void SetDatabase(string command);
+	void PartitionTable(string command);
 };
 
 #endif

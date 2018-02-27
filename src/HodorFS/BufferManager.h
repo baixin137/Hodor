@@ -1,6 +1,8 @@
 #ifndef BUFFERMANAGER_H
 #define BUFFERMANAGER_H
 
+#include "../Helper.h"
+
 #include <list>
 #include <ctime>
 #include <chrono>
@@ -30,10 +32,15 @@ public:
 	Tuple(bool n);
 	Tuple();
 
+	string timestamp();
+
 	bool isnull;
 	string sval;
 	int ival;
 	double dval;
+
+private:
+	string time;
 };
 
 class Page {
