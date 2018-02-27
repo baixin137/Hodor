@@ -11,9 +11,9 @@ void ConsoleReader::ReadCommand() {
 		string command;
 
 		if (filesystem->user)
-			cout << filesystem->user->name() << "$ ";
+			cout << "HodorDB " << filesystem->user->name() << "$ ";
 		else
-			cout << "$ ";
+			cout << "HodorDB$ ";
 
 		getline(cin, command);
 

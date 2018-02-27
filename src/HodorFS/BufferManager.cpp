@@ -56,8 +56,8 @@ int Page::getpinned() {
 	return pinned;
 }
 
-StringPage::StringPage() {
-	type = "STRING";
+TextPage::TextPage() {
+	type = "TEXT";
 }
 
 IntPage::IntPage() {
@@ -68,8 +68,8 @@ DoublePage::DoublePage() {
 	type = "DOUBLE";
 }
 
-StringPage::StringPage(int pn, string ta, string at) {
-	type = "STRING";
+TextPage::TextPage(int pn, string ta, string at) {
+	type = "TEXT";
 	page_num = pn;
 	table = ta;
 	attribute = at;
@@ -96,7 +96,7 @@ DoublePage::DoublePage(int pn, string ta, string at) {
 // 	type = "BNOOLEAN";
 // }
 
-void StringPage::read(int pn, string page_name, vector<string> property) {
+void TextPage::read(int pn, string page_name, vector<string> property) {
  	page_num = pn;
 	table = property[0];
 	attribute = property[1];
@@ -224,7 +224,7 @@ void DoublePage::read(int pn, string page_name, vector<string> property) {
 // 	}
 // }
 
-void StringPage::write() {
+void TextPage::write() {
 	string page_name = to_string(page_num);
 	int zeros = 10 - page_name.size();
 
@@ -332,7 +332,7 @@ void DoublePage::write() {
 // 	outfile.close();
 // }
 
-void StringPage::display() {
+void TextPage::display() {
 	cout << "Page number: " << page_num << endl;
 	cout << "Table: " << table << endl;;
 	cout << "Attribute: " << attribute << endl;
@@ -465,7 +465,7 @@ void BufferManager::add(int pn, string type, string table, string attribute) {
 		page = new DoublePage(pn, table, attribute);
 	}
 	else { // is string
-		page = new StringPage(pn, table, attribute);
+		page = new TextPage(pn, table, attribute);
 	}
 
 	buffer->set(pn, page);
@@ -503,7 +503,7 @@ void BufferManager::fetch(int pn) {
 		else if (property[2] == "DOUBLE")
 			page = new DoublePage();
 		else
-			page = new StringPage();
+			page = new TextPage();
 
 		page->read(pn, page_name, property); // read page from disk
 

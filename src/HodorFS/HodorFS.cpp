@@ -170,7 +170,7 @@ void FileManager::add(Table* table) {
 		outfile << table->attributes[table->attr_order[i]]->name() << ",";
 	}
 	for (size_t i = 0; i < table->columns(); i++) {
-		cout << "type is: " << table->attributes[table->attr_order[i]]->type() << endl;
+		// cout << "type is: " << table->attributes[table->attr_order[i]]->type() << endl;
 		if (i != table->columns() - 1)
 			outfile << table->attributes[table->attr_order[i]]->type() << ",";
 		else 
@@ -314,7 +314,7 @@ void AutoSave::FlushBuffer() {
 				page->write();
 				page->dirty = false;
 
-				cout << "Flushing page: " << page->getnum() << endl;
+				// cout << "Flushing page: " << page->getnum() << endl;
 			}
 		}
 
@@ -329,16 +329,19 @@ void AutoSave::FlushBuffer() {
 					   << tb->second->size()      << "," // table size
 					   << tb->second->columns()   << ","; // table attributes
 
+				// write table name
 				for (auto attr = tb->second->attr_order.begin(); attr != tb->second->attr_order.end(); attr++) {
 					tables_info << *attr << ",";
 				}
+
+				// write table type
 				for (size_t i = 0; i < tb->second->attr_order.size(); i++) {
 					if (i != tb->second->attr_order.size() - 1)
-						tables_info << tb->second->attributes[tb->second->attr_order[i]]->name() << ",";
+						tables_info << tb->second->attributes[tb->second->attr_order[i]]->type() << ",";
 					else
-						tables_info << tb->second->attributes[tb->second->attr_order[i]]->name() << endl;
+						tables_info << tb->second->attributes[tb->second->attr_order[i]]->type() << endl;
 				}
-				cout << "table " << tb->first << " flushed" << endl;
+				// cout << "table " << tb->first << " flushed" << endl;
 			}
 		}
 		tables_info.close();
@@ -362,7 +365,7 @@ void AutoSave::FlushBuffer() {
 				else 
 					db_info << db->second->table_names[i] << endl;
 			}
-			cout << "database " << db->first << " flushed" << endl;
+			// cout << "database " << db->first << " flushed" << endl;
 		}
 		db_info.close();
 	}

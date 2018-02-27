@@ -62,11 +62,11 @@ public:
 	virtual void display() = 0;
 };
 
-// String handles CHAR, DATE, TIME AND TIMESTAMP NOW
-class StringPage : public Page {
+// Text handles CHAR, DATE, TIME AND TIMESTAMP NOW
+class TextPage : public Page {
 public:
-	StringPage();
-	StringPage(int pn, string ta, string at);
+	TextPage();
+	TextPage(int pn, string ta, string at);
 
 	void read(int p, string pn, vector<string> property);
 	void write();

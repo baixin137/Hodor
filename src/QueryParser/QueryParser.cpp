@@ -30,7 +30,7 @@ void QueryParser::ParseCREATE(const hsql::SQLStatement* statement) {
 		else if (col->type == hsql::ColumnDefinition::DOUBLE)
 			type = "DOUBLE";
 		else
-			type = "STRING";
+			type = "TEXT";
 
 		Attribute* attribute = new Attribute(attr, type, tablename);
 		table->attributes[attr] = attribute;
