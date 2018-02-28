@@ -6,6 +6,37 @@ ConsoleReader::ConsoleReader(FileManager* fs, BufferManager* bf, QueryParser* p)
 	parser = p;
 }
 
+void ConsoleReader::AddDatabase(string username) {
+	cout << "Add a new user \"" << username <<"\"? [Y/N]" << endl;
+	cout << "HodorDB";
+	if (filesystem->user) cout << " " << filesystem->user->name() << " $ ";
+	else cout << "$ ";
+
+	string answer;
+
+	while (true) {
+		cin >> answer;
+
+		if (answer == "Y" || answer == "y") {
+			string timestamp = addTimeStamp();
+
+			Database* DB = new Database(username, 0, timestamp);
+			filesystem->users[username] = DB;
+			filesystem->user = DB;
+
+			cout << "Stored user: " << username << " to database" << endl;
+			break;
+		}
+		else if (answer != "N" && answer != "n") {
+			cout << "Add a new user \"" << username <<"\"? [Y/N]" << endl;
+			cout << "HodorDB";
+			if (filesystem->user) cout << " " << filesystem->user->name() << "$ ";
+			else cout << "$ ";
+		}
+		else break;
+	}
+}
+
 void ConsoleReader::ReadCommand() {
 	while (true) {
 		string command;
@@ -83,13 +114,7 @@ void ConsoleReader::SetDatabase(string command) {
 		filesystem->user = filesystem->users[username];
 	}
 	else { // create a new entry
-		string timestamp = addTimeStamp();
-
-		Database* DB = new Database(username, 0, timestamp);
-		filesystem->users[username] = DB;
-		filesystem->user = DB;
-
-		cout << "Stored user: " << username << " to database" << endl;
+		AddDatabase(username);
 	}
 }
 

@@ -37,6 +37,7 @@ void QueryParser::ParseCREATE(const hsql::SQLStatement* statement) {
 		table->attr_order.push_back(attr);
 	}
 	filesystem->add(table);
+	filesystem->user->IncrementSize(1);
 }
 
 void QueryParser::ParseINSERT(const hsql::SQLStatement* statement) {

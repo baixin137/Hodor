@@ -11,6 +11,8 @@ private:
 	BufferManager* buffer;
 	QueryParser* parser;
 
+	void AddDatabase(string username);
+
 public:
 	ConsoleReader(FileManager* fs, BufferManager* bf, QueryParser* p);
 

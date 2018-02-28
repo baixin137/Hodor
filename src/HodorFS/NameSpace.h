@@ -67,15 +67,17 @@ public:
 
 class Database {
 private: 
-	string database;
-	size_t dbsize;
-	string date;
+	string database; // database name
+	size_t dbsize; // number of tables in it
+	string date; // time stamp
 
 public:
 	vector<string> table_names;
 	unordered_map<string, Table*> tables;
 
 	Database(string username, size_t s, string t);
+	
+	void IncrementSize(size_t s);
 	string name();
 	size_t size();
 	string timestamp();

@@ -256,6 +256,10 @@ Database::Database(string nm, size_t s, string time) { // when first start, read
 	date = time;
 }
 
+void Database::IncrementSize(size_t s) {
+	dbsize += 1;
+}
+
 string Database::name() { // return the name of current database
 	return database;
 }
