@@ -9,3 +9,15 @@ string addTimeStamp() {
 
 	return timestamp;
 }
+
+string TableName(string name) {
+	string delimiter = "::";
+
+	return name.substr(name.find(delimiter) + 2);
+}
+
+string DatabaseName(string name) {
+	string delimiter = "::";
+
+	return name.substr(0, name.find(delimiter));
+}

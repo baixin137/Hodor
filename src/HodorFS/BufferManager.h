@@ -32,15 +32,10 @@ public:
 	Tuple(bool n);
 	Tuple();
 
-	string timestamp();
-
 	bool isnull;
 	string sval;
 	int ival;
 	double dval;
-
-private:
-	string time;
 };
 
 class Page {

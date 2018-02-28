@@ -21,8 +21,10 @@ void ConsoleReader::ReadCommand() {
 		hsql::SQLParser::parse(command, &result);
 
 		if (!result.isValid()) { // database command
-			// cout << "Invalid statement" << endl;
-			// cout << result.errorMsg() << endl;
+			cout << "Invalid statement" << endl;
+			cout << result.errorMsg() << endl;
+			
+			cout << "Not a query" << endl;
 			istringstream iss(command);
 			string keyword;
 
@@ -35,8 +37,8 @@ void ConsoleReader::ReadCommand() {
 			
 			if (keyword == "use")
 				SetDatabase(command);
-			else if (keyword == "partition")
-				PartitionTable(command);
+			// else if (keyword == "partition")
+			// 	PartitionTable(command);
 		}
 		else if (result.size() > 0) {
 			if (!filesystem->user) {
@@ -50,12 +52,13 @@ void ConsoleReader::ReadCommand() {
 				parser->ParseCREATE(statement);
 			}
 			else if (statement->isType(hsql::kStmtInsert)) {
+				cout << "Insert!" << endl;
 				parser->ParseINSERT(statement);
 
-				auto l = buffer->getbuffer()->linkedlist;
-				for (auto it : l) {
-					it.second->write();
-				}
+				// auto l = buffer->getbuffer()->linkedlist;
+				// for (auto it : l) {
+				// 	it.second->write();
+				// }
 			}
 			// else if (statement->isType(hsql::kStmtSelect)) {
 			// 	parser->ParserSELECT(statement);
@@ -80,11 +83,7 @@ void ConsoleReader::SetDatabase(string command) {
 		filesystem->user = filesystem->users[username];
 	}
 	else { // create a new entry
-		auto curr_time = chrono::system_clock::now();
-		time_t t = chrono::system_clock::to_time_t(curr_time);
-
-		string timestamp(ctime(&t));
-		timestamp.erase(remove(timestamp.begin(), timestamp.end(), '\n'), timestamp.end());
+		string timestamp = addTimeStamp();
 
 		Database* DB = new Database(username, 0, timestamp);
 		filesystem->users[username] = DB;
@@ -94,14 +93,14 @@ void ConsoleReader::SetDatabase(string command) {
 	}
 }
 
-void ConsoleReader::PartitionTable(string command) {
-	// command should look like:
-	// PARTITION <table name> <partition criteria>
-	istringstream iss(command);
-	string table;
-	string partition;
+// void ConsoleReader::PartitionTable(string command) {
+// 	// command should look like:
+// 	// PARTITION <table name> <partition criteria>
+// 	istringstream iss(command);
+// 	string table;
+// 	string partition;
 
-	getline(iss, table,     ' ');
-	getline(iss, table,     ' '); // get table name
-	getline(iss, partition, ' '); // get partition criteria
-}
+// 	getline(iss, table,     ' ');
+// 	getline(iss, table,     ' '); // get table name
+// 	getline(iss, partition, ' '); // get partition criteria
+// }

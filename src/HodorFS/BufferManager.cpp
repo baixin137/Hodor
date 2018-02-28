@@ -26,7 +26,8 @@ Tuple::Tuple(bool n) {
 	isnull = n;
 }
 
-Tuple::Tuple() {}
+Tuple::Tuple() {
+}
 
 int Page::getnum() {
 	return page_num;
@@ -287,7 +288,7 @@ void IntPage::write() {
 }
 
 void DoublePage::write() {
-		string page_name = to_string(page_num);
+	string page_name = to_string(page_num);
 	int zeros = 10 - page_name.size();
 
 	for (size_t i = 0; i < zeros; i++) 

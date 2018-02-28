@@ -3,6 +3,7 @@
 
 #include "NameSpace.h"
 #include "BufferManager.h"
+#include "../Helper.h"
 
 #include <vector>
 #include <string>
@@ -20,7 +21,7 @@ using namespace std;
 class FileManager {
 public:
 	unordered_map<string, Table*> tables; // this unordered map stores all the table names in the database
-	unordered_map<string, TableStorage*> pages;
+	unordered_map<string, TableStorage*> pages; // table name / pages storing these tables
 	unordered_map<string, Database*> users;
 
 	Database* user;

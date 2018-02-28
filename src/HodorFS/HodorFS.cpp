@@ -41,20 +41,20 @@ FileManager::FileManager() {
 			istringstream iss(line);
 
 			string table;
-			string user;
+			string username;
 			string ts;
 			string tuples;
 			string cols;
 
 		 	getline(iss, table,  ',');
-		 	getline(iss, user,   ',');
+		 	getline(iss, username,   ',');
 		 	getline(iss, ts,     ',');
 		 	getline(iss, tuples, ',');
 		 	getline(iss, cols,   ',');
 
-		 	table = user + "::" + table;
+		 	table = username + "::" + table;
 
-		 	tables[table] = new Table(table, user, ts, stoi(tuples), stoi(cols));
+		 	tables[table] = new Table(table, username, ts, stoi(tuples), stoi(cols));
 
 		 	string attr;
 		 	vector<string> attrs;
@@ -77,7 +77,7 @@ FileManager::FileManager() {
 		for (auto it = tables.begin(); it != tables.end(); it++) {
 			string t_name = it->first;
 
-			TableStorage* ts = new TableStorage(t_name);
+			TableStorage* ts = new TableStorage(t_name, DatabaseName(t_name));
 			pages[t_name] = ts;
 
 			string directory = DATAPATH + t_name + ".csv";
@@ -182,6 +182,9 @@ void FileManager::add(Table* table) {
 	user->table_names.push_back(table->name());
 	user->tables[table->name()] = table;
 
+	TableStorage* storage = new TableStorage(t_name, user->name());
+	pages[t_name] = storage;
+
 	// the table is just created and no data is in it
 	// so the pages doesn't have this table's information yet
 }
@@ -281,8 +284,9 @@ size_t PageSet::slot() {
 	return slots;
 }
 
-TableStorage::TableStorage(string t) {
+TableStorage::TableStorage(string t, string db) {
 	tablename = t;
+	databasename = db;
 }
 
 string TableStorage::table() {

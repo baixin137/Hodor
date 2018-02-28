@@ -7,3 +7,5 @@
 4. signal handler, flush when process exits
 
 5. add time stamp to tuples
+
+6. remove timestamp from tuple constructor

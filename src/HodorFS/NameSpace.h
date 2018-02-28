@@ -2,6 +2,8 @@
 #define NAMESPACE_H
 
 #include <string>
+
+#include "../Helper.h"
 #include "BufferManager.h"
 
 using namespace std;
@@ -51,14 +53,16 @@ public:
 
 };
 
-class TableStorage {
+class TableStorage { // stores which page sets a table has
 private:
 	string tablename;
+	string databasename;
 
 public:
-	TableStorage(string t);
+	TableStorage(string t, string db);
 
 	string table();
+	string database();
 	vector<PageSet*> pageset;
 };
 

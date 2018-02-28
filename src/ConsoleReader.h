@@ -1,6 +1,7 @@
 #ifndef CONSOLEREADER_H
 #define CONSOLEREADER_H
 
+#include "Helper.h"
 #include "HodorFS/HodorFS.h"
 #include "QueryParser/QueryParser.h"
 
@@ -16,7 +17,7 @@ public:
 	void ReadCommand();
 
 	void SetDatabase(string command);
-	void PartitionTable(string command);
+	// void PartitionTable(string command);
 };
 
 #endif

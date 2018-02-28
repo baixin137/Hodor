@@ -10,7 +10,7 @@ SRCPARSER   = src/third_party/hyrise_sqlparser/src/parser
 HYRISE_H    = $(SRCHYRISE)/SQLParser.h    $(SRCHYRISE)/SQLParserResult.h
 HYRISE_A   = $(HYRISE)/libsqlparser.a
 
-MY_CPP    = $(HODORFS)/HodorFS.cpp $(HODORFS)/BufferManager.cpp $(QUERYPARSER)/QueryParser.cpp $(SRC)/HodorDB.cpp $(SRC)/ConsoleReader.cpp
+MY_CPP    = $(HODORFS)/HodorFS.cpp $(HODORFS)/BufferManager.cpp $(QUERYPARSER)/QueryParser.cpp $(SRC)/HodorDB.cpp $(SRC)/ConsoleReader.cpp $(SRC)/Helper.cpp
 MY_H      = $(shell find $(SRC) -name '*.h' -not -path "src/third_party/*")
 MY_OBJ    = $(MY_CPP:%.cpp=%.o)
 
