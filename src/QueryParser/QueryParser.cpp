@@ -58,7 +58,9 @@ void QueryParser::ParseINSERT(const hsql::SQLStatement* statement) {
 		}
 		else {
 			for (auto p : filesystem->pages[table]->pageset) {
+				cout << "this page set has avalable slots: " << endl;
 				if (p->slot() > 0) {
+					cout << "Slots left: " << p->slot() << endl;
 					pset = p;
 					pagesetfound = true;
 					break;
