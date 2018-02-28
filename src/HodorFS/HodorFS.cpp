@@ -3,6 +3,7 @@
 FileManager::FileManager() {
 	user = nullptr; // current user initialized as null
 
+	// read available pages
 	ifstream empty_pages(DATAPATH + "availablepages.csv");
 	if (!empty_pages) {
 		ofstream apages(DATAPATH + "availablepages.csv");
@@ -46,11 +47,11 @@ FileManager::FileManager() {
 			string tuples;
 			string cols;
 
-		 	getline(iss, table,  ',');
+		 	getline(iss, table,      ',');
 		 	getline(iss, username,   ',');
-		 	getline(iss, ts,     ',');
-		 	getline(iss, tuples, ',');
-		 	getline(iss, cols,   ',');
+		 	getline(iss, ts,         ',');
+		 	getline(iss, tuples,     ',');
+		 	getline(iss, cols,       ',');
 
 		 	table = username + "::" + table;
 
@@ -310,6 +311,15 @@ void AutoSave::FlushBuffer() {
 		sleep(CHECKPERIOD);
 
 		// cout << "Ready to flush." << endl;
+
+		// flush available pages
+		string page_path = DATAPATH + "availablepages.csv";
+		ofstream apages(page_path);
+
+		apages << filesystem->nextpage << endl;
+		for (int recycled_page : filesystem->emptypages) {
+			apages << recycled_page << ",";
+		}
 
 		// flush dirty pages
 		for (auto it = cache->linkedlist.begin(); it != cache->linkedlist.end(); it++) {

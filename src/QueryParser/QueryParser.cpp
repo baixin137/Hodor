@@ -12,7 +12,7 @@ void QueryParser::ParseCREATE(const hsql::SQLStatement* statement) {
 	string tablename(create->tableName);
 	string user = filesystem->user->name();
 	string timestamp = addTimeStamp();
-	size_t cols = create->columns->size();
+	size_t cols = create->columns->size() + 1; // plus timestamp
 
 	Table* table = new Table(tablename, user, timestamp,0, cols);
 
