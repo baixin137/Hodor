@@ -47,15 +47,14 @@ class PageSet {
 public:
 	PageSet(size_t s);
 
-	size_t slots;
 	size_t slot();
+	size_t slots;
 	vector<int> pageset;
-
 };
 
 class TableStorage { // stores which page sets a table has
 private:
-	string tablename;
+	string tablename; // database::table
 	string databasename;
 
 public:

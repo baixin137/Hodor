@@ -101,9 +101,16 @@ void QueryParser::ParseINSERT(const hsql::SQLStatement* statement) {
 
 			// insert time stamp page
 			int t_pagenum = pset->pageset[0];
+
+			LRUCache* cache = buffer->getbuffer();
+			if (cache->map.find(t_pagenum) == cache->map.end())
+				buffer->fetch(t_pagenum);
+
 			Page* tstamp_page = buffer->getbuffer()->get(t_pagenum);
 			tstamp_page->dirty = true;
 			tstamp_page->slots -= 1;
+
+			cout << "Timestamp created" << endl;
 
 			Tuple* attr_ts = new Tuple(false, t_stamp);
 			tstamp_page->content.push_back(attr_ts);
@@ -113,7 +120,11 @@ void QueryParser::ParseINSERT(const hsql::SQLStatement* statement) {
 
 				if (filesystem->pages.size() > 0) { // look for a page that can store this tuple
 					int page_num = pset->pageset[i + 1];
-					Page* page2modify = buffer->getbuffer()->get(page_num);
+
+					if (cache->map.find(page_num) == cache->map.end())
+						buffer->fetch(page_num);
+
+					Page* page2modify = cache->get(page_num);
 					page2modify->dirty = true;
 					page2modify->slots -= 1;
 

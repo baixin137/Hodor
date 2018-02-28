@@ -146,6 +146,43 @@ FileManager::FileManager() {
 	}
 
 	cout << "Databases read." << endl;
+
+	// read pagestorage
+	string storage_path = (DATAPATH + STORAGECSV);
+	ifstream pstorage(storage_path);
+
+	if (!pstorage) {
+		ofstream outfile(storage_path);
+		outfile.close();
+	}
+	else {
+		string line;
+		while (getline(pstorage, line)) {
+			istringstream iss(line);
+
+			string db_table;
+			getline(iss, db_table, ',');
+			string db_name = DatabaseName(db_table);
+			string tb_name = TableName(db_table);
+
+			if (pages.find(db_table) == pages.end()) {
+				pages[db_table] = new TableStorage(db_table, db_name);
+			}
+
+			string slots;
+			getline(iss, slots, ',');
+
+			PageSet* pageset = new PageSet(stoi(slots));
+
+			string p_num;
+			while (getline(iss, p_num, ',')) {
+				pageset->pageset.push_back(stoi(p_num));
+			}
+
+			pages[db_table]->pageset.push_back(pageset);
+		}
+
+	}
 }
 
 void FileManager::add(Table* table) {
@@ -382,5 +419,22 @@ void AutoSave::FlushBuffer() {
 			// cout << "database " << db->first << " flushed" << endl;
 		}
 		db_info.close();
+
+		// flush which table has which pages meta information
+		ofstream pagestorage(DATAPATH + STORAGECSV);
+
+		for (auto table_pages = filesystem->pages.begin(); table_pages != filesystem->pages.end(); table_pages++) {
+			for (auto pset : table_pages->second->pageset) {
+				pagestorage << table_pages->first << ","
+							// << filesystem->tables[table_pages->first]->columns() << ","
+							<< pset->slot() << ",";
+
+				for (auto page : pset->pageset) {
+					pagestorage << page << ",";
+				}
+				pagestorage << endl;
+			}
+		}
+		pagestorage.close();
 	}
 }
