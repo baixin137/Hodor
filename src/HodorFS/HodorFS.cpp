@@ -318,6 +318,10 @@ size_t Table::columns() {
 	return cols;
 }
 
+void Table::IncrementSize(size_t s) {
+	tuples += s;
+}
+
 PageSet::PageSet(size_t s) {
 	slots = s;
 }

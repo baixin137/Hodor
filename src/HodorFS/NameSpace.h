@@ -38,6 +38,7 @@ public:
 	string timestamp();
 	size_t size();
 	size_t columns();
+	void IncrementSize(size_t s);
 
 	vector<string> attr_order;
 	unordered_map<string, Attribute*> attributes;

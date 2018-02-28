@@ -45,6 +45,8 @@ void QueryParser::ParseINSERT(const hsql::SQLStatement* statement) {
 	string table(insert->tableName);
 	table = filesystem->user->name() + "::" + table;
 
+	filesystem->tables[table]->IncrementSize(1);
+
 	// TODO: handle the error that data type doesn't match the correct order
 	if (!insert->columns) { // attributes not specified
 		PageSet* pset;
