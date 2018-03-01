@@ -135,17 +135,12 @@ void ConsoleReader::PartitionTable(string command) {
 	getline(iss, table_name, ' '); // get table name
 	getline(iss, partition,  ' '); // get partition criteria
 
-	set<string> partitions = {"year", "month", "date", "hour", "minute"};
+	unordered_set<string> partitions = {"year", "month", "date", "hour", "minute"};
 	if (partitions.find(partition) == partitions.end()) {
 		cout << "Invalid partition critera, please choose from: " << endl;
 		cout << "YEAR, MONTH, DATE, HOUR, MINUTE" << endl;
 		return;
 	}
-
-	// TODO: add timestamp to tuple objects
-	// TODO: create new partitioned tables
-	// TODO: remove old table
-	// TODO: add removed page to avalable pages, update next avalable page
 
 	string tname = filesystem->user->name() + "::" + table_name;
 	TableStorage* table = filesystem->pages[tname];
@@ -157,6 +152,27 @@ void ConsoleReader::PartitionTable(string command) {
 				buffer->fetch(page_num);
 			}
 		}
+		// the first page in page set stores time stamp
+		int pnum = pset->pageset[0];
+		Page* page = buffer->get(pnum);
 
+		size_t page_size = page->content.size();
+
+		for (size_t i = 0; i < page_size; i++) {
+			string new_table = table_name + "::" + GetTime(page->content[i]->timestamp(), partition);
+			string new_table_DB = filesystem->user->name() + "::" + new_table;
+
+			// check if the table exists
+			if (filesystem->tables.find(new_table_DB) == filesystem->tables.end()) {
+				// if table does not exists
+				// create a new table and add to file system
+				filesystem->create(filesystem->tables[tname], new_table_DB);
+			}
+			// move tuple to new table and pages
+			PageSet* pset_new = filesystem->FindPageSet(new_table_DB, buffer);
+			buffer->MoveTuple(pset_new, pset, i);
+			filesystem->tables[new_table_DB]->IncrementSize(1);
+		}
 	}
+	// TODO: remove old table and recycle pages
 }

@@ -39,12 +39,15 @@ public:
 	void sort(string key, string table);
 
 	void add(Table* table); // add a table
+	void create(Table* table, string tname); // create a new table from old table, with the same attributes
+	void remove(string tname); // remove a table from database
 	// void insert(string tuple, string table);
 	// void remove(vector<string> key, string table);
 	// void update(vector<string> key, string table);
 
-	void display_t();
-	void display_p();
+	PageSet* FindPageSet(string table, BufferManager* buffer);
+	// void display_t();
+	// void display_p();
 };
 
 class AutoSave { // periodically save data to disk

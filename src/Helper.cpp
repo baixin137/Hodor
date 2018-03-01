@@ -1,5 +1,17 @@
 #include "Helper.h"
 
+// define global variables
+string DATAPATH      = "src/HodorFS/data/";
+string TABLESCSV     = "tables.csv";
+string DBCSV         = "databases.csv";
+string STORAGECSV    = "storage.csv";
+
+size_t PAGESIZE      = 1000;
+size_t CHECKPERIOD   = 5;
+size_t BUFFERSIZE    = 5000;
+
+pthread_mutex_t Lock = PTHREAD_MUTEX_INITIALIZER;
+
 void ToLower(string& data) {
 	transform(data.begin(), data.end(), data.begin(), ::tolower);
 }
@@ -63,10 +75,10 @@ string GetTime(string timestamp, string unit) {
 		return month + '/' + date + '/' + year;
 	}
 	else if (unit == "hour") {
-		return month + '/' + date + '/' + year + ' ' + hour;
+		return month + '/' + date + '/' + year + '/' + hour;
 	}
-	else if (unit == "minute") {
-		return month + '/' + date + '/' + year + ' ' + hour + ':' + minute;
+	else { // minute
+		return month + '/' + date + '/' + year + '/' + hour + ':' + minute;
 	}
 }
 
@@ -79,7 +91,7 @@ void Month2Int(string & month) {
 		month = "02";
 	else if (month == "mar")
 		month = "03";
-	else if (month = "apr")
+	else if (month == "apr")
 		month = "04";
 	else if (month == "may")
 		month = "05";

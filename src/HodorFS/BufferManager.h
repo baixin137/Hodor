@@ -2,6 +2,7 @@
 #define BUFFERMANAGER_H
 
 #include "../Helper.h"
+#include "NameSpace.h"
 
 #include <list>
 #include <ctime>
@@ -16,17 +17,6 @@
 #include <unordered_map>
 
 using namespace std;
-
-extern string DATAPATH;
-extern string TABLESCSV;
-extern string DBCSV;
-extern string STORAGECSV;
-
-extern size_t PAGESIZE;
-extern size_t CHECKPERIOD;
-extern size_t BUFFERSIZE;
-
-extern pthread_mutex_t Lock;
 
 class Tuple {
 public:
@@ -137,6 +127,8 @@ public:
 	void fetch(int pn); // fetch page from disk
 	void flush(int pn); //flush the page to disk and remove from memory
 	bool iscached(int pn); // return true if page is in memory
+	Page* get(int pn); // get the page by page number
+	void MoveTuple(PageSet* pnew, PageSet* pold, size_t line);
 };
 
 #endif
