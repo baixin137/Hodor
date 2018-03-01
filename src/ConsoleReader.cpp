@@ -64,12 +64,12 @@ void ConsoleReader::ReadCommand() {
 				continue;
 			}
 
-			transform(keyword.begin(), keyword.end(), keyword.begin(), ::tolower);
+			ToLower(keyword);
 			
 			if (keyword == "use")
 				SetDatabase(command);
-			// else if (keyword == "partition")
-			// 	PartitionTable(command);
+			else if (keyword == "partition")
+				PartitionTable(command);
 		}
 		else if (result.size() > 0) {
 			if (!filesystem->user) {
@@ -118,14 +118,45 @@ void ConsoleReader::SetDatabase(string command) {
 	}
 }
 
-// void ConsoleReader::PartitionTable(string command) {
-// 	// command should look like:
-// 	// PARTITION <table name> <partition criteria>
-// 	istringstream iss(command);
-// 	string table;
-// 	string partition;
+void ConsoleReader::PartitionTable(string command) {
+	if (!filesystem->user) {
+		cout << "Please choose database first." << endl;
+		cout << "Usage: <USE> <USERNAME>" << endl;
+		return;
+	}
 
-// 	getline(iss, table,     ' ');
-// 	getline(iss, table,     ' '); // get table name
-// 	getline(iss, partition, ' '); // get partition criteria
-// }
+	// command should look like:
+	// PARTITION <table name> <partition criteria>
+	istringstream iss(command);
+	string table_name;
+	string partition;
+
+	getline(iss, table_name, ' ');
+	getline(iss, table_name, ' '); // get table name
+	getline(iss, partition,  ' '); // get partition criteria
+
+	set<string> partitions = {"year", "month", "date", "hour", "minute"};
+	if (partitions.find(partition) == partitions.end()) {
+		cout << "Invalid partition critera, please choose from: " << endl;
+		cout << "YEAR, MONTH, DATE, HOUR, MINUTE" << endl;
+		return;
+	}
+
+	// TODO: add timestamp to tuple objects
+	// TODO: create new partitioned tables
+	// TODO: remove old table
+	// TODO: add removed page to avalable pages, update next avalable page
+
+	string tname = filesystem->user->name() + "::" + table_name;
+	TableStorage* table = filesystem->pages[tname];
+
+	for (PageSet* pset : table->pageset) {
+		for (int page_num : pset->pageset) {
+			// fetch page from disk if not in memory
+			if (!buffer->iscached(page_num)) { // if not in memory
+				buffer->fetch(page_num);
+			}
+		}
+
+	}
+}

@@ -131,21 +131,21 @@ void QueryParser::ParseINSERT(const hsql::SQLStatement* statement) {
 
 					if (val->type == hsql::kExprLiteralString) {
 						string sval(val->name);
-						Tuple* newtup = new Tuple(false, sval);
+						Tuple* newtup = new Tuple(false, sval, t_stamp);
 						page2modify->content.push_back(newtup);
 					}
 					else if (val->type == hsql::kExprLiteralInt) {
 						int ival = val->ival;
-						Tuple* newtup = new Tuple(false, ival);
+						Tuple* newtup = new Tuple(false, ival, t_stamp);
 						page2modify->content.push_back(newtup);
 					}
 					else if (val->type == hsql::kExprLiteralFloat) {
 						double dval = val->fval;
-						Tuple* newtup = new Tuple(false, dval);
+						Tuple* newtup = new Tuple(false, dval, t_stamp);
 						page2modify->content.push_back(newtup);
 					}
 					else { // it's null
-						Tuple* newtup = new Tuple(true);
+						Tuple* newtup = new Tuple(true, t_stamp);
 						page2modify->content.push_back(newtup);
 					}
 				}

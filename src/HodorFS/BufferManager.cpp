@@ -1,33 +1,46 @@
 #include "BufferManager.h"
 
-string DATAPATH = "src/HodorFS/data/";
-string TABLESCSV = "tables.csv";
-string DBCSV = "databases.csv";
-string STORAGECSV = "storage.csv";
-int PAGESIZE = 1000;
-pthread_mutex_t Lock = PTHREAD_MUTEX_INITIALIZER;
-int CHECKPERIOD = 5;
+// define global variables
+string DATAPATH      = "src/HodorFS/data/";
+string TABLESCSV     = "tables.csv";
+string DBCSV         = "databases.csv";
+string STORAGECSV    = "storage.csv";
 
-Tuple::Tuple(bool n, string s) {
+size_t PAGESIZE      = 1000;
+size_t CHECKPERIOD   = 5;
+size_t BUFFERSIZE    = 5000;
+
+pthread_mutex_t Lock = PTHREAD_MUTEX_INITIALIZER;
+
+Tuple::Tuple(bool n, string s, string t) {
 	isnull = n;
 	sval = s;
+	timestamp = t;
 }
 
-Tuple::Tuple(bool n, int i) {
+Tuple::Tuple(bool n, int i, string t) {
 	isnull = n;
 	ival = i;
+	timestamp = t;
 }
 
-Tuple::Tuple(bool n, double d) {
+Tuple::Tuple(bool n, double d, string t) {
 	isnull = n;
 	dval = d;
+	timestamp = t;
 }
 
-Tuple::Tuple(bool n) {
+Tuple::Tuple(bool n, string t) {
 	isnull = n;
+	timestamp = t;
 }
 
-Tuple::Tuple() {
+string Tuple::timestamp() {
+	return time;
+}
+
+Tuple::Tuple(string t) {
+	timestamp = t;
 }
 
 int Page::getnum() {
@@ -541,4 +554,8 @@ void BufferManager::flush(int pn) {
 
 	buffer->remove(pn);
 	}
+}
+
+bool BufferManager::iscached(int pn) {
+	return (buffer->map.find(pn) != buffer->map.end());
 }

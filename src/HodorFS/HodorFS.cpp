@@ -73,7 +73,6 @@ FileManager::FileManager() {
 		 	}
 		}
 
-		// cout << "begin" << endl;
 		// use pages to store which tables are stored in which pages
 		for (auto it = tables.begin(); it != tables.end(); it++) {
 			string t_name = it->first;
