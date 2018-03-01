@@ -2,9 +2,10 @@
 #define NAMESPACE_H
 
 #include <string>
+#include <vector>
+#include <unordered_map>
 
 #include "../Helper.h"
-#include "BufferManager.h"
 
 using namespace std;
 
@@ -38,6 +39,8 @@ public:
 	string timestamp();
 	size_t size();
 	size_t columns();
+	void IncrementSize(size_t s);
+
 	void IncrementSize(size_t s);
 
 	vector<string> attr_order;

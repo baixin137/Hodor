@@ -2,6 +2,7 @@
 #define BUFFERMANAGER_H
 
 #include "../Helper.h"
+#include "NameSpace.h"
 
 #include <list>
 #include <ctime>
@@ -17,26 +18,23 @@
 
 using namespace std;
 
-extern string DATAPATH;
-extern string TABLESCSV;
-extern string DBCSV;
-extern string STORAGECSV;
-extern int PAGESIZE;
-extern pthread_mutex_t Lock;
-extern int CHECKPERIOD;
-
 class Tuple {
 public:
-	Tuple(bool n, string s);
-	Tuple(bool n, int i);
-	Tuple(bool n, double d);
-	Tuple(bool n);
-	Tuple();
+	Tuple(bool n, string s, string t);
+	Tuple(bool n, int i,    string t);
+	Tuple(bool n, double d, string t);
+	Tuple(bool n,           string t);
+	Tuple(                  string t);
+
+	string timestamp();
 
 	bool isnull;
 	string sval;
 	int ival;
 	double dval;
+
+private:
+	string time;
 };
 
 class Page {
@@ -128,6 +126,9 @@ public:
 	void add(int pn, string type, string table, string attribute); // create a new page and add to buffer
 	void fetch(int pn); // fetch page from disk
 	void flush(int pn); //flush the page to disk and remove from memory
+	bool iscached(int pn); // return true if page is in memory
+	Page* get(int pn); // get the page by page number
+	void MoveTuple(PageSet* pnew, PageSet* pold, size_t line);
 };
 
 #endif

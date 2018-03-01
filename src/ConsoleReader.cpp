@@ -64,12 +64,12 @@ void ConsoleReader::ReadCommand() {
 				continue;
 			}
 
-			transform(keyword.begin(), keyword.end(), keyword.begin(), ::tolower);
+			ToLower(keyword);
 			
 			if (keyword == "use")
 				SetDatabase(command);
-			// else if (keyword == "partition")
-			// 	PartitionTable(command);
+			else if (keyword == "partition")
+				PartitionTable(command);
 		}
 		else if (result.size() > 0) {
 			if (!filesystem->user) {
@@ -118,14 +118,61 @@ void ConsoleReader::SetDatabase(string command) {
 	}
 }
 
-// void ConsoleReader::PartitionTable(string command) {
-// 	// command should look like:
-// 	// PARTITION <table name> <partition criteria>
-// 	istringstream iss(command);
-// 	string table;
-// 	string partition;
+void ConsoleReader::PartitionTable(string command) {
+	if (!filesystem->user) {
+		cout << "Please choose database first." << endl;
+		cout << "Usage: <USE> <USERNAME>" << endl;
+		return;
+	}
 
-// 	getline(iss, table,     ' ');
-// 	getline(iss, table,     ' '); // get table name
-// 	getline(iss, partition, ' '); // get partition criteria
-// }
+	// command should look like:
+	// PARTITION <table name> <partition criteria>
+	istringstream iss(command);
+	string table_name;
+	string partition;
+
+	getline(iss, table_name, ' ');
+	getline(iss, table_name, ' '); // get table name
+	getline(iss, partition,  ' '); // get partition criteria
+
+	unordered_set<string> partitions = {"year", "month", "date", "hour", "minute"};
+	if (partitions.find(partition) == partitions.end()) {
+		cout << "Invalid partition critera, please choose from: " << endl;
+		cout << "YEAR, MONTH, DATE, HOUR, MINUTE" << endl;
+		return;
+	}
+
+	string tname = filesystem->user->name() + "::" + table_name;
+	TableStorage* table = filesystem->pages[tname];
+
+	for (PageSet* pset : table->pageset) {
+		for (int page_num : pset->pageset) {
+			// fetch page from disk if not in memory
+			if (!buffer->iscached(page_num)) { // if not in memory
+				buffer->fetch(page_num);
+			}
+		}
+		// the first page in page set stores time stamp
+		int pnum = pset->pageset[0];
+		Page* page = buffer->get(pnum);
+
+		size_t page_size = page->content.size();
+
+		for (size_t i = 0; i < page_size; i++) {
+			string new_table = table_name + "::" + GetTime(page->content[i]->timestamp(), partition);
+			string new_table_DB = filesystem->user->name() + "::" + new_table;
+
+			// check if the table exists
+			if (filesystem->tables.find(new_table_DB) == filesystem->tables.end()) {
+				// if table does not exists
+				// create a new table and add to file system
+				filesystem->create(filesystem->tables[tname], new_table_DB);
+			}
+			// move tuple to new table and pages
+			PageSet* pset_new = filesystem->FindPageSet(new_table_DB, buffer);
+			buffer->MoveTuple(pset_new, pset, i);
+			filesystem->tables[new_table_DB]->IncrementSize(1);
+		}
+	}
+	// TODO: remove old table and recycle pages
+}

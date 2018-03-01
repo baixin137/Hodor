@@ -73,7 +73,6 @@ FileManager::FileManager() {
 		 	}
 		}
 
-		// cout << "begin" << endl;
 		// use pages to store which tables are stored in which pages
 		for (auto it = tables.begin(); it != tables.end(); it++) {
 			string t_name = it->first;
@@ -226,29 +225,97 @@ void FileManager::add(Table* table) {
 	// the table is just created and no data is in it
 	// so the pages doesn't have this table's information yet
 }
+void FileManager::create(Table* table, string tname) {
+	// traverse the columns
+	string username = user->name();
+	string timestamp = addTimeStamp();
+	size_t cols = table->columns();
 
-void FileManager::display_t() {
-	for (auto it = tables.begin(); it != tables.end(); it++) {
-		cout << it->first << ", ";
-		for (auto attr : it->second->attr_order) {
-			cout << attr << ", ";
-		}
-		cout << endl;
-	}
+	Table* table_new = new Table(tname, username, timestamp, 0, cols);
+	table_new->attr_order = table->attr_order;
+	table_new->attributes = table->attributes;
+
+	add(table);
+	user->IncrementSize(1);
 }
 
-void FileManager::display_p() {
-	for (auto it = pages.begin(); it != pages.end(); it++) {
-		cout << "Table: " << it->first << endl;
-		for (auto t : it->second->pageset) {
-			cout << "Slots: " << t->slot() << ", ";
-			for (auto k : t->pageset) 
-				cout << k << ", ";
-		}
-		cout << endl;
-	}
-	cout << endl;
+void FileManager::remove(string tname) {
+
 }
+
+PageSet* FileManager::FindPageSet(string table, BufferManager* buffer) {
+	PageSet* pset;
+	string t_stamp = addTimeStamp();
+
+	bool pagesetfound = false;
+
+	if (pages.find(table) == pages.end()) {
+		cerr << "Table not found in " << user->name() << "." << endl;
+	}
+	else { // table found
+		for (auto p : pages[table]->pageset) {
+			if (p->slot() > 0) {
+				cout << "Slots left: " << p->slot() << endl;
+				pset = p;
+				pagesetfound = true;
+				break;
+			}
+		}
+		if (!pagesetfound) { // allocate a new page
+			// cout << "Pageset not found" << endl;
+			// int count = tables[table]->size();
+
+			PageSet* p = new PageSet(PAGESIZE);
+			// check if there are released pages to be recycled
+
+			// cout << "# of cols is: " << tables[table]->attr_order.size() << endl;
+			for (auto attrname : tables[table]->attr_order) {
+				Attribute* attr = tables[table]->attributes[attrname];
+				int pnumber;
+
+				if (emptypages.size() > 0) {
+					auto iter = emptypages.begin();
+					pnumber = *iter;
+					p->pageset.push_back(pnumber);
+					emptypages.erase(iter);
+				}
+				else {
+					pnumber = nextpage;
+					p->pageset.push_back(pnumber);
+					nextpage++;
+				}
+				buffer->add(pnumber, attr->type(), attr->table(), attr->name());
+			}
+			pset = p;
+			pages[table]->pageset.push_back(pset);
+		}
+		pset->slots -= 1;
+	}
+	return pset;
+}
+
+// void FileManager::display_t() {
+// 	for (auto it = tables.begin(); it != tables.end(); it++) {
+// 		cout << it->first << ", ";
+// 		for (auto attr : it->second->attr_order) {
+// 			cout << attr << ", ";
+// 		}
+// 		cout << endl;
+// 	}
+// }
+
+// void FileManager::display_p() {
+// 	for (auto it = pages.begin(); it != pages.end(); it++) {
+// 		cout << "Table: " << it->first << endl;
+// 		for (auto t : it->second->pageset) {
+// 			cout << "Slots: " << t->slot() << ", ";
+// 			for (auto k : t->pageset) 
+// 				cout << k << ", ";
+// 		}
+// 		cout << endl;
+// 	}
+// 	cout << endl;
+// }
 
 Database::Database(string nm, size_t s, string time) { // when first start, read meta information from disk
 	database = nm;

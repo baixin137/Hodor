@@ -10,7 +10,7 @@ int main() {
 	cout << "File System Started." << endl;
 
 	// buffer manager, manage pages in memory
-	BufferManager* buffer = new BufferManager(10);
+	BufferManager* buffer = new BufferManager(BUFFERSIZE);
 
 	cout << "Cache System Started." << endl;
 

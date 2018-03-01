@@ -1,33 +1,34 @@
 #include "BufferManager.h"
 
-string DATAPATH = "src/HodorFS/data/";
-string TABLESCSV = "tables.csv";
-string DBCSV = "databases.csv";
-string STORAGECSV = "storage.csv";
-int PAGESIZE = 1000;
-pthread_mutex_t Lock = PTHREAD_MUTEX_INITIALIZER;
-int CHECKPERIOD = 5;
-
-Tuple::Tuple(bool n, string s) {
+Tuple::Tuple(bool n, string s, string t) {
 	isnull = n;
 	sval = s;
+	time = t;
 }
 
-Tuple::Tuple(bool n, int i) {
+Tuple::Tuple(bool n, int i, string t) {
 	isnull = n;
 	ival = i;
+	time = t;
 }
 
-Tuple::Tuple(bool n, double d) {
+Tuple::Tuple(bool n, double d, string t) {
 	isnull = n;
 	dval = d;
+	time = t;
 }
 
-Tuple::Tuple(bool n) {
+Tuple::Tuple(bool n, string t) {
 	isnull = n;
+	time = t;
 }
 
-Tuple::Tuple() {
+Tuple::Tuple(string t) {
+	time = t;
+}
+
+string Tuple::timestamp() {
+	return time;
 }
 
 int Page::getnum() {
@@ -114,17 +115,24 @@ void TextPage::read(int pn, string page_name, vector<string> property) {
 	else {
 		string token;
 
-		getline(infile, token); // get rid of the header
+		getline(infile, token); // skip the header
 		while (getline(infile, token)) {
-			Tuple* tuple = new Tuple();
+			istringstream iss(token);
+			string value;
+			string t_stamp;
 
-			if (token == "NULL") {
+			getline(iss, value,   ',');
+			getline(iss, t_stamp, ',');
+
+			Tuple* tuple = new Tuple(t_stamp);
+
+			if (value == "NULL") {
 				tuple->isnull = true;
 				content.push_back(tuple);
 			}
 			else {
 				tuple->isnull = false;
-				tuple->sval = token;
+				tuple->sval = value;
 				content.push_back(tuple);
 			}
 		}
@@ -150,14 +158,21 @@ void IntPage::read(int pn, string page_name, vector<string> property) {
 
 		getline(infile, token); // get rid of the header
 		while (getline(infile, token)) {
-			Tuple* tuple = new Tuple();
-			if (token == "NULL") {
+			istringstream iss(token);
+			string value;
+			string t_stamp;
+
+			getline(iss, value,   ',');
+			getline(iss, t_stamp, ',');
+
+			Tuple* tuple = new Tuple(t_stamp);
+			if (value == "NULL") {
 				tuple->isnull = true;
 				content.push_back(tuple);
 			}
 			else {
 				tuple->isnull = false;
-				tuple->ival = stoi(token);
+				tuple->ival = stoi(value);
 				content.push_back(tuple);
 			}
 		}
@@ -183,14 +198,21 @@ void DoublePage::read(int pn, string page_name, vector<string> property) {
 
 		getline(infile, token); // get rid of the header
 		while (getline(infile, token)) {
-			Tuple* tuple = new Tuple();
-			if (token == "NULL") {
+			istringstream iss(token);
+			string value;
+			string t_stamp;
+
+			getline(iss, value,   ',');
+			getline(iss, t_stamp, ',');
+
+			Tuple* tuple = new Tuple(t_stamp);
+			if (value == "NULL") {
 				tuple->isnull = true;
 				content.push_back(tuple);
 			}
 			else {
 				tuple->isnull = false;
-				tuple->dval = stod(token);
+				tuple->dval = stod(value);
 				content.push_back(tuple);
 			}
 		}
@@ -242,16 +264,24 @@ void TextPage::write() {
 
 	for (size_t i = 0; i < content.size(); i++) {
 		if (i != content.size() - 1) {
-			if (!content[i]->isnull)
-				outfile << content[i]->sval << endl;
-			else
-				outfile << "NULL" << endl;
+			if (!content[i]->isnull) {
+				outfile << content[i]->sval << ","
+						<< content[i]->timestamp() << endl;
+			}
+			else {
+				outfile << "NULL" << ","
+						<< content[i]->timestamp() << endl;
+			}
 		}
 		else {
-			if (!content[i]->isnull)
-				outfile << content[i]->sval;
-			else 
-				outfile << "NULL";
+			if (!content[i]->isnull) {
+				outfile << content[i]->sval << ","
+						<< content[i]->timestamp();
+			}
+			else  {
+				outfile << "NULL" << ","
+						<< content[i]->timestamp();
+			}
 		}
 	}
 	outfile.close();
@@ -273,16 +303,24 @@ void IntPage::write() {
 
 	for (size_t i = 0; i < content.size(); i++) {
 		if (i != content.size() - 1) {
-			if (!content[i]->isnull)
-				outfile << content[i]->ival << endl;
-			else
-				outfile << "NULL" <<endl;
+			if (!content[i]->isnull) {
+				outfile << content[i]->ival << ","
+						<< content[i]->timestamp() << endl;
+			}
+			else {
+				outfile << "NULL" << ","
+						<< content[i]->timestamp() << endl;
+			}
 		}
 		else {
-			if (!content[i]->isnull)
-				outfile << content[i]->ival;
-			else 
-				outfile << "NULL";
+			if (!content[i]->isnull) {
+				outfile << content[i]->ival << ","
+						<< content[i]->timestamp();
+			}
+			else {
+				outfile << "NULL" << ","
+						<< content[i]->timestamp();
+			}
 		}
 	}
 	outfile.close();
@@ -304,16 +342,23 @@ void DoublePage::write() {
 
 	for (size_t i = 0; i < content.size(); i++) {
 		if (i != content.size() - 1) {
-			if (!content[i]->isnull)
-				outfile << content[i]->dval << endl;
-			else
-				outfile << "NULL" << endl;
+			if (!content[i]->isnull) {
+				outfile << content[i]->dval << ","
+						<< content[i]->timestamp() << endl;
+			}
+			else {
+				outfile << "NULL" << ","
+						<< content[i]->timestamp() << endl;
+			}
 		}
 		else
-			if (!content[i]->isnull)
-				outfile << content[i]->dval;
+			if (!content[i]->isnull) {
+				outfile << content[i]->dval << ","
+						<< content[i]->timestamp();
+			}
 			else
-				outfile << "NULL";
+				outfile << "NULL" << ","
+						<< content[i]->timestamp();
 	}
 	outfile.close();
 }
@@ -540,5 +585,24 @@ void BufferManager::flush(int pn) {
 		}
 
 	buffer->remove(pn);
+	}
+}
+
+bool BufferManager::iscached(int pn) {
+	return (buffer->map.find(pn) != buffer->map.end());
+}
+
+Page* BufferManager::get(int pn) {
+	return buffer->get(pn);
+}
+
+
+void BufferManager::MoveTuple(PageSet* pnew, PageSet* pold, size_t line) {
+	for (size_t i = 0; i < pold->pageset.size(); i++) {
+		Page* page_old = get(pold->pageset[i]);
+		Page* page_new = get(pnew->pageset[i]);
+
+		Tuple* tuple_old = page_old->content[i];
+		page_new->content.push_back(tuple_old);
 	}
 }

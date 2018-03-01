@@ -19,7 +19,7 @@ public:
 	void ReadCommand();
 
 	void SetDatabase(string command);
-	// void PartitionTable(string command);
+	void PartitionTable(string command);
 };
 
 #endif

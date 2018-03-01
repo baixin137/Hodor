@@ -49,107 +49,60 @@ void QueryParser::ParseINSERT(const hsql::SQLStatement* statement) {
 
 	// TODO: handle the error that data type doesn't match the correct order
 	if (!insert->columns) { // attributes not specified
-		PageSet* pset;
-		string t_stamp = addTimeStamp();
+		// find or create a pageset to store this tuple
+		PageSet* pset = filesystem->FindPageSet(table, buffer); 		string t_stamp = addTimeStamp();
 
-		cout << "Time is: " << t_stamp << endl;
+		pset->slots -= 1;
 
-		bool pagesetfound = false;
+		cout << "pageset created, creating pages;" << endl;
 
-		if (filesystem->pages.find(table) == filesystem->pages.end()) {
-			cerr << "Table not found in " << filesystem->user->name() << "." << endl;
-		}
-		else {
-			for (auto p : filesystem->pages[table]->pageset) {
-				cout << "this page set has avalable slots: " << endl;
-				if (p->slot() > 0) {
-					cout << "Slots left: " << p->slot() << endl;
-					pset = p;
-					pagesetfound = true;
-					break;
+		// insert time stamp page
+		int t_pagenum = pset->pageset[0];
+
+		LRUCache* cache = buffer->getbuffer();
+		if (cache->map.find(t_pagenum) == cache->map.end())
+			buffer->fetch(t_pagenum);
+
+		Page* tstamp_page = buffer->getbuffer()->get(t_pagenum);
+		tstamp_page->dirty = true;
+		tstamp_page->slots -= 1;
+
+		cout << "Timestamp created" << endl;
+
+		Tuple* attr_ts = new Tuple(false, t_stamp);
+		tstamp_page->content.push_back(attr_ts);
+
+		for (size_t i = 0; i < insert->values->size(); i++) {
+			auto val = (*insert->values)[i];
+
+			if (filesystem->pages.size() > 0) { // look for a page that can store this tuple
+				int page_num = pset->pageset[i + 1];
+
+				if (cache->map.find(page_num) == cache->map.end())
+					buffer->fetch(page_num);
+
+				Page* page2modify = cache->get(page_num);
+				page2modify->dirty = true;
+				page2modify->slots -= 1;
+
+				if (val->type == hsql::kExprLiteralString) {
+					string sval(val->name);
+					Tuple* newtup = new Tuple(false, sval, t_stamp);
+					page2modify->content.push_back(newtup);
 				}
-			}
-			if (!pagesetfound) { // allocate a new page
-				cout << "Pageset not found" << endl;
-				int count = filesystem->tables[table]->size();
-
-				PageSet* p = new PageSet(PAGESIZE);
-				// check if there are released pages to be recycled
-
-				cout << "# of cols is: " << filesystem->tables[table]->attr_order.size() << endl;
-				for (auto attrname : filesystem->tables[table]->attr_order) {
-					Attribute* attr = filesystem->tables[table]->attributes[attrname];
-					int pnumber;
-
-					if (filesystem->emptypages.size() > 0) {
-						auto iter = filesystem->emptypages.begin();
-						pnumber = *iter;
-						p->pageset.push_back(pnumber);
-						filesystem->emptypages.erase(iter);
-					}
-					else {
-						pnumber = filesystem->nextpage;
-						p->pageset.push_back(pnumber);
-						filesystem->nextpage++;
-					}
-					buffer->add(pnumber, attr->type(), attr->table(), attr->name());
+				else if (val->type == hsql::kExprLiteralInt) {
+					int ival = val->ival;
+					Tuple* newtup = new Tuple(false, ival, t_stamp);
+					page2modify->content.push_back(newtup);
 				}
-				pset = p;
-				filesystem->pages[table]->pageset.push_back(pset);
-			}
-
-			pset->slots -= 1;
-
-			cout << "pageset created, creating pages;" << endl;
-
-			// insert time stamp page
-			int t_pagenum = pset->pageset[0];
-
-			LRUCache* cache = buffer->getbuffer();
-			if (cache->map.find(t_pagenum) == cache->map.end())
-				buffer->fetch(t_pagenum);
-
-			Page* tstamp_page = buffer->getbuffer()->get(t_pagenum);
-			tstamp_page->dirty = true;
-			tstamp_page->slots -= 1;
-
-			cout << "Timestamp created" << endl;
-
-			Tuple* attr_ts = new Tuple(false, t_stamp);
-			tstamp_page->content.push_back(attr_ts);
-
-			for (size_t i = 0; i < insert->values->size(); i++) {
-				auto val = (*insert->values)[i];
-
-				if (filesystem->pages.size() > 0) { // look for a page that can store this tuple
-					int page_num = pset->pageset[i + 1];
-
-					if (cache->map.find(page_num) == cache->map.end())
-						buffer->fetch(page_num);
-
-					Page* page2modify = cache->get(page_num);
-					page2modify->dirty = true;
-					page2modify->slots -= 1;
-
-					if (val->type == hsql::kExprLiteralString) {
-						string sval(val->name);
-						Tuple* newtup = new Tuple(false, sval);
-						page2modify->content.push_back(newtup);
-					}
-					else if (val->type == hsql::kExprLiteralInt) {
-						int ival = val->ival;
-						Tuple* newtup = new Tuple(false, ival);
-						page2modify->content.push_back(newtup);
-					}
-					else if (val->type == hsql::kExprLiteralFloat) {
-						double dval = val->fval;
-						Tuple* newtup = new Tuple(false, dval);
-						page2modify->content.push_back(newtup);
-					}
-					else { // it's null
-						Tuple* newtup = new Tuple(true);
-						page2modify->content.push_back(newtup);
-					}
+				else if (val->type == hsql::kExprLiteralFloat) {
+					double dval = val->fval;
+					Tuple* newtup = new Tuple(false, dval, t_stamp);
+					page2modify->content.push_back(newtup);
+				}
+				else { // it's null
+					Tuple* newtup = new Tuple(true, t_stamp);
+					page2modify->content.push_back(newtup);
 				}
 			}
 		}
