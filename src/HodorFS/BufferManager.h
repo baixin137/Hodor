@@ -40,58 +40,89 @@ private:
 class Page {
 protected:
 	int page_num; // page number, 4 bytes, from 0 to 4,294,967,296
-	string table; // the table it belongs to
-	string attribute; // which attribute it stores
-	string type; // type of the attribute
+	string tablename; // the table it belongs to
+	string attrname; // which attribute it stores
+	string attrtype; // type of the attribute
+	size_t attrs; // # of attributes stored in page
 
 public:
 	bool dirty; // the page is dirty of not
-	int pinned; // the buffer manager shouldn't flush a paged pinned by some threads
+	int threads; // the buffer manager shouldn't flush a paged pinned by some threads
 	vector<Tuple*> content;
 	int slots; // number of empty slots in this page
 
-	int getnum();
-	string gettable();
-	string getattr();
-	string gettype();
-	int getslots();
+	int number();
+	int size();
+	string table();
+	string attribute();
+	string type();
+	int slot();
 	bool isdirty();
-	int getpinned();
+	int pinned();
+
+	void IncrementSize(size_t s);
 
 	virtual void read(int p, string pn, vector<string> property) = 0;
 	virtual void write() = 0;
-	virtual void display() = 0;
+	virtual void UpdateMeta(double val) = 0;
+	// virtual void display() = 0;
 };
 
 // Text handles CHAR, DATE, TIME AND TIMESTAMP NOW
 class TextPage : public Page {
 public:
 	TextPage();
-	TextPage(int pn, string ta, string at);
+	TextPage(int pn, string ta, string at, size_t attr);
 
 	void read(int p, string pn, vector<string> property);
 	void write();
-	void display();
+	// void display();
+	void UpdateMeta(double val);
+
 };
 
 class IntPage : public Page {
 public:
 	IntPage();
-	IntPage(int pn, string ta, string at);
+	IntPage(int pn, string ta, string at, size_t attr);
 
 	void read(int p, string pn, vector<string> property);
 	void write();
-	void display();
+	// void display();
+
+	int min();
+	int max();
+	double mean();
+
+	// update min, max and mean, before inserted 
+	void UpdateMeta(double val);
+	
+private:
+	int minval;
+	int maxval;
+	double meanval;
 };
 
 class DoublePage : public Page {
 public:
 	DoublePage();
-	DoublePage(int pn, string ta, string at);
+	DoublePage(int pn, string ta, string at, size_t attr);
 
 	void read(int p, string pn, vector<string> property);
 	void write();
-	void display();
+	// void display();
+
+	double min();
+	double max();
+	double mean();
+
+	// update min, max and mean, before inserted 
+	void UpdateMeta(double val);
+
+private:
+	double minval;
+	double maxval;
+	double meanval;
 };
 
 // class BooleanPage : public Page {
@@ -113,7 +144,7 @@ public:
     void set(int key, Page* value); // set/insert page in cache
     void remove(int key); // remove from memory
 
-    void display();
+    // void display();
 };
 
 class BufferManager {
