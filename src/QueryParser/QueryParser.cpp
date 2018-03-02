@@ -82,6 +82,7 @@ void QueryParser::ParseINSERT(const hsql::SQLStatement* statement) {
 
 		Tuple* attr_ts = new Tuple(false, t_stamp, t_stamp);
 		tstamp_page->content.push_back(attr_ts);
+		tstamp_page->IncrementSize(1);
 
 		for (size_t i = 0; i < insert->values->size(); i++) {
 			auto val = (*insert->values)[i];
@@ -96,25 +97,25 @@ void QueryParser::ParseINSERT(const hsql::SQLStatement* statement) {
 				page2modify->dirty = true;
 				page2modify->slots -= 1;
 
+				Tuple* newtup;
+
 				if (val->type == hsql::kExprLiteralString) {
 					string sval(val->name);
-					Tuple* newtup = new Tuple(false, sval, t_stamp);
-					page2modify->content.push_back(newtup);
+					newtup = new Tuple(false, sval, t_stamp);
 				}
 				else if (val->type == hsql::kExprLiteralInt) {
 					int ival = val->ival;
-					Tuple* newtup = new Tuple(false, ival, t_stamp);
-					page2modify->content.push_back(newtup);
+					newtup = new Tuple(false, ival, t_stamp);
 				}
 				else if (val->type == hsql::kExprLiteralFloat) {
 					double dval = val->fval;
-					Tuple* newtup = new Tuple(false, dval, t_stamp);
-					page2modify->content.push_back(newtup);
+					newtup = new Tuple(false, dval, t_stamp);
 				}
 				else { // it's null
-					Tuple* newtup = new Tuple(true, t_stamp);
-					page2modify->content.push_back(newtup);
+					newtup = new Tuple(true, t_stamp);
 				}
+				page2modify->content.push_back(newtup);
+				page2modify->IncrementSize(1);
 			}
 		}
 	}

@@ -31,23 +31,27 @@ string Tuple::timestamp() {
 	return time;
 }
 
-int Page::getnum() {
+int Page::number() {
 	return page_num;
 }
 
-string Page::gettable() {
-	return table;
+int Page::size() {
+	return attrs;
 }
 
-string Page::getattr() {
-	return attribute;
+string Page::table() {
+	return tablename;
 }
 
-string Page::gettype() {
-	return type;
+string Page::attribute() {
+	return attrname;
 }
 
-int Page::getslots() {
+string Page::type() {
+	return attrtype;
+}
+
+int Page::slot() {
 	return slots;
 }
 
@@ -55,44 +59,51 @@ bool Page::isdirty() {
 	return dirty;
 }
 
-int Page::getpinned() {
-	return pinned;
+int Page::pinned() {
+	return threads;
+}
+
+void Page::IncrementSize(size_t s) {
+	attrs += s;
 }
 
 TextPage::TextPage() {
-	type = "TEXT";
+	attrtype = "TEXT";
 }
 
 IntPage::IntPage() {
-	type = "INT";
+	attrtype = "INT";
 }
 
 DoublePage::DoublePage() {
-	type = "DOUBLE";
+	attrtype = "DOUBLE";
 }
 
-TextPage::TextPage(int pn, string ta, string at) {
-	type = "TEXT";
+TextPage::TextPage(int pn, string ta, string at, size_t attr) {
+	attrtype = "TEXT";
 	page_num = pn;
-	table = ta;
-	attribute = at;
+	tablename = ta;
+	attrname = at;
 	slots = PAGESIZE;
+	attrs = attr;
 }
 
-IntPage::IntPage(int pn, string ta, string at) {
-	type = "INT";
+IntPage::IntPage(int pn, string ta, string at, size_t attr) {
+	attrtype = "INT";
 	page_num = pn;
-	table = ta;
-	attribute = at;
+	tablename = ta;
+	attrname = at;
 	slots = PAGESIZE;
+	attrs = attr;
 }
 
-DoublePage::DoublePage(int pn, string ta, string at) {
-	type = "DOUBLE";
+DoublePage::DoublePage(int pn, string ta, string at, size_t attr) {
+	attrtype = "DOUBLE";
 	page_num = pn;
-	table = ta;
-	attribute = at;
+	tablename = ta;
+	attrname = at;
 	slots = PAGESIZE;
+	attr = attrs;
 }
 
 // BooleanPage::BooleanPage() {
@@ -101,11 +112,12 @@ DoublePage::DoublePage(int pn, string ta, string at) {
 
 void TextPage::read(int pn, string page_name, vector<string> property) {
  	page_num = pn;
-	table = property[0];
-	attribute = property[1];
+	tablename = property[0];
+	attrname = property[1];
 	slots = stoi(property[3]);
+	attrs = stoi(property[4]);
 	dirty = false; // fetched a new page, clean
-	pinned = 0; // new page, not pinned by any thread
+	threads = 0; // new page, not pinned by any thread
 
 	ifstream infile(page_name);
 
@@ -141,12 +153,13 @@ void TextPage::read(int pn, string page_name, vector<string> property) {
 
 void IntPage::read(int pn, string page_name, vector<string> property) {
 	page_num = pn;
-	table = property[0];
-	attribute = property[1];
+	tablename = property[0];
+	attrname = property[1];
 	slots = stoi(property[3]);
+	attrs = stoi(property[4]);
 
 	dirty = false; // fetched a new page, clean
-	pinned = 0; // new page, not pinned by any thread
+	threads = 0; // new page, not pinned by any thread
 
 	ifstream infile(page_name);
 
@@ -181,12 +194,13 @@ void IntPage::read(int pn, string page_name, vector<string> property) {
 
 void DoublePage::read(int pn, string page_name, vector<string> property) {
 	page_num = pn;
-	table = property[0];
-	attribute = property[1];
+	tablename = property[0];
+	attrname = property[1];
 	slots = stoi(property[3]);
+	attrs = stoi(property[4]);
 
 	dirty = false; // fetched a new page, clean
-	pinned = 0; // new page, not pinned by any thread
+	threads = 0; // new page, not pinned by any thread
 
 	ifstream infile(page_name);
 
@@ -253,9 +267,9 @@ void TextPage::write() {
 
 	ofstream outfile;
 	outfile.open(page_name);
-	outfile << table << ',' << attribute << ','
-			<< type << ',' << to_string(slots)
-			<< endl;
+	outfile << tablename << ',' << attrname << ','
+			<< attrtype << ',' << to_string(slots) << ','
+			<< attrs << endl;
 
 	for (size_t i = 0; i < content.size(); i++) {
 		if (i != content.size() - 1) {
@@ -287,9 +301,9 @@ void IntPage::write() {
 
 	ofstream outfile;
 	outfile.open(page_name);
-	outfile << table << ',' << attribute << ','
-			<< type << ',' << to_string(slots)
-			<< endl;
+	outfile << tablename << ',' << attrname << ','
+			<< attrtype << ',' << to_string(slots) << ','
+			<< attrs << endl;
 
 	for (size_t i = 0; i < content.size(); i++) {
 		if (i != content.size() - 1) {
@@ -321,9 +335,9 @@ void DoublePage::write() {
 
 	ofstream outfile;
 	outfile.open(page_name);
-	outfile << table << ',' << attribute << ','
-			<< type << ',' << to_string(slots)
-			<< endl;
+	outfile << tablename << ',' << attrname << ','
+			<< attrtype << ',' << to_string(slots) << ','
+			<< attrs << endl;
 
 	for (size_t i = 0; i < content.size(); i++) {
 		if (i != content.size() - 1) {
@@ -364,50 +378,50 @@ void DoublePage::write() {
 // 	outfile.close();
 // }
 
-void TextPage::display() {
-	cout << "Page number: " << page_num << endl;
-	cout << "Table: " << table << endl;;
-	cout << "Attribute: " << attribute << endl;
-	cout << "Type: " << type << endl;
-	cout << "Empty slots: " << slots << endl;
-	string d = dirty ? "true" : "false";
-	cout << "Dirty: " << d << endl;
+// void TextPage::display() {
+// 	cout << "Page number: " << page_num << endl;
+// 	cout << "Table: " << table << endl;;
+// 	cout << "Attribute: " << attribute << endl;
+// 	cout << "Type: " << type << endl;
+// 	cout << "Empty slots: " << slots << endl;
+// 	string d = dirty ? "true" : "false";
+// 	cout << "Dirty: " << d << endl;
 
-	for (auto c : content) 
-		cout << c->sval << endl;
+// 	for (auto c : content) 
+// 		cout << c->sval << endl;
 
-	cout << endl;
-}
+// 	cout << endl;
+// }
 
-void IntPage::display() {
-	cout << "Page number: " << page_num << endl;
-	cout << "Table: " << table << endl;;
-	cout << "Attribute: " << attribute << endl;
-	cout << "Type: " << type << endl;
-	cout << "Empty slots: " << slots << endl;
-	string d = dirty ? "true" : "false";
-	cout << "Dirty: " << d << endl;
+// void IntPage::display() {
+// 	cout << "Page number: " << page_num << endl;
+// 	cout << "Table: " << table << endl;;
+// 	cout << "Attribute: " << attribute << endl;
+// 	cout << "Type: " << type << endl;
+// 	cout << "Empty slots: " << slots << endl;
+// 	string d = dirty ? "true" : "false";
+// 	cout << "Dirty: " << d << endl;
 
-	for (auto c : content) 
-		cout << c->ival << endl;
+// 	for (auto c : content) 
+// 		cout << c->ival << endl;
 
-	cout << endl;
-}
+// 	cout << endl;
+// }
 
-void DoublePage::display() {
-	cout << "Page number: " << page_num << endl;
-	cout << "Table: " << table << endl;;
-	cout << "Attribute: " << attribute << endl;
-	cout << "Type: " << type << endl;
-	cout << "Empty slots: " << slots << endl;
-	string d = dirty ? "true" : "false";
-	cout << "Dirty: " << d << endl;
+// void DoublePage::display() {
+// 	cout << "Page number: " << page_num << endl;
+// 	cout << "Table: " << table << endl;;
+// 	cout << "Attribute: " << attribute << endl;
+// 	cout << "Type: " << type << endl;
+// 	cout << "Empty slots: " << slots << endl;
+// 	string d = dirty ? "true" : "false";
+// 	cout << "Dirty: " << d << endl;
 
-	for (auto c : content) 
-		cout << c->dval << endl;
+// 	for (auto c : content) 
+// 		cout << c->dval << endl;
 
-	cout << endl;
-}
+// 	cout << endl;
+// }
 
 // void BooleanPage::display() {
 // 	cout << "Page number: " << page_num << endl;
@@ -427,6 +441,39 @@ void DoublePage::display() {
 
 // 	cout << endl;
 // }
+
+int IntPage::min() {return minval;}
+double DoublePage::min() {return minval;}
+
+int IntPage::max() {return maxval;}
+double DoublePage::max() {return maxval;}
+
+double IntPage::mean() {return meanval;}
+double DoublePage::mean() {return meanval;}
+
+void IntPage::UpdateMin(int val) {
+	minval = val < minval ? val : minval;
+}
+
+void DoublePage::UpdateMin(double val) {
+	minval = val < minval ? val : minval;
+}
+
+void IntPage::UpdateMax(int val) {
+	maxval = val > maxval ? val : maxval;
+}
+
+void DoublePage::UpdateMax(double val) {
+	maxval = val > maxval ? val : maxval;
+}
+
+void IntPage::UpdateMean(int val) {
+	meanval = (meanval * attrs + double(val)) / (attrs + 1);
+}
+
+void DoublePage::UpdateMean(double val) {
+	meanval = (meanval * attrs + val) / (attrs + 1);
+}
 
 LRUCache::LRUCache(size_t c) {
 	capacity = c;
@@ -471,13 +518,13 @@ void LRUCache::remove(int key) {
 	}
 }
 
-void LRUCache::display() {
-	cout << "Buffer size: " << map.size() << endl << endl;
+// void LRUCache::display() {
+// 	cout << "Buffer size: " << map.size() << endl << endl;
 
-	for (auto it = linkedlist.begin(); it != linkedlist.end(); it++) {
-		it->second->display();
-	}
-}
+// 	for (auto it = linkedlist.begin(); it != linkedlist.end(); it++) {
+// 		it->second->display();
+// 	}
+// }
 
 BufferManager::BufferManager(size_t c) {
 	buffer = new LRUCache(c);
@@ -491,13 +538,13 @@ void BufferManager::add(int pn, string type, string table, string attribute) {
 	Page* page;
 
 	if (type == "INT") {
-		page = new IntPage(pn, table, attribute);
+		page = new IntPage(pn, table, attribute, 1);
 	}
 	else if (type == "DOUBLE") {
-		page = new DoublePage(pn, table, attribute);
+		page = new DoublePage(pn, table, attribute, 1);
 	}
 	else { // is string
-		page = new TextPage(pn, table, attribute);
+		page = new TextPage(pn, table, attribute, 1);
 	}
 
 	buffer->set(pn, page);
@@ -517,7 +564,7 @@ void BufferManager::fetch(int pn) {
 		istringstream iss(header);
 		vector<string> property; // table, attribute, type, slots
 
-		for (size_t i = 0; i < 4; i++) {
+		for (size_t i = 0; i < 5; i++) {
 			string p;
 			getline(iss, p, ',');
 			property.push_back(p);
@@ -542,9 +589,9 @@ void BufferManager::flush(int pn) {
 	Page* page = buffer->get(pn);
 	if (!page) return;
 
-	if (page->getpinned() > 0) {
-		string thread = page->getpinned() > 1 ? "threads" : "thread";
-		cerr << "Page pinned by " << page->getpinned() << " " << thread << ", cannot be flushed." << endl;
+	if (page->pinned() > 0) {
+		string thread = page->pinned() > 1 ? "threads" : "thread";
+		cerr << "Page pinned by " << page->pinned() << " " << thread << ", cannot be flushed." << endl;
 		return;
 	}
 
@@ -588,6 +635,7 @@ void BufferManager::MoveTuple(PageSet* pnew, PageSet* pold, size_t line) {
 
 		Tuple* tuple_old = page_old->content[i];
 		page_new->content.push_back(tuple_old);
+		page_new->IncrementSize(1);
 		page_new->dirty = true;
 	}
 }
