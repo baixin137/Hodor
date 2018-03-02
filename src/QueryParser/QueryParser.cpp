@@ -115,6 +115,12 @@ void QueryParser::ParseINSERT(const hsql::SQLStatement* statement) {
 					newtup = new Tuple(true, t_stamp);
 				}
 				page2modify->content.push_back(newtup);
+
+				if (page2modify->type() == "INT")
+					page2modify->UpdateMeta(val->ival);
+				else if (page2modify->type() == "DOUBLE")
+					page2modify->UpdateMeta(val->fval);
+
 				page2modify->IncrementSize(1);
 			}
 		}

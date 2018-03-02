@@ -64,6 +64,7 @@ public:
 
 	virtual void read(int p, string pn, vector<string> property) = 0;
 	virtual void write() = 0;
+	virtual void UpdateMeta(double val) = 0;
 	// virtual void display() = 0;
 };
 
@@ -76,6 +77,8 @@ public:
 	void read(int p, string pn, vector<string> property);
 	void write();
 	// void display();
+	void UpdateMeta(double val);
+
 };
 
 class IntPage : public Page {
@@ -91,10 +94,9 @@ public:
 	int max();
 	double mean();
 
-	void UpdateMin(int val);
-	void UpdateMax(int val);
-	void UpdateMean(int val); // before val inserted into page
-
+	// update min, max and mean, before inserted 
+	void UpdateMeta(double val);
+	
 private:
 	int minval;
 	int maxval;
@@ -114,9 +116,8 @@ public:
 	double max();
 	double mean();
 
-	void UpdateMin(double val);
-	void UpdateMax(double val);
-	void UpdateMean(double val); // before val inserted into page
+	// update min, max and mean, before inserted 
+	void UpdateMeta(double val);
 
 private:
 	double minval;

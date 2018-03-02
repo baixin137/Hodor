@@ -157,6 +157,9 @@ void IntPage::read(int pn, string page_name, vector<string> property) {
 	attrname = property[1];
 	slots = stoi(property[3]);
 	attrs = stoi(property[4]);
+	minval = stoi(property[5]);
+	maxval = stoi(property[6]);
+	meanval = stod(property[7]);
 
 	dirty = false; // fetched a new page, clean
 	threads = 0; // new page, not pinned by any thread
@@ -198,6 +201,9 @@ void DoublePage::read(int pn, string page_name, vector<string> property) {
 	attrname = property[1];
 	slots = stoi(property[3]);
 	attrs = stoi(property[4]);
+	minval = stod(property[5]);
+	maxval = stod(property[6]);
+	meanval = stod(property[7]);
 
 	dirty = false; // fetched a new page, clean
 	threads = 0; // new page, not pinned by any thread
@@ -303,7 +309,8 @@ void IntPage::write() {
 	outfile.open(page_name);
 	outfile << tablename << ',' << attrname << ','
 			<< attrtype << ',' << to_string(slots) << ','
-			<< attrs << endl;
+			<< attrs << ',' << minval << ','
+			<< maxval << ',' << meanval << endl;
 
 	for (size_t i = 0; i < content.size(); i++) {
 		if (i != content.size() - 1) {
@@ -337,7 +344,8 @@ void DoublePage::write() {
 	outfile.open(page_name);
 	outfile << tablename << ',' << attrname << ','
 			<< attrtype << ',' << to_string(slots) << ','
-			<< attrs << endl;
+			<< attrs << ',' << minval << ','
+			<< maxval << ',' << meanval << endl;
 
 	for (size_t i = 0; i < content.size(); i++) {
 		if (i != content.size() - 1) {
@@ -451,28 +459,25 @@ double DoublePage::max() {return maxval;}
 double IntPage::mean() {return meanval;}
 double DoublePage::mean() {return meanval;}
 
-void IntPage::UpdateMin(int val) {
+void TextPage::UpdateMeta(double val) {}
+
+void IntPage::UpdateMeta(double val) {
+	val = int(val);
 	minval = val < minval ? val : minval;
+	maxval = val > maxval ? val : maxval;
+	if (attrs == 0)
+		meanval = double(val);
+	else
+		meanval = (meanval * attrs + double(val)) / (attrs + 1);
 }
 
-void DoublePage::UpdateMin(double val) {
+void DoublePage::UpdateMeta(double val) {
 	minval = val < minval ? val : minval;
-}
-
-void IntPage::UpdateMax(int val) {
 	maxval = val > maxval ? val : maxval;
-}
-
-void DoublePage::UpdateMax(double val) {
-	maxval = val > maxval ? val : maxval;
-}
-
-void IntPage::UpdateMean(int val) {
-	meanval = (meanval * attrs + double(val)) / (attrs + 1);
-}
-
-void DoublePage::UpdateMean(double val) {
-	meanval = (meanval * attrs + val) / (attrs + 1);
+	if (attrs == 0)
+		meanval = val;
+	else
+		meanval = (meanval * attrs + val) / (attrs + 1);
 }
 
 LRUCache::LRUCache(size_t c) {
@@ -562,12 +567,19 @@ void BufferManager::fetch(int pn) {
 		getline(infile, header);
 
 		istringstream iss(header);
-		vector<string> property; // table, attribute, type, slots
+		vector<string> property; // table, attribute, type, slots, size
 
 		for (size_t i = 0; i < 5; i++) {
 			string p;
 			getline(iss, p, ',');
 			property.push_back(p);
+		}
+		if (property[2] == "INT" || property[2] == "DOUBLE") {
+			for (size_t i = 0; i < 3; i++) {
+				string p;
+				getline(iss, p, ',');
+				property.push_back(p);
+			}
 		}
 
 		Page* page;
