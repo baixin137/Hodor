@@ -49,6 +49,7 @@ string GetTime(string timestamp, string unit) {
 	getline(iss, month, ' '); // get rid of week day
 	getline(iss, month, ' ');
 	getline(iss, date,  ' ');
+	getline(iss, date,  ' ');
 	getline(iss, time,  ' ');
 	getline(iss, year,  ' ');
 
