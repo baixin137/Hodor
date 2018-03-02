@@ -32,5 +32,6 @@ string DatabaseName(string name); // return database name from database:;table
 // time stamp look like: Wed Feb 28 17:38:50 2018
 string GetTime(string timestamp, string unit);
 void Month2Int(string& month); // convert month to 1-12
+string GetPageFile(int pn);
 
 #endif

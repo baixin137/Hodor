@@ -138,7 +138,7 @@ FileManager::FileManager() {
 			string t_name;
 			while (getline(iss, t_name, ',')) {
 				newDB->tables[t_name] = (tables[db_name + "::" + t_name]);
-				newDB->table_names.push_back(t_name);
+				newDB->table_names.insert(t_name);
 			}
 			users[db_name] = newDB;
 		}
@@ -216,7 +216,7 @@ void FileManager::add(Table* table) {
 
 	// store table in memory
 	tables[t_name] = table;
-	user->table_names.push_back(table->name());
+	user->table_names.insert(table->name());
 	user->tables[table->name()] = table;
 
 	TableStorage* storage = new TableStorage(t_name, user->name());
@@ -243,8 +243,23 @@ void FileManager::create(Table* table, string tname) {
 	user->IncrementSize(1);
 }
 
-void FileManager::remove(string tname) {
+void FileManager::remove(string tname, BufferManager* buffer) {
+	// remove every page from disk and cache
+	TableStorage* storage = pages[tname];
 
+	for (PageSet* pageset : storage->pageset) {
+		for (int page_num : pageset->pageset) {
+			buffer->erase(page_num);
+			emptypages.insert(page_num);
+		}
+	}
+	pages.erase(tname);
+	tables.erase(tname);
+
+	// remove from database
+	user->table_names.erase(tname);
+	user->tables.erase(tname);
+	user->IncrementSize(-1);
 }
 
 PageSet* FileManager::FindPageSet(string table, BufferManager* buffer) {
@@ -488,11 +503,8 @@ void AutoSave::FlushBuffer() {
 			if (!db->second->table_names.size())
 				db_info << endl;
 
-			for (size_t i = 0; i < db->second->table_names.size(); i++) {
-				if (i != db->second->table_names.size() - 1)
-					db_info << db->second->table_names[i] << ",";
-				else 
-					db_info << db->second->table_names[i] << endl;
+			for (auto it = db->second->table_names.begin(); it != db->second->table_names.end(); it++) {
+				db_info << *it << ",";
 			}
 			// cout << "database " << db->first << " flushed" << endl;
 		}

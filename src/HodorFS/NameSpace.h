@@ -1,6 +1,7 @@
 #ifndef NAMESPACE_H
 #define NAMESPACE_H
 
+#include <set>
 #include <string>
 #include <vector>
 #include <unordered_map>
@@ -75,7 +76,7 @@ private:
 	string date; // time stamp
 
 public:
-	vector<string> table_names;
+	set<string> table_names;
 	unordered_map<string, Table*> tables;
 
 	Database(string username, size_t s, string t);
