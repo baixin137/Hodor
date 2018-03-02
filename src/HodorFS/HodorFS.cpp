@@ -185,7 +185,7 @@ FileManager::FileManager() {
 }
 
 void FileManager::add(Table* table) {
-	string t_name = user->name() + "::" + table->name();
+	string t_name = table->name(); // database::table
 
 	if (tables.find(t_name) != tables.end()) {
 		cout << "Table already exists." << endl;
@@ -234,7 +234,10 @@ void FileManager::create(Table* table, string tname) {
 
 	Table* table_new = new Table(tname, username, timestamp, 0, cols);
 	table_new->attr_order = table->attr_order;
-	table_new->attributes = table->attributes;
+
+	for (string attr : table->attr_order) {
+		table_new->attributes[attr] = new Attribute(attr, table->attributes[attr]->type(), user->name() + "::" + tname);
+	}
 
 	add(table_new);
 	user->IncrementSize(1);
@@ -246,7 +249,7 @@ void FileManager::remove(string tname) {
 
 PageSet* FileManager::FindPageSet(string table, BufferManager* buffer) {
 	PageSet* pset;
-	string t_stamp = addTimeStamp();
+	// string t_stamp = addTimeStamp();
 
 	bool pagesetfound = false;
 

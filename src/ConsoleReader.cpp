@@ -165,11 +165,12 @@ void ConsoleReader::PartitionTable(string command) {
 			if (filesystem->tables.find(new_table_DB) == filesystem->tables.end()) {
 				// if table does not exists
 				// create a new table and add to file system
-				filesystem->create(filesystem->tables[tname], new_table);
+				filesystem->create(filesystem->tables[tname], new_table_DB);
 				cout << "new table created" << endl;
 			}
 			// move tuple to new table and pages
 			PageSet* pset_new = filesystem->FindPageSet(new_table_DB, buffer);
+
 			buffer->MoveTuple(pset_new, pset, i);
 			filesystem->tables[new_table_DB]->IncrementSize(1);
 		}

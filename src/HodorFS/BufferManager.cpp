@@ -604,5 +604,6 @@ void BufferManager::MoveTuple(PageSet* pnew, PageSet* pold, size_t line) {
 
 		Tuple* tuple_old = page_old->content[i];
 		page_new->content.push_back(tuple_old);
+		page_new->dirty = true;
 	}
 }
