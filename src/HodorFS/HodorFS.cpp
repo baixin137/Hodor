@@ -289,7 +289,6 @@ PageSet* FileManager::FindPageSet(string table, BufferManager* buffer) {
 			pset = p;
 			pages[table]->pageset.push_back(pset);
 		}
-		pset->slots -= 1;
 	}
 	return pset;
 }

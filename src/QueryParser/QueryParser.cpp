@@ -44,6 +44,7 @@ void QueryParser::ParseINSERT(const hsql::SQLStatement* statement) {
 	const hsql::InsertStatement* insert = (const hsql::InsertStatement*) statement;
 	string table(insert->tableName);
 	table = filesystem->user->name() + "::" + table;
+	filesystem->tables[table]->IncrementSize(1);
 
 	// TODO: handle the error that data type doesn't match the correct order
 	if (!insert->columns) { // attributes not specified
@@ -67,7 +68,7 @@ void QueryParser::ParseINSERT(const hsql::SQLStatement* statement) {
 
 		cout << "Timestamp created" << endl;
 
-		Tuple* attr_ts = new Tuple(false, t_stamp);
+		Tuple* attr_ts = new Tuple(false, t_stamp, t_stamp);
 		tstamp_page->content.push_back(attr_ts);
 
 		for (size_t i = 0; i < insert->values->size(); i++) {
