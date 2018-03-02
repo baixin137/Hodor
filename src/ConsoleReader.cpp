@@ -55,7 +55,6 @@ void ConsoleReader::ReadCommand() {
 			cout << "Invalid statement" << endl;
 			cout << result.errorMsg() << endl;
 			
-			cout << "Not a query" << endl;
 			istringstream iss(command);
 			string keyword;
 
