@@ -185,7 +185,7 @@ FileManager::FileManager() {
 }
 
 void FileManager::add(Table* table) {
-	string t_name = user->name() + "::" + table->name();
+	string t_name = table->name(); // database::table
 
 	if (tables.find(t_name) != tables.end()) {
 		cout << "Table already exists." << endl;
@@ -214,7 +214,7 @@ void FileManager::add(Table* table) {
 			outfile << table->attributes[table->attr_order[i]]->type() << endl;
 	}
 
-	// store table in memeory
+	// store table in memory
 	tables[t_name] = table;
 	user->table_names.push_back(table->name());
 	user->tables[table->name()] = table;
@@ -225,6 +225,7 @@ void FileManager::add(Table* table) {
 	// the table is just created and no data is in it
 	// so the pages doesn't have this table's information yet
 }
+
 void FileManager::create(Table* table, string tname) {
 	// traverse the columns
 	string username = user->name();
@@ -233,9 +234,12 @@ void FileManager::create(Table* table, string tname) {
 
 	Table* table_new = new Table(tname, username, timestamp, 0, cols);
 	table_new->attr_order = table->attr_order;
-	table_new->attributes = table->attributes;
 
-	add(table);
+	for (string attr : table->attr_order) {
+		table_new->attributes[attr] = new Attribute(attr, table->attributes[attr]->type(), user->name() + "::" + tname);
+	}
+
+	add(table_new);
 	user->IncrementSize(1);
 }
 
@@ -245,7 +249,7 @@ void FileManager::remove(string tname) {
 
 PageSet* FileManager::FindPageSet(string table, BufferManager* buffer) {
 	PageSet* pset;
-	string t_stamp = addTimeStamp();
+	// string t_stamp = addTimeStamp();
 
 	bool pagesetfound = false;
 
@@ -289,7 +293,6 @@ PageSet* FileManager::FindPageSet(string table, BufferManager* buffer) {
 			pset = p;
 			pages[table]->pageset.push_back(pset);
 		}
-		pset->slots -= 1;
 	}
 	return pset;
 }

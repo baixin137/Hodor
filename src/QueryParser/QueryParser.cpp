@@ -10,11 +10,14 @@ void QueryParser::ParseCREATE(const hsql::SQLStatement* statement) {
 
 	// traverse the columns
 	string tablename(create->tableName);
+	tablename = filesystem->user->name() + "::" + tablename;
 	string user = filesystem->user->name();
 	string timestamp = addTimeStamp();
 	size_t cols = create->columns->size() + 1; // plus timestamp
 
 	Table* table = new Table(tablename, user, timestamp,0, cols);
+
+	cout << "Creating new table: " << tablename << endl;
 
 	// add timestamp to table
 	Attribute* t_stamp = new Attribute("TimeStamp", "TEXT", tablename);
@@ -44,6 +47,16 @@ void QueryParser::ParseINSERT(const hsql::SQLStatement* statement) {
 	const hsql::InsertStatement* insert = (const hsql::InsertStatement*) statement;
 	string table(insert->tableName);
 	table = filesystem->user->name() + "::" + table;
+	cout << "Ready to insert to table: " << table << endl;
+
+	if (filesystem->tables.find(table) == filesystem->tables.end()) {
+		cerr << "Trying to insert to non-existing table" << endl;
+		return;
+	}
+
+	filesystem->tables[table]->IncrementSize(1);
+
+	cout << "Table size incremented" << endl;
 
 	filesystem->tables[table]->IncrementSize(1);
 
@@ -69,7 +82,7 @@ void QueryParser::ParseINSERT(const hsql::SQLStatement* statement) {
 
 		cout << "Timestamp created" << endl;
 
-		Tuple* attr_ts = new Tuple(false, t_stamp);
+		Tuple* attr_ts = new Tuple(false, t_stamp, t_stamp);
 		tstamp_page->content.push_back(attr_ts);
 
 		for (size_t i = 0; i < insert->values->size(); i++) {

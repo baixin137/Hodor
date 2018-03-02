@@ -598,11 +598,13 @@ Page* BufferManager::get(int pn) {
 
 
 void BufferManager::MoveTuple(PageSet* pnew, PageSet* pold, size_t line) {
+	pnew->slots -= 1;
 	for (size_t i = 0; i < pold->pageset.size(); i++) {
 		Page* page_old = get(pold->pageset[i]);
 		Page* page_new = get(pnew->pageset[i]);
 
 		Tuple* tuple_old = page_old->content[i];
 		page_new->content.push_back(tuple_old);
+		page_new->dirty = true;
 	}
 }
