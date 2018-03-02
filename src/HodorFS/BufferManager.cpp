@@ -249,12 +249,7 @@ void DoublePage::read(int pn, string page_name, vector<string> property) {
 // }
 
 void TextPage::write() {
-	string page_name = to_string(page_num);
-	int zeros = 10 - page_name.size();
-
-	for (size_t i = 0; i < zeros; i++) 
-		page_name = '0' + page_name;
-	page_name = DATAPATH + page_name + ".csv";
+	string page_name = GetPageFile(page_num);
 
 	ofstream outfile;
 	outfile.open(page_name);
@@ -288,12 +283,7 @@ void TextPage::write() {
 }
 
 void IntPage::write() {
-	string page_name = to_string(page_num);
-	int zeros = 10 - page_name.size();
-
-	for (size_t i = 0; i < zeros; i++) 
-		page_name = '0' + page_name;
-	page_name = DATAPATH + page_name + ".csv";
+	string page_name = GetPageFile(page_num);
 
 	ofstream outfile;
 	outfile.open(page_name);
@@ -327,12 +317,7 @@ void IntPage::write() {
 }
 
 void DoublePage::write() {
-	string page_name = to_string(page_num);
-	int zeros = 10 - page_name.size();
-
-	for (size_t i = 0; i < zeros; i++) 
-		page_name = '0' + page_name;
-	page_name = DATAPATH + page_name + ".csv";
+	string page_name = GetPageFile(page_num);
 
 	ofstream outfile;
 	outfile.open(page_name);
@@ -519,12 +504,7 @@ void BufferManager::add(int pn, string type, string table, string attribute) {
 }
 
 void BufferManager::fetch(int pn) {
-	string page_name = to_string(pn);
-	int zeros = 10 - page_name.size();
-
-	for (size_t i = 0; i < zeros; i++) 
-		page_name = '0' + page_name;
-	page_name = DATAPATH + page_name + ".csv";
+	string page_name = GetPageFile(pn);
 
 	ifstream infile(page_name);
 	if (!infile) {
@@ -570,12 +550,7 @@ void BufferManager::flush(int pn) {
 
 	if (page->isdirty()) return; // no need to modify the file in memory
 	else {
-		string page_name = to_string(pn);
-		int zeros = 10 - page_name.size();
-
-		for (size_t i = 0; i < zeros; i++) 
-			page_name = '0' + page_name;
-		page_name = DATAPATH + page_name + ".csv";
+		string page_name = GetPageFile(pn);
 
 		if (remove(page_name.c_str())) { // remove old file from disk
 			cerr << "Failed to remove file " << page_name << endl;
@@ -586,6 +561,14 @@ void BufferManager::flush(int pn) {
 
 	buffer->remove(pn);
 	}
+}
+
+void BufferManager::erase(int pn) {
+	string path = GetPageFile(pn);
+	if (remove(path.c_str()) != 0) {
+		cerr << "Unable to delete file: " << path << endl;
+	}
+	buffer->remove(pn);
 }
 
 bool BufferManager::iscached(int pn) {

@@ -111,3 +111,14 @@ void Month2Int(string & month) {
 	else
 		month = "12";
 }
+
+string GetPageFile(int pn) {
+	string page_name = to_string(pn);
+	int zeros = 10 - page_name.size();
+
+	for (size_t i = 0; i < zeros; i++) 
+		page_name = '0' + page_name;
+	page_name = DATAPATH + page_name + ".csv";
+	
+	return page_name;
+}

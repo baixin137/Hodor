@@ -40,7 +40,7 @@ public:
 
 	void add(Table* table); // add a table, takes in database::table
 	void create(Table* table, string tname); // create a new table from old table, with the same attributes
-	void remove(string tname); // remove a table from database
+	void remove(string tname, BufferManager* buffer); // remove a table from database, database::table
 	// void insert(string tuple, string table);
 	// void remove(vector<string> key, string table);
 	// void update(vector<string> key, string table);

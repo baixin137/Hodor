@@ -176,4 +176,5 @@ void ConsoleReader::PartitionTable(string command) {
 		}
 	}
 	// TODO: remove old table and recycle pages
+	filesystem->remove(tname, buffer);
 }

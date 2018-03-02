@@ -111,7 +111,7 @@ public:
     LRUCache(size_t capacity);
     Page* get(int key); // get page from cache
     void set(int key, Page* value); // set/insert page in cache
-    void remove(int key);
+    void remove(int key); // remove from memory
 
     void display();
 };
@@ -125,7 +125,8 @@ public:
 	BufferManager(size_t capacity);
 	void add(int pn, string type, string table, string attribute); // create a new page and add to buffer
 	void fetch(int pn); // fetch page from disk
-	void flush(int pn); //flush the page to disk and remove from memory
+	void flush(int pn); // flush the page to disk and remove from memory
+	void erase(int pn); // erase from memory and disk
 	bool iscached(int pn); // return true if page is in memory
 	Page* get(int pn); // get the page by page number
 	void MoveTuple(PageSet* pnew, PageSet* pold, size_t line);
