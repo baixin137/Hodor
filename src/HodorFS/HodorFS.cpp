@@ -214,7 +214,7 @@ void FileManager::add(Table* table) {
 			outfile << table->attributes[table->attr_order[i]]->type() << endl;
 	}
 
-	// store table in memeory
+	// store table in memory
 	tables[t_name] = table;
 	user->table_names.push_back(table->name());
 	user->tables[table->name()] = table;
@@ -225,6 +225,7 @@ void FileManager::add(Table* table) {
 	// the table is just created and no data is in it
 	// so the pages doesn't have this table's information yet
 }
+
 void FileManager::create(Table* table, string tname) {
 	// traverse the columns
 	string username = user->name();
@@ -235,7 +236,7 @@ void FileManager::create(Table* table, string tname) {
 	table_new->attr_order = table->attr_order;
 	table_new->attributes = table->attributes;
 
-	add(table);
+	add(table_new);
 	user->IncrementSize(1);
 }
 
