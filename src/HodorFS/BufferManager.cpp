@@ -4,18 +4,21 @@ Tuple::Tuple(bool n, string s, string t) {
 	isnull = n;
 	sval = s;
 	time = t;
+	tupletype = "TEXT";
 }
 
 Tuple::Tuple(bool n, int i, string t) {
 	isnull = n;
 	ival = i;
 	time = t;
+	tupletype = "INT";
 }
 
 Tuple::Tuple(bool n, double d, string t) {
 	isnull = n;
 	dval = d;
 	time = t;
+	tupletype = "DOUBLE";
 }
 
 Tuple::Tuple(bool n, string t) {
@@ -29,6 +32,10 @@ Tuple::Tuple(string t) {
 
 string Tuple::timestamp() {
 	return time;
+}
+
+string Tuple::type() {
+	return tupletype;
 }
 
 int Page::number() {
@@ -140,13 +147,13 @@ void TextPage::read(int pn, string page_name, vector<string> property) {
 
 			if (value == "NULL") {
 				tuple->isnull = true;
-				content.push_back(tuple);
 			}
 			else {
 				tuple->isnull = false;
 				tuple->sval = value;
-				content.push_back(tuple);
 			}
+			tuple->tupletype = "TEXT";
+			content.push_back(tuple);
 		}
 	}
 }
@@ -184,13 +191,13 @@ void IntPage::read(int pn, string page_name, vector<string> property) {
 			Tuple* tuple = new Tuple(t_stamp);
 			if (value == "NULL") {
 				tuple->isnull = true;
-				content.push_back(tuple);
 			}
 			else {
 				tuple->isnull = false;
 				tuple->ival = stoi(value);
-				content.push_back(tuple);
 			}
+			tuple->tupletype = "INT";
+			content.push_back(tuple);
 		}
 	}
 }
@@ -228,13 +235,13 @@ void DoublePage::read(int pn, string page_name, vector<string> property) {
 			Tuple* tuple = new Tuple(t_stamp);
 			if (value == "NULL") {
 				tuple->isnull = true;
-				content.push_back(tuple);
 			}
 			else {
 				tuple->isnull = false;
 				tuple->dval = stod(value);
-				content.push_back(tuple);
 			}
+			tuple->tupletype = "DOUBLE";
+			content.push_back(tuple);
 		}
 	}
 }
@@ -274,7 +281,7 @@ void TextPage::write() {
 	ofstream outfile;
 	outfile.open(page_name);
 	outfile << tablename << ',' << attrname << ','
-			<< attrtype << ',' << to_string(slots) << ','
+			<< attrtype << ',' << slots << ','
 			<< attrs << endl;
 
 	for (size_t i = 0; i < content.size(); i++) {
@@ -308,7 +315,7 @@ void IntPage::write() {
 	ofstream outfile;
 	outfile.open(page_name);
 	outfile << tablename << ',' << attrname << ','
-			<< attrtype << ',' << to_string(slots) << ','
+			<< attrtype << ',' << slots << ','
 			<< attrs << ',' << minval << ','
 			<< maxval << ',' << meanval << endl;
 
@@ -343,7 +350,7 @@ void DoublePage::write() {
 	ofstream outfile;
 	outfile.open(page_name);
 	outfile << tablename << ',' << attrname << ','
-			<< attrtype << ',' << to_string(slots) << ','
+			<< attrtype << ',' << slots << ','
 			<< attrs << ',' << minval << ','
 			<< maxval << ',' << meanval << endl;
 
@@ -463,7 +470,12 @@ void TextPage::UpdateMeta(double val) {}
 
 void IntPage::UpdateMeta(double val) {
 	val = int(val);
-	minval = val < minval ? val : minval;
+
+	if (attrs == 0)
+		minval = val;
+	else 
+		minval = val < minval ? val : minval;
+
 	maxval = val > maxval ? val : maxval;
 	if (attrs == 0)
 		meanval = double(val);
@@ -472,7 +484,10 @@ void IntPage::UpdateMeta(double val) {
 }
 
 void DoublePage::UpdateMeta(double val) {
-	minval = val < minval ? val : minval;
+	if (attrs == 0)
+		minval = val;
+	else
+		minval = val < minval ? val : minval;
 	maxval = val > maxval ? val : maxval;
 	if (attrs == 0)
 		meanval = val;
@@ -543,13 +558,13 @@ void BufferManager::add(int pn, string type, string table, string attribute) {
 	Page* page;
 
 	if (type == "INT") {
-		page = new IntPage(pn, table, attribute, 1);
+		page = new IntPage(pn, table, attribute, 0);
 	}
 	else if (type == "DOUBLE") {
-		page = new DoublePage(pn, table, attribute, 1);
+		page = new DoublePage(pn, table, attribute, 0);
 	}
 	else { // is string
-		page = new TextPage(pn, table, attribute, 1);
+		page = new TextPage(pn, table, attribute, 0);
 	}
 
 	buffer->set(pn, page);
@@ -645,9 +660,21 @@ void BufferManager::MoveTuple(PageSet* pnew, PageSet* pold, size_t line) {
 		Page* page_old = get(pold->pageset[i]);
 		Page* page_new = get(pnew->pageset[i]);
 
-		Tuple* tuple_old = page_old->content[i];
+		Tuple* tuple_old = page_old->content[line];
 		page_new->content.push_back(tuple_old);
+
+		if (tuple_old->type() == "INT") {
+			cout << "updating int meta" << endl;
+			page_new->UpdateMeta(tuple_old->ival);
+		}
+		else if (tuple_old->type() == "DOUBLE") {
+			cout << "updating float meta" << endl;
+			page_new->UpdateMeta(tuple_old->dval);
+		}
+
 		page_new->IncrementSize(1);
 		page_new->dirty = true;
+		page_new->slots -= 1;
 	}
+	cout << "Tuples moved from old pageset successfully" << endl;
 }

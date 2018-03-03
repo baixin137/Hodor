@@ -27,11 +27,13 @@ public:
 	Tuple(                  string t);
 
 	string timestamp();
+	string type();
 
 	bool isnull;
 	string sval;
 	int ival;
 	double dval;
+	string tupletype;
 
 private:
 	string time;
