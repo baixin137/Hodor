@@ -102,6 +102,7 @@ void QueryParser::ParseINSERT(const hsql::SQLStatement* statement) {
 				if (val->type == hsql::kExprLiteralString) {
 					string sval(val->name);
 					newtup = new Tuple(false, sval, t_stamp);
+					cout << "New tuple: " << sval << " type: " << newtup->type() << endl;
 				}
 				else if (val->type == hsql::kExprLiteralInt) {
 					int ival = val->ival;

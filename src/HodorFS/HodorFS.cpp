@@ -41,7 +41,7 @@ FileManager::FileManager() {
 		while (getline(table_attr, line)) {
 			istringstream iss(line);
 
-			string table;
+			string table; // database::table
 			string username;
 			string ts;
 			string tuples;
@@ -52,8 +52,6 @@ FileManager::FileManager() {
 		 	getline(iss, ts,         ',');
 		 	getline(iss, tuples,     ',');
 		 	getline(iss, cols,       ',');
-
-		 	table = username + "::" + table;
 
 		 	tables[table] = new Table(table, username, ts, stoi(tuples), stoi(cols));
 
@@ -233,10 +231,11 @@ void FileManager::create(Table* table, string tname) {
 	size_t cols = table->columns();
 
 	Table* table_new = new Table(tname, username, timestamp, 0, cols);
+	cout << "New partition table name: " << tname << endl;
 	table_new->attr_order = table->attr_order;
 
 	for (string attr : table->attr_order) {
-		table_new->attributes[attr] = new Attribute(attr, table->attributes[attr]->type(), user->name() + "::" + tname);
+		table_new->attributes[attr] = new Attribute(attr, table->attributes[attr]->type(), tname);
 	}
 
 	add(table_new);
@@ -251,6 +250,9 @@ void FileManager::remove(string tname, BufferManager* buffer) {
 		for (int page_num : pageset->pageset) {
 			buffer->erase(page_num);
 			emptypages.insert(page_num);
+
+			// we don't actuall need to remove old files
+			// just cover them with new files
 		}
 	}
 	pages.erase(tname);
@@ -267,6 +269,7 @@ PageSet* FileManager::FindPageSet(string table, BufferManager* buffer) {
 	// string t_stamp = addTimeStamp();
 
 	bool pagesetfound = false;
+	cout << "Trying to find a pageset." << endl;
 
 	if (pages.find(table) == pages.end()) {
 		cerr << "Table not found in " << user->name() << "." << endl;
@@ -277,6 +280,7 @@ PageSet* FileManager::FindPageSet(string table, BufferManager* buffer) {
 				cout << "Slots left: " << p->slot() << endl;
 				pset = p;
 				pagesetfound = true;
+				cout << "Existing page set found" << endl;
 				break;
 			}
 		}
@@ -307,6 +311,7 @@ PageSet* FileManager::FindPageSet(string table, BufferManager* buffer) {
 			}
 			pset = p;
 			pages[table]->pageset.push_back(pset);
+			cout << "Created a new page set." << endl;
 		}
 	}
 	return pset;
