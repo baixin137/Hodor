@@ -129,3 +129,9 @@ void QueryParser::ParseINSERT(const hsql::SQLStatement* statement) {
 		}
 	}
 }
+
+void QueryParser::ParseSELECT(const hsql::SQLStatement* statement) {
+	const hsql::SelectStatement* select = (const hsql::SelectStatement*) statement;
+
+	
+}
