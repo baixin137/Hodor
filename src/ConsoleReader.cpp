@@ -129,14 +129,13 @@ void ConsoleReader::PartitionTable(string command) {
 	istringstream iss(command);
 	string table_name;
 	string partition;
-	ToLower(partition);
 
 	getline(iss, table_name, ' ');
 	getline(iss, table_name, ' '); // get table name
 	getline(iss, partition,  ' '); // get partition criteria
 
-	cout <<  "Table name is: " << table_name << endl;
-
+	// cout <<  "Table name is: " << table_name << endl;
+	ToLower(partition);
 	unordered_set<string> partitions = {"year", "month", "date", "hour", "minute"};
 	if (partitions.find(partition) == partitions.end()) {
 		cout << "Invalid partition critera, please choose from: " << endl;
@@ -158,31 +157,31 @@ void ConsoleReader::PartitionTable(string command) {
 	for (PageSet* pset : table->pageset) {
 		for (int page_num : pset->pageset) {
 			// fetch page from disk if not in memory
-			cout << "Check if page in memory" << endl;
+			// cout << "Check if page in memory" << endl;
 			if (!buffer->iscached(page_num)) { // if not in memory
-				cout << "Preparing the fetch page from disk." << endl;
+				// cout << "Preparing the fetch page from disk." << endl;
 				buffer->fetch(page_num);
-				cout << "Page fetched from disk: " << page_num << endl;
+				// cout << "Page fetched from disk: " << page_num << endl;
 			}
 		}
 		// the first page in page set stores time stamp
 		int pnum = pset->pageset[0];
 		Page* page = buffer->get(pnum);
-		cout << "Timestamp page got from cache: " << pnum << endl;
+		// cout << "Timestamp page got from cache: " << pnum << endl;
 
 		size_t page_size = page->content.size();
 
 		for (size_t i = 0; i < page_size; i++) {
 			string new_table = table_name + "::" + GetTime(page->content[i]->timestamp(), partition);
-			cout << "New table name is: " << new_table << endl;
+			// cout << "New table name is: " << new_table << endl;
 			string new_table_DB = filesystem->user->name() + "::" + new_table;
-			cout << "New table name DB is: " << new_table_DB << endl;
+			// cout << "New table name DB is: " << new_table_DB << endl;
 			// check if the table exists
 			if (filesystem->tables.find(new_table_DB) == filesystem->tables.end()) {
 				// if table does not exists
 				// create a new table and add to file system
 				filesystem->create(filesystem->tables[tname_official], new_table_DB);
-				cout << "New partition table created" << endl;
+				// cout << "New partition table created" << endl;
 			}
 			// move tuple to new table and pages
 			PageSet* pset_new = filesystem->FindPageSet(new_table_DB, buffer);
@@ -191,7 +190,6 @@ void ConsoleReader::PartitionTable(string command) {
 			filesystem->tables[new_table_DB]->IncrementSize(1);
 		}
 	}
-	// TODO: remove old table and recycle pages
 	if (filesystem->tables.find(tname_official) == filesystem->tables.end()) {
 		cerr << "Error: table \"" << tname_official << "\" not found in storage." << endl;
 		return;

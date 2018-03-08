@@ -20,7 +20,7 @@ public:
 	// parse incoming INSERT statement
 	void ParseINSERT(const hsql::SQLStatement* statement);
 	// parse incoming SELECT statement
-	// void ParseSELECT(const hsql::SQLStatement* statement);
+	void ParseSELECT(const hsql::SQLStatement* statement);
 };
 
 #endif
