@@ -9,6 +9,7 @@ string STORAGECSV    = "storage.csv";
 size_t PAGESIZE      = 1000;
 size_t CHECKPERIOD   = 5;
 size_t BUFFERSIZE    = 5000;
+size_t BOXWIDTH      = 20;
 
 pthread_mutex_t Lock = PTHREAD_MUTEX_INITIALIZER;
 
@@ -121,4 +122,23 @@ string GetPageFile(int pn) {
 	page_name = DATAPATH + page_name + ".csv";
 	
 	return page_name;
+}
+
+void PrintLine(size_t width, size_t cols) {
+	size_t num = 1 + (width + 1) * cols;
+
+	for (size_t i = 0; i < num; i++) {
+		cout << '-';
+	}
+	cout << endl;
+}
+
+void PrintLineInner(size_t width, size_t cols) {
+	for (size_t i = 0; i < cols; i++) {
+		cout << '|';
+		for (size_t j = 0; j < width; j++) {
+			cout << '-';
+		}
+	}
+	cout << '|' << endl;
 }

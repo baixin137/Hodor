@@ -153,7 +153,7 @@ void QueryParser::ParseSELECT(const hsql::SQLStatement* statement) {
 
 	string t_name(select->fromTable->name);
 	t_name = filesystem->user->name() + "::" + t_name;
-	// cout << "table name is: " << t_name << endl;
+	cout << "table name is: " << t_name << endl;
 	Table* fromTable = filesystem->tables[t_name];
 
 	vector<Attribute*> selectList;
@@ -164,6 +164,8 @@ void QueryParser::ParseSELECT(const hsql::SQLStatement* statement) {
 
 	size_t num_pages = selectList[0]->pages.size();
 	size_t cols = selectList.size();
+
+	PrintLine(BOXWIDTH, cols);
 
 	for (size_t i = 0; i < num_pages; i++) {
 		int page_num = selectList[0]->page_order[i];
@@ -185,13 +187,17 @@ void QueryParser::ParseSELECT(const hsql::SQLStatement* statement) {
 				Page* page = buffer->get(page_num);
 
 				if (page->type() == "TEXT")
-					printElement(page->content[j]->sval, 20);
+					printElement(page->content[j]->sval, BOXWIDTH);
 				else if (page->type() == "INT")
-					printElement(page->content[j]->ival, 20);
+					printElement(page->content[j]->ival, BOXWIDTH);
 				else
-					printElement(page->content[j]->dval, 20);
+					printElement(page->content[j]->dval, BOXWIDTH);
 			}
 			cout << endl;
+			if (j < num_tuples - 1)
+				PrintLineInner(BOXWIDTH, cols);
+			else
+				PrintLine(BOXWIDTH, cols);
 		}
 	}
 }

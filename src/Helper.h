@@ -18,6 +18,7 @@ extern string STORAGECSV;
 extern size_t PAGESIZE;
 extern size_t CHECKPERIOD;
 extern size_t BUFFERSIZE;
+extern size_t BOXWIDTH;
 
 extern pthread_mutex_t Lock;
 
@@ -33,5 +34,8 @@ string DatabaseName(string name); // return database name from database:;table
 string GetTime(string timestamp, string unit);
 void Month2Int(string& month); // convert month to 1-12
 string GetPageFile(int pn);
+
+void PrintLine(size_t width, size_t cols);
+void PrintLineInner(size_t width, size_t cols);
 
 #endif

@@ -189,12 +189,14 @@ FileManager::FileManager() {
 					attribute->pages.insert(stoi(p_num));
 					attribute->page_order.push_back(stoi(p_num));
 				}
+				count++;
 			}
 
 			pages[db_table]->pageset.push_back(pageset);
 		}
 
 	}
+	display();
 }
 
 void FileManager::add(Table* table) {
@@ -332,28 +334,22 @@ PageSet* FileManager::FindPageSet(string table, BufferManager* buffer) {
 	return pset;
 }
 
-// void FileManager::display_t() {
-// 	for (auto it = tables.begin(); it != tables.end(); it++) {
-// 		cout << it->first << ", ";
-// 		for (auto attr : it->second->attr_order) {
-// 			cout << attr << ", ";
-// 		}
-// 		cout << endl;
-// 	}
-// }
-
-// void FileManager::display_p() {
-// 	for (auto it = pages.begin(); it != pages.end(); it++) {
-// 		cout << "Table: " << it->first << endl;
-// 		for (auto t : it->second->pageset) {
-// 			cout << "Slots: " << t->slot() << ", ";
-// 			for (auto k : t->pageset) 
-// 				cout << k << ", ";
-// 		}
-// 		cout << endl;
-// 	}
-// 	cout << endl;
-// }
+void FileManager::display() {
+	cout << "Showing all the tables in the database: " << endl;
+	for (auto table = tables.begin(); table != tables.end(); table++) {
+		cout << table->first << endl;
+		cout << "This table has attributes: " << endl;
+		for (auto attr : table->second->attr_order) {
+			cout << attr << endl;
+			auto attribute = table->second->attributes[attr];
+			cout << "This attribute is stored in pages: " << endl;
+			for (auto p : attribute->page_order) {
+				cout << p << ' ';
+			}
+			cout << endl;
+		}
+	}
+}
 
 Database::Database(string nm, size_t s, string time) { // when first start, read meta information from disk
 	database = nm;

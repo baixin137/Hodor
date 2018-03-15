@@ -46,8 +46,8 @@ public:
 	// void update(vector<string> key, string table);
 
 	PageSet* FindPageSet(string table, BufferManager* buffer);
-	// void display_t();
-	// void display_p();
+
+	void display();
 };
 
 class AutoSave { // periodically save data to disk

@@ -45,8 +45,6 @@ public:
 	size_t columns();
 	void IncrementSize(size_t s);
 
-	void IncrementSize(size_t s);
-
 	vector<string> attr_order;
 	unordered_map<string, Attribute*> attributes;
 };

@@ -10,14 +10,14 @@ using namespace std;
 
 class Token {
 private:
-	string type;
-	string token;
+	string tokentype;
+	string tokenvalue;
 
 public:
 	Token(string tp, string tk);
 
-	string get_type();
-	string get_token();
+	string type();
+	string token();
 
 	bool is_keyword();
 	bool is_whitespace();
