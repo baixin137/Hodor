@@ -15,7 +15,7 @@ void ConsoleReader::AddDatabase(string username) {
 	string answer;
 
 	while (true) {
-		cin >> answer;
+		getline(cin, answer);
 
 		if (answer == "Y" || answer == "y") {
 			string timestamp = addTimeStamp();
@@ -24,7 +24,7 @@ void ConsoleReader::AddDatabase(string username) {
 			filesystem->users[username] = DB;
 			filesystem->user = DB;
 
-			cout << "Stored user: " << username << " to database" << endl;
+			// cout << "Stored user: " << username << " to database" << endl;
 			break;
 		}
 		else if (answer != "N" && answer != "n") {
@@ -52,12 +52,11 @@ void ConsoleReader::ReadCommand() {
 		hsql::SQLParser::parse(command, &result);
 
 		if (!result.isValid()) { // database command
-			cout << "Invalid statement" << endl;
-			cout << result.errorMsg() << endl;
+			// cout << "Invalid statement" << endl;
+			// cout << result.errorMsg() << endl;
 			
 			istringstream iss(command);
 			string keyword;
-
 			if (!getline(iss, keyword, ' ')) {
 				cerr << "Unsupported Command." << endl;
 				continue;
@@ -82,7 +81,7 @@ void ConsoleReader::ReadCommand() {
 				parser->ParseCREATE(statement);
 			}
 			else if (statement->isType(hsql::kStmtInsert)) {
-				cout << "Insert!" << endl;
+				// cout << "Insert!" << endl;
 				parser->ParseINSERT(statement);
 
 				// auto l = buffer->getbuffer()->linkedlist;
@@ -91,7 +90,7 @@ void ConsoleReader::ReadCommand() {
 				// }
 			}
 			else if (statement->isType(hsql::kStmtSelect)) {
-				cout << "Select!" << endl;
+				// cout << "Select!" << endl;
 				parser->ParseSELECT(statement);
 			}
 			// write metainfo of new table to disk
@@ -153,7 +152,7 @@ void ConsoleReader::PartitionTable(string command) {
 
 	TableStorage* table = filesystem->pages[tname_official];
 
-	cout << "Table storage found." << endl;
+	// cout << "Table storage found." << endl;
 
 	for (PageSet* pset : table->pageset) {
 		for (int page_num : pset->pageset) {

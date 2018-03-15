@@ -21,7 +21,7 @@ void QueryParser::ParseCREATE(const hsql::SQLStatement* statement) {
 
 	Table* table = new Table(tablename, user, timestamp,0, cols);
 
-	cout << "Creating new table: " << tablename << endl;
+	// cout << "Creating new table: " << tablename << endl;
 
 	// add timestamp to table
 	Attribute* t_stamp = new Attribute("TimeStamp", "TEXT", tablename);
@@ -41,7 +41,7 @@ void QueryParser::ParseCREATE(const hsql::SQLStatement* statement) {
 
 		Attribute* attribute = new Attribute(attr, type, tablename);
 		table->attributes[attr] = attribute;
-		cout << "Adding column " << attr << " to table" << endl;
+		// cout << "Adding column " << attr << " to table" << endl;
 		table->attr_order.push_back(attr);
 	}
 	filesystem->add(table);
@@ -52,7 +52,7 @@ void QueryParser::ParseINSERT(const hsql::SQLStatement* statement) {
 	const hsql::InsertStatement* insert = (const hsql::InsertStatement*) statement;
 	string table(insert->tableName);
 	table = filesystem->user->name() + "::" + table;
-	cout << "Ready to insert to table: " << table << endl;
+	// cout << "Ready to insert to table: " << table << endl;
 
 	if (filesystem->tables.find(table) == filesystem->tables.end()) {
 		cerr << "Trying to insert to non-existing table" << endl;
@@ -61,7 +61,7 @@ void QueryParser::ParseINSERT(const hsql::SQLStatement* statement) {
 
 	filesystem->tables[table]->IncrementSize(1);
 
-	cout << "Table size incremented" << endl;
+	// cout << "Table size incremented" << endl;
 
 	// TODO: handle the error that data type doesn't match the correct order
 	if (!insert->columns) { // attributes not specified
@@ -83,7 +83,7 @@ void QueryParser::ParseINSERT(const hsql::SQLStatement* statement) {
 
 		pset->slots -= 1;
 
-		cout << "pageset created, creating pages;" << endl;
+		// cout << "pageset created, creating pages;" << endl;
 
 		// insert time stamp page
 		int t_pagenum = pset->pageset[0];
@@ -96,7 +96,7 @@ void QueryParser::ParseINSERT(const hsql::SQLStatement* statement) {
 		tstamp_page->dirty = true;
 		tstamp_page->slots -= 1;
 
-		cout << "Timestamp created" << endl;
+		// cout << "Timestamp created" << endl;
 
 		Tuple* attr_ts = new Tuple(false, t_stamp, t_stamp);
 		tstamp_page->content.push_back(attr_ts);
@@ -120,7 +120,7 @@ void QueryParser::ParseINSERT(const hsql::SQLStatement* statement) {
 				if (val->type == hsql::kExprLiteralString) {
 					string sval(val->name);
 					newtup = new Tuple(false, sval, t_stamp);
-					cout << "New tuple: " << sval << " type: " << newtup->type() << endl;
+					// cout << "New tuple: " << sval << " type: " << newtup->type() << endl;
 				}
 				else if (val->type == hsql::kExprLiteralInt) {
 					int ival = val->ival;
@@ -151,7 +151,7 @@ void QueryParser::ParseSELECT(const hsql::SQLStatement* statement) {
 
 	string t_name(select->fromTable->name);
 	t_name = filesystem->user->name() + "::" + t_name;
-	cout << "table name is: " << t_name << endl;
+	// cout << "table name is: " << t_name << endl;
 	Table* fromTable = filesystem->tables[t_name];
 
 	vector<Attribute*> selectList;

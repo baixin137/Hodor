@@ -24,7 +24,7 @@ FileManager::FileManager() {
 		}
 	}
 
-	cout << "avalable pages read." << endl;
+	// cout << "avalable pages read." << endl;
 
 	// fetch the table names from the table file
 	// use the tables hash table to store which table has which attributes
@@ -37,7 +37,6 @@ FileManager::FileManager() {
 	}
 	else {
 		string line;
-		cout << "line is: " << line << endl;
 
 		while (getline(table_attr, line)) {
 			istringstream iss(line);
@@ -55,7 +54,7 @@ FileManager::FileManager() {
 		 	getline(iss, cols,       ',');
 
 		 	tables[table] = new Table(table, username, ts, stoi(tuples), stoi(cols));
-		 	cout << "Adding table: " << table << endl;
+		 	// cout << "Adding table: " << table << endl;
 		 	string attr;
 		 	vector<string> attrs;
 		 	for (size_t i = 0; i  < stoi(cols); i++) {
@@ -103,7 +102,7 @@ FileManager::FileManager() {
 		// }
 	}
 
-	cout << "Tables read." << endl;
+	// cout << "Tables read." << endl;
 
 	// read meta info of databases
 	string path_DB = DATAPATH + DBCSV;
@@ -138,13 +137,13 @@ FileManager::FileManager() {
 			while (getline(iss, t_name, ',')) {
 				newDB->tables[t_name] = (tables[t_name]);
 				newDB->table_names.insert(t_name);
-				cout << "table: " << t_name << " loaded to " << db_name << endl;
+				// cout << "table: " << t_name << " loaded to " << db_name << endl;
 			}
 			users[db_name] = newDB;
 		}
 	}
 
-	cout << "Databases read." << endl;
+	// cout << "Databases read." << endl;
 
 	// read pagestorage
 	string storage_path = (DATAPATH + STORAGECSV);
@@ -180,10 +179,10 @@ FileManager::FileManager() {
 				pageset->pageset.push_back(stoi(p_num));
 
 				// add page information to according attribute
-				cout << "db_table is: " << db_table << endl;
-				if (tables.find(db_table) == tables.end()) cout << "end!" << endl;
+				// cout << "db_table is: " << db_table << endl;
+				// if (tables.find(db_table) == tables.end()) cout << "end!" << endl;
 				string attrname = tables[db_table]->attr_order[count];
-				cout << "attrname is: " << attrname << endl;
+				// cout << "attrname is: " << attrname << endl;
 
 				Attribute* attribute = tables[db_table]->attributes[attrname];
 				if (attribute->pages.find(stoi(p_num)) == attribute->pages.end()) {
@@ -247,7 +246,7 @@ void FileManager::create(Table* table, string tname) {
 	size_t cols = table->columns();
 
 	Table* table_new = new Table(tname, username, timestamp, 0, cols);
-	cout << "New partition table name: " << tname << endl;
+	// cout << "New partition table name: " << tname << endl;
 	table_new->attr_order = table->attr_order;
 
 	for (string attr : table->attr_order) {
@@ -285,7 +284,7 @@ PageSet* FileManager::FindPageSet(string table, BufferManager* buffer) {
 	// string t_stamp = addTimeStamp();
 
 	bool pagesetfound = false;
-	cout << "Trying to find a pageset." << endl;
+	// cout << "Trying to find a pageset." << endl;
 
 	if (pages.find(table) == pages.end()) {
 		cerr << "Table not found in " << user->name() << "." << endl;
@@ -293,10 +292,10 @@ PageSet* FileManager::FindPageSet(string table, BufferManager* buffer) {
 	else { // table found
 		for (auto p : pages[table]->pageset) {
 			if (p->slot() > 0) {
-				cout << "Slots left: " << p->slot() << endl;
+				// cout << "Slots left: " << p->slot() << endl;
 				pset = p;
 				pagesetfound = true;
-				cout << "Existing page set found" << endl;
+				// cout << "Existing page set found" << endl;
 				break;
 			}
 		}
@@ -327,7 +326,7 @@ PageSet* FileManager::FindPageSet(string table, BufferManager* buffer) {
 			}
 			pset = p;
 			pages[table]->pageset.push_back(pset);
-			cout << "Created a new page set." << endl;
+			// cout << "Created a new page set." << endl;
 		}
 	}
 	return pset;
