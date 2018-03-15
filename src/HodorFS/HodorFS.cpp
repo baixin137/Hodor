@@ -70,36 +70,6 @@ FileManager::FileManager() {
 		 		tables[table]->attr_order.push_back(attrs[i]);
 		 	}
 		}
-
-		// use pages to store which tables are stored in which pages
-		// for (auto it = tables.begin(); it != tables.end(); it++) {
-		// 	string t_name = it->first;
-
-		// 	TableStorage* ts = new TableStorage(t_name, DatabaseName(t_name));
-		// 	pages[t_name] = ts;
-
-		// 	string directory = DATAPATH + t_name + ".csv";
-		// 	ifstream table_loc(directory);
-
-		// 	if (table_loc) {
-		// 		string pages_attr;
-		// 		while (getline(table_loc, pages_attr)) {
-		// 			istringstream iss(pages_attr);
-		// 			string pnumber;
-		// 			vector<int> page_num;
-		// 			string slots;
-
-		// 			getline(iss, slots, ',');
-		// 			PageSet* ps = new PageSet(stoi(slots));
-
-		// 			while (getline(iss, pnumber, ',')) {
-		// 				ps->pageset.push_back(stoi(pnumber));
-		// 			}
-
-		// 			pages[t_name]->pageset.push_back(ps);
-		// 		}
-		// 	}
-		// }
 	}
 
 	// cout << "Tables read." << endl;
@@ -196,7 +166,7 @@ FileManager::FileManager() {
 		}
 
 	}
-	display();
+	// display();
 }
 
 void FileManager::add(Table* table) {
