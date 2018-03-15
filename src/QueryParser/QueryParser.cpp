@@ -5,6 +5,10 @@ QueryParser::QueryParser(FileManager* fs, BufferManager* bf) {
 	buffer = bf;
 }
 
+template <typename T> void QueryParser::printElement(T elem, const int& width) {
+	cout << left << setw(width) << setfill(' ') << elem << '|';
+}
+
 void QueryParser::ParseCREATE(const hsql::SQLStatement* statement) {
 	const hsql::CreateStatement* create = (const hsql::CreateStatement*) statement;
 
@@ -37,6 +41,7 @@ void QueryParser::ParseCREATE(const hsql::SQLStatement* statement) {
 
 		Attribute* attribute = new Attribute(attr, type, tablename);
 		table->attributes[attr] = attribute;
+		cout << "Adding column " << attr << " to table" << endl;
 		table->attr_order.push_back(attr);
 	}
 	filesystem->add(table);
@@ -61,7 +66,20 @@ void QueryParser::ParseINSERT(const hsql::SQLStatement* statement) {
 	// TODO: handle the error that data type doesn't match the correct order
 	if (!insert->columns) { // attributes not specified
 		// find or create a pageset to store this tuple
-		PageSet* pset = filesystem->FindPageSet(table, buffer); 		string t_stamp = addTimeStamp();
+		PageSet* pset = filesystem->FindPageSet(table, buffer);
+		string t_stamp = addTimeStamp();
+
+		// add pages to attributes
+		for (size_t i = 0; i < pset->pageset.size(); i++) {
+			string attrname = filesystem->tables[table]->attr_order[i];
+			Attribute* attribute = filesystem->tables[table]->attributes[attrname];
+			if (attribute->pages.find(pset->pageset[i]) != attribute->pages.end())
+				break;
+			else {
+				attribute->pages.insert(pset->pageset[i]);
+				attribute->page_order.push_back(pset->pageset[i]);
+			}
+		}
 
 		pset->slots -= 1;
 
@@ -131,5 +149,47 @@ void QueryParser::ParseINSERT(const hsql::SQLStatement* statement) {
 void QueryParser::ParseSELECT(const hsql::SQLStatement* statement) {
 	const hsql::SelectStatement* select = (const hsql::SelectStatement*) statement;
 
-	
+	string t_name(select->fromTable->name);
+	t_name = filesystem->user->name() + "::" + t_name;
+	cout << "table name is: " << t_name << endl;
+	Table* fromTable = filesystem->tables[t_name];
+
+	vector<Attribute*> selectList;
+	for (auto column : *select->selectList) {
+		string col(column->name);
+		selectList.push_back(fromTable->attributes[col]);
+	}
+
+	size_t num_pages = selectList[0]->pages.size();
+	size_t cols = selectList.size();
+
+	for (size_t i = 0; i < num_pages; i++) {
+		int page_num = selectList[0]->page_order[i];
+		if (!buffer->iscached(page_num)) {
+			buffer->fetch(page_num);
+		}
+		Page* p = buffer->get(page_num);
+		size_t num_tuples = p->size();
+		// cout << 1 << endl;
+		for (size_t j = 0; j < num_tuples; j++) {
+			// cout << 2 << endl;
+			cout << '|';
+			for (size_t k = 0; k < cols; k++) {
+				// cout << 3 << endl;
+				int page_num = selectList[k]->page_order[i];
+				if (!buffer->iscached(page_num)) {
+					buffer->fetch(page_num);
+				}
+				Page* page = buffer->get(page_num);
+
+				if (page->type() == "TEXT")
+					printElement(page->content[j]->sval, 20);
+				else if (page->type() == "INT")
+					printElement(page->content[j]->ival, 20);
+				else
+					printElement(page->content[j]->dval, 20);
+			}
+			cout << endl;
+		}
+	}
 }

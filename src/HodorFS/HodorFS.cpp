@@ -37,6 +37,7 @@ FileManager::FileManager() {
 	}
 	else {
 		string line;
+		cout << "line is: " << line << endl;
 
 		while (getline(table_attr, line)) {
 			istringstream iss(line);
@@ -54,7 +55,7 @@ FileManager::FileManager() {
 		 	getline(iss, cols,       ',');
 
 		 	tables[table] = new Table(table, username, ts, stoi(tuples), stoi(cols));
-
+		 	cout << "Adding table: " << table << endl;
 		 	string attr;
 		 	vector<string> attrs;
 		 	for (size_t i = 0; i  < stoi(cols); i++) {
@@ -72,34 +73,34 @@ FileManager::FileManager() {
 		}
 
 		// use pages to store which tables are stored in which pages
-		for (auto it = tables.begin(); it != tables.end(); it++) {
-			string t_name = it->first;
+		// for (auto it = tables.begin(); it != tables.end(); it++) {
+		// 	string t_name = it->first;
 
-			TableStorage* ts = new TableStorage(t_name, DatabaseName(t_name));
-			pages[t_name] = ts;
+		// 	TableStorage* ts = new TableStorage(t_name, DatabaseName(t_name));
+		// 	pages[t_name] = ts;
 
-			string directory = DATAPATH + t_name + ".csv";
-			ifstream table_loc(directory);
+		// 	string directory = DATAPATH + t_name + ".csv";
+		// 	ifstream table_loc(directory);
 
-			if (table_loc) {
-				string pages_attr;
-				while (getline(table_loc, pages_attr)) {
-					istringstream iss(pages_attr);
-					string pnumber;
-					vector<int> page_num;
-					string slots;
+		// 	if (table_loc) {
+		// 		string pages_attr;
+		// 		while (getline(table_loc, pages_attr)) {
+		// 			istringstream iss(pages_attr);
+		// 			string pnumber;
+		// 			vector<int> page_num;
+		// 			string slots;
 
-					getline(iss, slots, ',');
-					PageSet* ps = new PageSet(stoi(slots));
+		// 			getline(iss, slots, ',');
+		// 			PageSet* ps = new PageSet(stoi(slots));
 
-					while (getline(iss, pnumber, ',')) {
-						ps->pageset.push_back(stoi(pnumber));
-					}
+		// 			while (getline(iss, pnumber, ',')) {
+		// 				ps->pageset.push_back(stoi(pnumber));
+		// 			}
 
-					pages[t_name]->pageset.push_back(ps);
-				}
-			}
-		}
+		// 			pages[t_name]->pageset.push_back(ps);
+		// 		}
+		// 	}
+		// }
 	}
 
 	cout << "Tables read." << endl;
@@ -135,8 +136,9 @@ FileManager::FileManager() {
 
 			string t_name;
 			while (getline(iss, t_name, ',')) {
-				newDB->tables[t_name] = (tables[db_name + "::" + t_name]);
+				newDB->tables[t_name] = (tables[t_name]);
 				newDB->table_names.insert(t_name);
+				cout << "table: " << t_name << " loaded to " << db_name << endl;
 			}
 			users[db_name] = newDB;
 		}
@@ -172,8 +174,22 @@ FileManager::FileManager() {
 			PageSet* pageset = new PageSet(stoi(slots));
 
 			string p_num;
+
+			size_t count = 0;
 			while (getline(iss, p_num, ',')) {
 				pageset->pageset.push_back(stoi(p_num));
+
+				// add page information to according attribute
+				cout << "db_table is: " << db_table << endl;
+				if (tables.find(db_table) == tables.end()) cout << "end!" << endl;
+				string attrname = tables[db_table]->attr_order[count];
+				cout << "attrname is: " << attrname << endl;
+
+				Attribute* attribute = tables[db_table]->attributes[attrname];
+				if (attribute->pages.find(stoi(p_num)) == attribute->pages.end()) {
+					attribute->pages.insert(stoi(p_num));
+					attribute->page_order.push_back(stoi(p_num));
+				}
 			}
 
 			pages[db_table]->pageset.push_back(pageset);
@@ -455,6 +471,7 @@ void AutoSave::FlushBuffer() {
 		for (int recycled_page : filesystem->emptypages) {
 			apages << recycled_page << ",";
 		}
+		// cout << "Available pages auto flushed" << endl;
 
 		// flush dirty pages
 		for (auto it = cache->linkedlist.begin(); it != cache->linkedlist.end(); it++) {
@@ -466,6 +483,7 @@ void AutoSave::FlushBuffer() {
 				// cout << "Flushing page: " << page->getnum() << endl;
 			}
 		}
+		// cout << "Dirty pages auto flushed" << endl;
 
 		// flush table information
 		ofstream tables_info(DATAPATH + TABLESCSV);
@@ -494,6 +512,7 @@ void AutoSave::FlushBuffer() {
 			}
 		}
 		tables_info.close();
+		// cout << "Table info auto flushed" << endl;
 
 		// flush users information
 		ofstream db_info(DATAPATH + DBCSV);
@@ -514,6 +533,7 @@ void AutoSave::FlushBuffer() {
 			// cout << "database " << db->first << " flushed" << endl;
 		}
 		db_info.close();
+		// cout << "DB info auto flushed" << endl;
 
 		// flush which table has which pages meta information
 		ofstream pagestorage(DATAPATH + STORAGECSV);
@@ -531,5 +551,6 @@ void AutoSave::FlushBuffer() {
 			}
 		}
 		pagestorage.close();
+		// cout << "Page storage auto flushed" << endl;
 	}
 }

@@ -90,9 +90,10 @@ void ConsoleReader::ReadCommand() {
 				// 	it.second->write();
 				// }
 			}
-			// else if (statement->isType(hsql::kStmtSelect)) {
-			// 	parser->ParserSELECT(statement);
-			// }
+			else if (statement->isType(hsql::kStmtSelect)) {
+				cout << "Select!" << endl;
+				parser->ParseSELECT(statement);
+			}
 			// write metainfo of new table to disk
 		}
 		else 
