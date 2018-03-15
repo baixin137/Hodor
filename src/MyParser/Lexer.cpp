@@ -1,40 +1,40 @@
 #include "Lexer.h"
 
 Token::Token(string tp, string tk) {
-	type = tp;
-	token = tk;
+	tokentype = tp;
+	tokenvalue = tk;
 }
 
-string Token::get_type() {
-	return type;
+string Token::type() {
+	return tokentype;
 }
 
-string Token::get_token() {
-	return token;
+string Token::token() {
+	return tokenvalue;
 }
 
 bool Token::is_keyword() {
-	return type == "keyword";
+	return tokentype == "keyword";
 }
 
 bool Token::is_whitespace() {
-	return type == "whitespace";
+	return tokentype == "whitespace";
 }
 
 bool Token::is_others() {
-	return type == "others";
+	return tokentype == "others";
 }
 
 bool Token::is_operator() {
-	return type == "operator";
+	return tokentype == "operator";
 }
 
 bool Token::is_identifier() {
-	return type == "identifier";
+	return tokentype == "identifier";
 }
 
 bool Token::is_number() {
-	return type == "number";
+	return tokentype == "number";
 }
 
 

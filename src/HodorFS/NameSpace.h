@@ -22,6 +22,9 @@ public:
 	string name();
 	string type();
 	string table();
+
+	set<int> pages; // store which pages are this attribute stored
+	vector<int> page_order;
 };
 
 class Table {
