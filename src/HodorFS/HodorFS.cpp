@@ -24,7 +24,7 @@ FileManager::FileManager() {
 		}
 	}
 
-	// cout << "avalable pages read." << endl;
+	cout << "avalable pages read." << endl;
 
 	// fetch the table names from the table file
 	// use the tables hash table to store which table has which attributes
@@ -54,6 +54,7 @@ FileManager::FileManager() {
 		 	getline(iss, cols,       ',');
 
 		 	tables[table] = new Table(table, username, ts, stoi(tuples), stoi(cols));
+		 	pages[table] = nullptr;
 		 	// cout << "Adding table: " << table << endl;
 		 	string attr;
 		 	vector<string> attrs;
@@ -72,7 +73,7 @@ FileManager::FileManager() {
 		}
 	}
 
-	// cout << "Tables read." << endl;
+	cout << "Tables read." << endl;
 
 	// read meta info of databases
 	string path_DB = DATAPATH + DBCSV;
@@ -113,7 +114,7 @@ FileManager::FileManager() {
 		}
 	}
 
-	// cout << "Databases read." << endl;
+	cout << "Databases read." << endl;
 
 	// read pagestorage
 	string storage_path = (DATAPATH + STORAGECSV);
@@ -124,8 +125,10 @@ FileManager::FileManager() {
 		outfile.close();
 	}
 	else {
+		// cout << "Preparing to read meta info from disk." << endl;
 		string line;
 		while (getline(pstorage, line)) {
+			// cout << "Line is: " << line << endl;
 			istringstream iss(line);
 
 			string db_table;
@@ -133,7 +136,8 @@ FileManager::FileManager() {
 			string db_name = DatabaseName(db_table);
 			string tb_name = TableName(db_table);
 
-			if (pages.find(db_table) == pages.end()) {
+			if (pages.find(db_table) == pages.end() || !pages[db_table]) {
+				cout << db_table << " read to Hodor" << endl;
 				pages[db_table] = new TableStorage(db_table, db_name);
 			}
 
@@ -166,6 +170,8 @@ FileManager::FileManager() {
 		}
 
 	}
+
+	cout << "Storage read." << endl;
 	// display();
 }
 
@@ -259,21 +265,54 @@ PageSet* FileManager::FindPageSet(string table, BufferManager* buffer) {
 	// cout << "Trying to find a pageset." << endl;
 
 	if (pages.find(table) == pages.end()) {
-		cerr << "Table not found in " << user->name() << "." << endl;
+		cerr << "Error: Table " << table << " not found in " << user->name() << "." << endl;
+		return nullptr;
 	}
 	else { // table found
-		for (auto p : pages[table]->pageset) {
-			if (p->slot() > 0) {
-				// cout << "Slots left: " << p->slot() << endl;
+		// it could be that this entry has a nullptr so we need to check
+		if (pages[table]) {
+			for (auto p : pages[table]->pageset) {
+				if (p->slot() > 0) {
+					// cout << "Slots left: " << p->slot() << endl;
+					pset = p;
+					pagesetfound = true;
+					// cout << "Existing page set found" << endl;
+					break;
+				}
+			}
+			if (!pagesetfound) { // allocate a new page
+				// cout << "Pageset not found" << endl;
+				// int count = tables[table]->size();
+
+				PageSet* p = new PageSet(PAGESIZE);
+				// check if there are released pages to be recycled
+
+				// cout << "# of cols is: " << tables[table]->attr_order.size() << endl;
+				for (auto attrname : tables[table]->attr_order) {
+					Attribute* attr = tables[table]->attributes[attrname];
+					int pnumber;
+
+					if (emptypages.size() > 0) {
+						auto iter = emptypages.begin();
+						pnumber = *iter;
+						p->pageset.push_back(pnumber);
+						emptypages.erase(iter);
+					}
+					else {
+						pnumber = nextpage;
+						p->pageset.push_back(pnumber);
+						nextpage++;
+					}
+					buffer->add(pnumber, attr->type(), attr->table(), attr->name());
+				}
 				pset = p;
-				pagesetfound = true;
-				// cout << "Existing page set found" << endl;
-				break;
+				pages[table]->pageset.push_back(pset);
+				// cout << "Created a new page set." << endl;
 			}
 		}
-		if (!pagesetfound) { // allocate a new page
-			// cout << "Pageset not found" << endl;
-			// int count = tables[table]->size();
+		// if pages[table] is null, we need to create a new TableStorage
+		else {
+			pages[table] = new TableStorage(table, DatabaseName(table));
 
 			PageSet* p = new PageSet(PAGESIZE);
 			// check if there are released pages to be recycled
@@ -298,7 +337,6 @@ PageSet* FileManager::FindPageSet(string table, BufferManager* buffer) {
 			}
 			pset = p;
 			pages[table]->pageset.push_back(pset);
-			// cout << "Created a new page set." << endl;
 		}
 	}
 	return pset;
@@ -504,6 +542,11 @@ void AutoSave::FlushBuffer() {
 		ofstream pagestorage(DATAPATH + STORAGECSV);
 
 		for (auto table_pages = filesystem->pages.begin(); table_pages != filesystem->pages.end(); table_pages++) {
+			// cout << "Flushing table to storage " << table_pages->first << endl;
+			if (!table_pages->second) {
+				// cout << "Bug caught." << endl;
+				continue;
+			}
 			for (auto pset : table_pages->second->pageset) {
 				pagestorage << table_pages->first << ","
 							// << filesystem->tables[table_pages->first]->columns() << ","
