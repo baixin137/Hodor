@@ -9,6 +9,19 @@
 
 using namespace std;
 
+class Entry { // each Entry stores a tuple to print
+private:
+	size_t width; // width of each box
+	size_t num; // num of attributes to print
+
+public:
+	Entry(size_t w);
+
+	size_t size();
+	void print(); // print this entry
+	vector<string> attributeList;
+};
+
 class QueryParser {
 private:
 
