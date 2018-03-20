@@ -19,51 +19,56 @@ void QueryParser::SelectFilter(hsql::OperatorType op, double val, Attribute* att
 	size_t num_pages = selectList[0]->pages.size();
 	size_t cols = selectList.size();
 
-	if (op == hsql::kOpEquals) {
-		for (size_t i = 0; i < num_pages; i++) {
-			int page_num = selectList[0]->page_order[i];
-			if (!buffer->iscached(page_num)) {
-				buffer->fetch(page_num);
-			}
-			Page* p = buffer->get(page_num);
-			size_t num_tuples = p->size();
+	vector<Entry*> entries;
 
-			for (size_t j = 0; j < num_tuples; j++) {
-				bool satisfied = true;
-				for (size_t k = 0; k < cols; k++) {
-					int page_condnum = attr->page_order[i];
-					if (!buffer->iscached(page_condnum)) {
-						buffer->fetch(page_condnum);
-					}
-					Page* page_cond = buffer->get(page_condnum);
+	for (size_t i = 0; i < num_pages; i++) {
+		int page_num = selectList[0]->page_order[i];
+		if (!buffer->iscached(page_num)) {
+			buffer->fetch(page_num);
+		}
+		Page* p = buffer->get(page_num);
+		size_t num_tuples = p->size();
 
-					int page_num = selectList[k]->page_order[i];
-					if (!buffer->iscached(page_num)) {
-						buffer->fetch(page_num);
-					}
-					Page* page = buffer->get(page_num);
+		for (size_t j = 0; j < num_tuples; j++) {
+			Entry* entry = new Entry(BOXWIDTH);
+			bool satisfied = true;
 
+			for (size_t k = 0; k < cols; k++) {
+				int page_condnum = attr->page_order[i];
+				if (!buffer->iscached(page_condnum)) {
+					buffer->fetch(page_condnum);
+				}
+				Page* page_cond = buffer->get(page_condnum);
+
+				int page_num = selectList[k]->page_order[i];
+				if (!buffer->iscached(page_num)) {
+					buffer->fetch(page_num);
+				}
+				Page* page = buffer->get(page_num);
+				if (op == hsql::kOpEquals) {
 					if (page_cond->type() == "INT") {
 						if (page_cond->content[j]->ival == val) {
-							if (k == 0) cout << '|';
-							if (page->type() == "TEXT")
-								printElement(page->content[j]->sval, BOXWIDTH);
+							if (page->type() == "TEXT") {
+								string text(page->content[j]->sval);
+								entry->attributeList.push_back(text);
+							}
 							else if (page->type() == "INT")
-								printElement(page->content[j]->ival, BOXWIDTH);
+								entry->attributeList.push_back(to_string(page->content[j]->ival));
 							else
-								printElement(page->content[j]->dval, BOXWIDTH);
+								entry->attributeList.push_back(to_string(page->content[j]->dval));
 						}
 						else satisfied = false;
 					}
 					else if (page_cond->type() == "DOUBLE") {
 						if (page_cond->content[j]->dval == val) {
-							if (k == 0) cout << '|';
-							if (page->type() == "TEXT")
-								printElement(page->content[j]->sval, BOXWIDTH);
+							if (page->type() == "TEXT") {
+								string text(page->content[j]->sval);
+								entry->attributeList.push_back(text);
+							}
 							else if (page->type() == "INT")
-								printElement(page->content[j]->ival, BOXWIDTH);
+								entry->attributeList.push_back(to_string(page->content[j]->ival));
 							else
-								printElement(page->content[j]->dval, BOXWIDTH);
+								entry->attributeList.push_back(to_string(page->content[j]->dval));
 						}
 						else satisfied = false;
 					}
@@ -71,63 +76,31 @@ void QueryParser::SelectFilter(hsql::OperatorType op, double val, Attribute* att
 						cerr << "Error: Invalid condition, text on the right side of operator.";
 						return;
 					}
-
 				}
-				if (satisfied) {
-					cout << endl;
-					if (j < num_tuples - 1)
-						PrintLineInner(BOXWIDTH, cols);
-					else
-						PrintLine(BOXWIDTH, cols);
-				}
-			}
-		}
-	}
-	else if (op == hsql::kOpNotEquals) {
-		for (size_t i = 0; i < num_pages; i++) {
-			int page_num = selectList[0]->page_order[i];
-			if (!buffer->iscached(page_num)) {
-				buffer->fetch(page_num);
-			}
-			Page* p = buffer->get(page_num);
-			size_t num_tuples = p->size();
-
-			for (size_t j = 0; j < num_tuples; j++) {
-				bool satisfied = true;
-				for (size_t k = 0; k < cols; k++) {
-					int page_condnum = attr->page_order[i];
-					if (!buffer->iscached(page_condnum)) {
-						buffer->fetch(page_condnum);
-					}
-					Page* page_cond = buffer->get(page_condnum);
-
-					int page_num = selectList[k]->page_order[i];
-					if (!buffer->iscached(page_num)) {
-						buffer->fetch(page_num);
-					}
-					Page* page = buffer->get(page_num);
-
+				else if (op == hsql::kOpNotEquals) {
 					if (page_cond->type() == "INT") {
 						if (page_cond->content[j]->ival != val) {
-							if (k == 0) cout << '|';
-							if (page->type() == "TEXT")
-								printElement(page->content[j]->sval, BOXWIDTH);
+							if (page->type() == "TEXT") {
+								string text(page->content[j]->sval);
+								entry->attributeList.push_back(text);
+							}
 							else if (page->type() == "INT")
-								printElement(page->content[j]->ival, BOXWIDTH);
+								entry->attributeList.push_back(to_string(page->content[j]->ival));
 							else
-								printElement(page->content[j]->dval, BOXWIDTH);
+								entry->attributeList.push_back(to_string(page->content[j]->dval));
 						}
 						else satisfied = false;
 					}
 					else if (page_cond->type() == "DOUBLE") {
 						if (page_cond->content[j]->dval != val) {
-							if (k == 0) cout << '|';
-							if (page->type() == "TEXT")
-								printElement(page->content[j]->sval, BOXWIDTH);
+							if (page->type() == "TEXT") {
+								string text(page->content[j]->sval);
+								entry->attributeList.push_back(text);
+							}
 							else if (page->type() == "INT")
-								printElement(page->content[j]->ival, BOXWIDTH);
+								entry->attributeList.push_back(to_string(page->content[j]->ival));
 							else
-								printElement(page->content[j]->dval, BOXWIDTH);
+								entry->attributeList.push_back(to_string(page->content[j]->dval));
 						}
 						else satisfied = false;
 					}
@@ -135,63 +108,31 @@ void QueryParser::SelectFilter(hsql::OperatorType op, double val, Attribute* att
 						cerr << "Error: Invalid condition, text on the right side of operator.";
 						return;
 					}
-
 				}
-				if (satisfied) {
-					cout << endl;
-					if (j < num_tuples - 1)
-						PrintLineInner(BOXWIDTH, cols);
-					else
-						PrintLine(BOXWIDTH, cols);
-				}
-			}
-		}
-	}
-	else if (op == hsql::kOpLess) {
-		for (size_t i = 0; i < num_pages; i++) {
-			int page_num = selectList[0]->page_order[i];
-			if (!buffer->iscached(page_num)) {
-				buffer->fetch(page_num);
-			}
-			Page* p = buffer->get(page_num);
-			size_t num_tuples = p->size();
-
-			for (size_t j = 0; j < num_tuples; j++) {
-				bool satisfied = true;
-				for (size_t k = 0; k < cols; k++) {
-					int page_condnum = attr->page_order[i];
-					if (!buffer->iscached(page_condnum)) {
-						buffer->fetch(page_condnum);
-					}
-					Page* page_cond = buffer->get(page_condnum);
-
-					int page_num = selectList[k]->page_order[i];
-					if (!buffer->iscached(page_num)) {
-						buffer->fetch(page_num);
-					}
-					Page* page = buffer->get(page_num);
-
+				else if (op == hsql::kOpLess) {
 					if (page_cond->type() == "INT") {
 						if (page_cond->content[j]->ival < val) {
-							if (k == 0) cout << '|';
-							if (page->type() == "TEXT")
-								printElement(page->content[j]->sval, BOXWIDTH);
+							if (page->type() == "TEXT") {
+								string text(page->content[j]->sval);
+								entry->attributeList.push_back(text);
+							}
 							else if (page->type() == "INT")
-								printElement(page->content[j]->ival, BOXWIDTH);
+								entry->attributeList.push_back(to_string(page->content[j]->ival));
 							else
-								printElement(page->content[j]->dval, BOXWIDTH);
+								entry->attributeList.push_back(to_string(page->content[j]->dval));
 						}
 						else satisfied = false;
 					}
 					else if (page_cond->type() == "DOUBLE") {
 						if (page_cond->content[j]->dval < val) {
-							if (k == 0) cout << '|';
-							if (page->type() == "TEXT")
-								printElement(page->content[j]->sval, BOXWIDTH);
+							if (page->type() == "TEXT") {
+								string text(page->content[j]->sval);
+								entry->attributeList.push_back(text);
+							}
 							else if (page->type() == "INT")
-								printElement(page->content[j]->ival, BOXWIDTH);
+								entry->attributeList.push_back(to_string(page->content[j]->ival));
 							else
-								printElement(page->content[j]->dval, BOXWIDTH);
+								entry->attributeList.push_back(to_string(page->content[j]->dval));
 						}
 						else satisfied = false;
 					}
@@ -199,63 +140,31 @@ void QueryParser::SelectFilter(hsql::OperatorType op, double val, Attribute* att
 						cerr << "Error: Invalid condition, text on the right side of operator.";
 						return;
 					}
-
 				}
-				if (satisfied) {
-					cout << endl;
-					if (j < num_tuples - 1)
-						PrintLineInner(BOXWIDTH, cols);
-					else
-						PrintLine(BOXWIDTH, cols);
-				}
-			}
-		}
-	}
-	else if (op == hsql::kOpLessEq) {
-		for (size_t i = 0; i < num_pages; i++) {
-			int page_num = selectList[0]->page_order[i];
-			if (!buffer->iscached(page_num)) {
-				buffer->fetch(page_num);
-			}
-			Page* p = buffer->get(page_num);
-			size_t num_tuples = p->size();
-
-			for (size_t j = 0; j < num_tuples; j++) {
-				bool satisfied = true;
-				for (size_t k = 0; k < cols; k++) {
-					int page_condnum = attr->page_order[i];
-					if (!buffer->iscached(page_condnum)) {
-						buffer->fetch(page_condnum);
-					}
-					Page* page_cond = buffer->get(page_condnum);
-
-					int page_num = selectList[k]->page_order[i];
-					if (!buffer->iscached(page_num)) {
-						buffer->fetch(page_num);
-					}
-					Page* page = buffer->get(page_num);
-
+				else if (op == hsql::kOpLessEq) {
 					if (page_cond->type() == "INT") {
 						if (page_cond->content[j]->ival <= val) {
-							if (k == 0) cout << '|';
-							if (page->type() == "TEXT")
-								printElement(page->content[j]->sval, BOXWIDTH);
+							if (page->type() == "TEXT") {
+								string text(page->content[j]->sval);
+								entry->attributeList.push_back(text);
+							}
 							else if (page->type() == "INT")
-								printElement(page->content[j]->ival, BOXWIDTH);
+								entry->attributeList.push_back(to_string(page->content[j]->ival));
 							else
-								printElement(page->content[j]->dval, BOXWIDTH);
+								entry->attributeList.push_back(to_string(page->content[j]->dval));
 						}
 						else satisfied = false;
 					}
 					else if (page_cond->type() == "DOUBLE") {
 						if (page_cond->content[j]->dval <= val) {
-							if (k == 0) cout << '|';
-							if (page->type() == "TEXT")
-								printElement(page->content[j]->sval, BOXWIDTH);
+							if (page->type() == "TEXT") {
+								string text(page->content[j]->sval);
+								entry->attributeList.push_back(text);
+							}
 							else if (page->type() == "INT")
-								printElement(page->content[j]->ival, BOXWIDTH);
+								entry->attributeList.push_back(to_string(page->content[j]->ival));
 							else
-								printElement(page->content[j]->dval, BOXWIDTH);
+								entry->attributeList.push_back(to_string(page->content[j]->dval));
 						}
 						else satisfied = false;
 					}
@@ -263,63 +172,31 @@ void QueryParser::SelectFilter(hsql::OperatorType op, double val, Attribute* att
 						cerr << "Error: Invalid condition, text on the right side of operator.";
 						return;
 					}
-
 				}
-				if (satisfied) {
-					cout << endl;
-					if (j < num_tuples - 1)
-						PrintLineInner(BOXWIDTH, cols);
-					else
-						PrintLine(BOXWIDTH, cols);
-				}
-			}
-		}
-	}
-	else if (op == hsql::kOpGreater) {
-		for (size_t i = 0; i < num_pages; i++) {
-			int page_num = selectList[0]->page_order[i];
-			if (!buffer->iscached(page_num)) {
-				buffer->fetch(page_num);
-			}
-			Page* p = buffer->get(page_num);
-			size_t num_tuples = p->size();
-
-			for (size_t j = 0; j < num_tuples; j++) {
-				bool satisfied = true;
-				for (size_t k = 0; k < cols; k++) {
-					int page_condnum = attr->page_order[i];
-					if (!buffer->iscached(page_condnum)) {
-						buffer->fetch(page_condnum);
-					}
-					Page* page_cond = buffer->get(page_condnum);
-
-					int page_num = selectList[k]->page_order[i];
-					if (!buffer->iscached(page_num)) {
-						buffer->fetch(page_num);
-					}
-					Page* page = buffer->get(page_num);
-
+				else if (op == hsql::kOpGreater) {
 					if (page_cond->type() == "INT") {
 						if (page_cond->content[j]->ival > val) {
-							if (k == 0) cout << '|';
-							if (page->type() == "TEXT")
-								printElement(page->content[j]->sval, BOXWIDTH);
+							if (page->type() == "TEXT") {
+								string text(page->content[j]->sval);
+								entry->attributeList.push_back(text);
+							}
 							else if (page->type() == "INT")
-								printElement(page->content[j]->ival, BOXWIDTH);
+								entry->attributeList.push_back(to_string(page->content[j]->ival));
 							else
-								printElement(page->content[j]->dval, BOXWIDTH);
+								entry->attributeList.push_back(to_string(page->content[j]->dval));
 						}
 						else satisfied = false;
 					}
 					else if (page_cond->type() == "DOUBLE") {
 						if (page_cond->content[j]->dval > val) {
-							if (k == 0) cout << '|';
-							if (page->type() == "TEXT")
-								printElement(page->content[j]->sval, BOXWIDTH);
+							if (page->type() == "TEXT") {
+								string text(page->content[j]->sval);
+								entry->attributeList.push_back(text);
+							}
 							else if (page->type() == "INT")
-								printElement(page->content[j]->ival, BOXWIDTH);
+								entry->attributeList.push_back(to_string(page->content[j]->ival));
 							else
-								printElement(page->content[j]->dval, BOXWIDTH);
+								entry->attributeList.push_back(to_string(page->content[j]->dval));
 						}
 						else satisfied = false;
 					}
@@ -327,63 +204,31 @@ void QueryParser::SelectFilter(hsql::OperatorType op, double val, Attribute* att
 						cerr << "Error: Invalid condition, text on the right side of operator.";
 						return;
 					}
-
 				}
-				if (satisfied) {
-					cout << endl;
-					if (j < num_tuples - 1)
-						PrintLineInner(BOXWIDTH, cols);
-					else
-						PrintLine(BOXWIDTH, cols);
-				}
-			}
-		}
-	}
-	else if (op == hsql::kOpGreaterEq) {
-		for (size_t i = 0; i < num_pages; i++) {
-			int page_num = selectList[0]->page_order[i];
-			if (!buffer->iscached(page_num)) {
-				buffer->fetch(page_num);
-			}
-			Page* p = buffer->get(page_num);
-			size_t num_tuples = p->size();
-
-			for (size_t j = 0; j < num_tuples; j++) {
-				bool satisfied = true;
-				for (size_t k = 0; k < cols; k++) {
-					int page_condnum = attr->page_order[i];
-					if (!buffer->iscached(page_condnum)) {
-						buffer->fetch(page_condnum);
-					}
-					Page* page_cond = buffer->get(page_condnum);
-
-					int page_num = selectList[k]->page_order[i];
-					if (!buffer->iscached(page_num)) {
-						buffer->fetch(page_num);
-					}
-					Page* page = buffer->get(page_num);
-
+				else if (op == hsql::kOpGreaterEq) {
 					if (page_cond->type() == "INT") {
 						if (page_cond->content[j]->ival >= val) {
-							if (k == 0) cout << '|';
-							if (page->type() == "TEXT")
-								printElement(page->content[j]->sval, BOXWIDTH);
+							if (page->type() == "TEXT") {
+								string text(page->content[j]->sval);
+								entry->attributeList.push_back(text);
+							}
 							else if (page->type() == "INT")
-								printElement(page->content[j]->ival, BOXWIDTH);
+								entry->attributeList.push_back(to_string(page->content[j]->ival));
 							else
-								printElement(page->content[j]->dval, BOXWIDTH);
+								entry->attributeList.push_back(to_string(page->content[j]->dval));
 						}
 						else satisfied = false;
 					}
 					else if (page_cond->type() == "DOUBLE") {
 						if (page_cond->content[j]->dval >= val) {
-							if (k == 0) cout << '|';
-							if (page->type() == "TEXT")
-								printElement(page->content[j]->sval, BOXWIDTH);
+							if (page->type() == "TEXT") {
+								string text(page->content[j]->sval);
+								entry->attributeList.push_back(text);
+							}
 							else if (page->type() == "INT")
-								printElement(page->content[j]->ival, BOXWIDTH);
+								entry->attributeList.push_back(to_string(page->content[j]->ival));
 							else
-								printElement(page->content[j]->dval, BOXWIDTH);
+								entry->attributeList.push_back(to_string(page->content[j]->dval));
 						}
 						else satisfied = false;
 					}
@@ -391,72 +236,74 @@ void QueryParser::SelectFilter(hsql::OperatorType op, double val, Attribute* att
 						cerr << "Error: Invalid condition, text on the right side of operator.";
 						return;
 					}
-
 				}
-				if (satisfied) {
-					cout << endl;
-					if (j < num_tuples - 1)
-						PrintLineInner(BOXWIDTH, cols);
-					else
-						PrintLine(BOXWIDTH, cols);
-				}
+			}
+			if (satisfied) {
+				entries.push_back(entry);
 			}
 		}
 	}
-	else {
-		cerr << "Error: unsupported condition operator;" << endl;
-		return;
+
+	for (size_t i = 0; i < entries.size(); i++) {
+		entries[i]->print();
+		if (i < entries.size() - 1)
+			PrintLineInner(BOXWIDTH, cols);
 	}
 }
 void QueryParser::SelectFilter(hsql::OperatorType op, int val, Attribute* attr, vector<Attribute*> selectList) {
 	size_t num_pages = selectList[0]->pages.size();
 	size_t cols = selectList.size();
 
-	if (op == hsql::kOpEquals) {
-		for (size_t i = 0; i < num_pages; i++) {
-			int page_num = selectList[0]->page_order[i];
-			if (!buffer->iscached(page_num)) {
-				buffer->fetch(page_num);
-			}
-			Page* p = buffer->get(page_num);
-			size_t num_tuples = p->size();
+	vector<Entry*> entries;
 
-			for (size_t j = 0; j < num_tuples; j++) {
-				bool satisfied = true;
-				for (size_t k = 0; k < cols; k++) {
-					int page_condnum = attr->page_order[i];
-					if (!buffer->iscached(page_condnum)) {
-						buffer->fetch(page_condnum);
-					}
-					Page* page_cond = buffer->get(page_condnum);
+	for (size_t i = 0; i < num_pages; i++) {
+		int page_num = selectList[0]->page_order[i];
+		if (!buffer->iscached(page_num)) {
+			buffer->fetch(page_num);
+		}
+		Page* p = buffer->get(page_num);
+		size_t num_tuples = p->size();
 
-					int page_num = selectList[k]->page_order[i];
-					if (!buffer->iscached(page_num)) {
-						buffer->fetch(page_num);
-					}
-					Page* page = buffer->get(page_num);
+		for (size_t j = 0; j < num_tuples; j++) {
+			Entry* entry = new Entry(BOXWIDTH);
+			bool satisfied = true;
 
+			for (size_t k = 0; k < cols; k++) {
+				int page_condnum = attr->page_order[i];
+				if (!buffer->iscached(page_condnum)) {
+					buffer->fetch(page_condnum);
+				}
+				Page* page_cond = buffer->get(page_condnum);
+
+				int page_num = selectList[k]->page_order[i];
+				if (!buffer->iscached(page_num)) {
+					buffer->fetch(page_num);
+				}
+				Page* page = buffer->get(page_num);
+				if (op == hsql::kOpEquals) {
 					if (page_cond->type() == "INT") {
 						if (page_cond->content[j]->ival == val) {
-							if (k == 0) cout << '|';
-							if (page->type() == "TEXT")
-								printElement(page->content[j]->sval, BOXWIDTH);
+							if (page->type() == "TEXT") {
+								string text(page->content[j]->sval);
+								entry->attributeList.push_back(text);
+							}
 							else if (page->type() == "INT")
-								printElement(page->content[j]->ival, BOXWIDTH);
+								entry->attributeList.push_back(to_string(page->content[j]->ival));
 							else
-								printElement(page->content[j]->dval, BOXWIDTH);
+								entry->attributeList.push_back(to_string(page->content[j]->dval));
 						}
 						else satisfied = false;
 					}
 					else if (page_cond->type() == "DOUBLE") {
 						if (page_cond->content[j]->dval == val) {
-							if (k == 0) cout << '|';
-							if (page->type() == "TEXT")
-								printElement(page->content[j]->sval, BOXWIDTH);
+							if (page->type() == "TEXT") {
+								string text(page->content[j]->sval);
+								entry->attributeList.push_back(text);
+							}
 							else if (page->type() == "INT")
-								printElement(page->content[j]->ival, BOXWIDTH);
+								entry->attributeList.push_back(to_string(page->content[j]->ival));
 							else
-								printElement(page->content[j]->dval, BOXWIDTH);
+								entry->attributeList.push_back(to_string(page->content[j]->dval));
 						}
 						else satisfied = false;
 					}
@@ -464,63 +311,31 @@ void QueryParser::SelectFilter(hsql::OperatorType op, int val, Attribute* attr, 
 						cerr << "Error: Invalid condition, text on the right side of operator.";
 						return;
 					}
-
 				}
-				if (satisfied) {
-					cout << endl;
-					if (j < num_tuples - 1)
-						PrintLineInner(BOXWIDTH, cols);
-					else
-						PrintLine(BOXWIDTH, cols);
-				}
-			}
-		}
-	}
-	else if (op == hsql::kOpNotEquals) {
-		for (size_t i = 0; i < num_pages; i++) {
-			int page_num = selectList[0]->page_order[i];
-			if (!buffer->iscached(page_num)) {
-				buffer->fetch(page_num);
-			}
-			Page* p = buffer->get(page_num);
-			size_t num_tuples = p->size();
-
-			for (size_t j = 0; j < num_tuples; j++) {
-				bool satisfied = true;
-				for (size_t k = 0; k < cols; k++) {
-					int page_condnum = attr->page_order[i];
-					if (!buffer->iscached(page_condnum)) {
-						buffer->fetch(page_condnum);
-					}
-					Page* page_cond = buffer->get(page_condnum);
-
-					int page_num = selectList[k]->page_order[i];
-					if (!buffer->iscached(page_num)) {
-						buffer->fetch(page_num);
-					}
-					Page* page = buffer->get(page_num);
-
+				else if (op == hsql::kOpNotEquals) {
 					if (page_cond->type() == "INT") {
 						if (page_cond->content[j]->ival != val) {
-							if (k == 0) cout << '|';
-							if (page->type() == "TEXT")
-								printElement(page->content[j]->sval, BOXWIDTH);
+							if (page->type() == "TEXT") {
+								string text(page->content[j]->sval);
+								entry->attributeList.push_back(text);
+							}
 							else if (page->type() == "INT")
-								printElement(page->content[j]->ival, BOXWIDTH);
+								entry->attributeList.push_back(to_string(page->content[j]->ival));
 							else
-								printElement(page->content[j]->dval, BOXWIDTH);
+								entry->attributeList.push_back(to_string(page->content[j]->dval));
 						}
 						else satisfied = false;
 					}
 					else if (page_cond->type() == "DOUBLE") {
 						if (page_cond->content[j]->dval != val) {
-							if (k == 0) cout << '|';
-							if (page->type() == "TEXT")
-								printElement(page->content[j]->sval, BOXWIDTH);
+							if (page->type() == "TEXT") {
+								string text(page->content[j]->sval);
+								entry->attributeList.push_back(text);
+							}
 							else if (page->type() == "INT")
-								printElement(page->content[j]->ival, BOXWIDTH);
+								entry->attributeList.push_back(to_string(page->content[j]->ival));
 							else
-								printElement(page->content[j]->dval, BOXWIDTH);
+								entry->attributeList.push_back(to_string(page->content[j]->dval));
 						}
 						else satisfied = false;
 					}
@@ -528,63 +343,31 @@ void QueryParser::SelectFilter(hsql::OperatorType op, int val, Attribute* attr, 
 						cerr << "Error: Invalid condition, text on the right side of operator.";
 						return;
 					}
-
 				}
-				if (satisfied) {
-					cout << endl;
-					if (j < num_tuples - 1)
-						PrintLineInner(BOXWIDTH, cols);
-					else
-						PrintLine(BOXWIDTH, cols);
-				}
-			}
-		}
-	}
-	else if (op == hsql::kOpLess) {
-		for (size_t i = 0; i < num_pages; i++) {
-			int page_num = selectList[0]->page_order[i];
-			if (!buffer->iscached(page_num)) {
-				buffer->fetch(page_num);
-			}
-			Page* p = buffer->get(page_num);
-			size_t num_tuples = p->size();
-
-			for (size_t j = 0; j < num_tuples; j++) {
-				bool satisfied = true;
-				for (size_t k = 0; k < cols; k++) {
-					int page_condnum = attr->page_order[i];
-					if (!buffer->iscached(page_condnum)) {
-						buffer->fetch(page_condnum);
-					}
-					Page* page_cond = buffer->get(page_condnum);
-
-					int page_num = selectList[k]->page_order[i];
-					if (!buffer->iscached(page_num)) {
-						buffer->fetch(page_num);
-					}
-					Page* page = buffer->get(page_num);
-
+				else if (op == hsql::kOpLess) {
 					if (page_cond->type() == "INT") {
 						if (page_cond->content[j]->ival < val) {
-							if (k == 0) cout << '|';
-							if (page->type() == "TEXT")
-								printElement(page->content[j]->sval, BOXWIDTH);
+							if (page->type() == "TEXT") {
+								string text(page->content[j]->sval);
+								entry->attributeList.push_back(text);
+							}
 							else if (page->type() == "INT")
-								printElement(page->content[j]->ival, BOXWIDTH);
+								entry->attributeList.push_back(to_string(page->content[j]->ival));
 							else
-								printElement(page->content[j]->dval, BOXWIDTH);
+								entry->attributeList.push_back(to_string(page->content[j]->dval));
 						}
 						else satisfied = false;
 					}
 					else if (page_cond->type() == "DOUBLE") {
 						if (page_cond->content[j]->dval < val) {
-							if (k == 0) cout << '|';
-							if (page->type() == "TEXT")
-								printElement(page->content[j]->sval, BOXWIDTH);
+							if (page->type() == "TEXT") {
+								string text(page->content[j]->sval);
+								entry->attributeList.push_back(text);
+							}
 							else if (page->type() == "INT")
-								printElement(page->content[j]->ival, BOXWIDTH);
+								entry->attributeList.push_back(to_string(page->content[j]->ival));
 							else
-								printElement(page->content[j]->dval, BOXWIDTH);
+								entry->attributeList.push_back(to_string(page->content[j]->dval));
 						}
 						else satisfied = false;
 					}
@@ -592,63 +375,31 @@ void QueryParser::SelectFilter(hsql::OperatorType op, int val, Attribute* attr, 
 						cerr << "Error: Invalid condition, text on the right side of operator.";
 						return;
 					}
-
 				}
-				if (satisfied) {
-					cout << endl;
-					if (j < num_tuples - 1)
-						PrintLineInner(BOXWIDTH, cols);
-					else
-						PrintLine(BOXWIDTH, cols);
-				}
-			}
-		}
-	}
-	else if (op == hsql::kOpLessEq) {
-		for (size_t i = 0; i < num_pages; i++) {
-			int page_num = selectList[0]->page_order[i];
-			if (!buffer->iscached(page_num)) {
-				buffer->fetch(page_num);
-			}
-			Page* p = buffer->get(page_num);
-			size_t num_tuples = p->size();
-
-			for (size_t j = 0; j < num_tuples; j++) {
-				bool satisfied = true;
-				for (size_t k = 0; k < cols; k++) {
-					int page_condnum = attr->page_order[i];
-					if (!buffer->iscached(page_condnum)) {
-						buffer->fetch(page_condnum);
-					}
-					Page* page_cond = buffer->get(page_condnum);
-
-					int page_num = selectList[k]->page_order[i];
-					if (!buffer->iscached(page_num)) {
-						buffer->fetch(page_num);
-					}
-					Page* page = buffer->get(page_num);
-
+				else if (op == hsql::kOpLessEq) {
 					if (page_cond->type() == "INT") {
 						if (page_cond->content[j]->ival <= val) {
-							if (k == 0) cout << '|';
-							if (page->type() == "TEXT")
-								printElement(page->content[j]->sval, BOXWIDTH);
+							if (page->type() == "TEXT") {
+								string text(page->content[j]->sval);
+								entry->attributeList.push_back(text);
+							}
 							else if (page->type() == "INT")
-								printElement(page->content[j]->ival, BOXWIDTH);
+								entry->attributeList.push_back(to_string(page->content[j]->ival));
 							else
-								printElement(page->content[j]->dval, BOXWIDTH);
+								entry->attributeList.push_back(to_string(page->content[j]->dval));
 						}
 						else satisfied = false;
 					}
 					else if (page_cond->type() == "DOUBLE") {
 						if (page_cond->content[j]->dval <= val) {
-							if (k == 0) cout << '|';
-							if (page->type() == "TEXT")
-								printElement(page->content[j]->sval, BOXWIDTH);
+							if (page->type() == "TEXT") {
+								string text(page->content[j]->sval);
+								entry->attributeList.push_back(text);
+							}
 							else if (page->type() == "INT")
-								printElement(page->content[j]->ival, BOXWIDTH);
+								entry->attributeList.push_back(to_string(page->content[j]->ival));
 							else
-								printElement(page->content[j]->dval, BOXWIDTH);
+								entry->attributeList.push_back(to_string(page->content[j]->dval));
 						}
 						else satisfied = false;
 					}
@@ -656,63 +407,31 @@ void QueryParser::SelectFilter(hsql::OperatorType op, int val, Attribute* attr, 
 						cerr << "Error: Invalid condition, text on the right side of operator.";
 						return;
 					}
-
 				}
-				if (satisfied) {
-					cout << endl;
-					if (j < num_tuples - 1)
-						PrintLineInner(BOXWIDTH, cols);
-					else
-						PrintLine(BOXWIDTH, cols);
-				}
-			}
-		}
-	}
-	else if (op == hsql::kOpGreater) {
-		for (size_t i = 0; i < num_pages; i++) {
-			int page_num = selectList[0]->page_order[i];
-			if (!buffer->iscached(page_num)) {
-				buffer->fetch(page_num);
-			}
-			Page* p = buffer->get(page_num);
-			size_t num_tuples = p->size();
-
-			for (size_t j = 0; j < num_tuples; j++) {
-				bool satisfied = true;
-				for (size_t k = 0; k < cols; k++) {
-					int page_condnum = attr->page_order[i];
-					if (!buffer->iscached(page_condnum)) {
-						buffer->fetch(page_condnum);
-					}
-					Page* page_cond = buffer->get(page_condnum);
-
-					int page_num = selectList[k]->page_order[i];
-					if (!buffer->iscached(page_num)) {
-						buffer->fetch(page_num);
-					}
-					Page* page = buffer->get(page_num);
-
+				else if (op == hsql::kOpGreater) {
 					if (page_cond->type() == "INT") {
 						if (page_cond->content[j]->ival > val) {
-							if (k == 0) cout << '|';
-							if (page->type() == "TEXT")
-								printElement(page->content[j]->sval, BOXWIDTH);
+							if (page->type() == "TEXT") {
+								string text(page->content[j]->sval);
+								entry->attributeList.push_back(text);
+							}
 							else if (page->type() == "INT")
-								printElement(page->content[j]->ival, BOXWIDTH);
+								entry->attributeList.push_back(to_string(page->content[j]->ival));
 							else
-								printElement(page->content[j]->dval, BOXWIDTH);
+								entry->attributeList.push_back(to_string(page->content[j]->dval));
 						}
 						else satisfied = false;
 					}
 					else if (page_cond->type() == "DOUBLE") {
 						if (page_cond->content[j]->dval > val) {
-							if (k == 0) cout << '|';
-							if (page->type() == "TEXT")
-								printElement(page->content[j]->sval, BOXWIDTH);
+							if (page->type() == "TEXT") {
+								string text(page->content[j]->sval);
+								entry->attributeList.push_back(text);
+							}
 							else if (page->type() == "INT")
-								printElement(page->content[j]->ival, BOXWIDTH);
+								entry->attributeList.push_back(to_string(page->content[j]->ival));
 							else
-								printElement(page->content[j]->dval, BOXWIDTH);
+								entry->attributeList.push_back(to_string(page->content[j]->dval));
 						}
 						else satisfied = false;
 					}
@@ -720,63 +439,31 @@ void QueryParser::SelectFilter(hsql::OperatorType op, int val, Attribute* attr, 
 						cerr << "Error: Invalid condition, text on the right side of operator.";
 						return;
 					}
-
 				}
-				if (satisfied) {
-					cout << endl;
-					if (j < num_tuples - 1)
-						PrintLineInner(BOXWIDTH, cols);
-					else
-						PrintLine(BOXWIDTH, cols);
-				}
-			}
-		}
-	}
-	else if (op == hsql::kOpGreaterEq) {
-		for (size_t i = 0; i < num_pages; i++) {
-			int page_num = selectList[0]->page_order[i];
-			if (!buffer->iscached(page_num)) {
-				buffer->fetch(page_num);
-			}
-			Page* p = buffer->get(page_num);
-			size_t num_tuples = p->size();
-
-			for (size_t j = 0; j < num_tuples; j++) {
-				bool satisfied = true;
-				for (size_t k = 0; k < cols; k++) {
-					int page_condnum = attr->page_order[i];
-					if (!buffer->iscached(page_condnum)) {
-						buffer->fetch(page_condnum);
-					}
-					Page* page_cond = buffer->get(page_condnum);
-
-					int page_num = selectList[k]->page_order[i];
-					if (!buffer->iscached(page_num)) {
-						buffer->fetch(page_num);
-					}
-					Page* page = buffer->get(page_num);
-
+				else if (op == hsql::kOpGreaterEq) {
 					if (page_cond->type() == "INT") {
 						if (page_cond->content[j]->ival >= val) {
-							if (k == 0) cout << '|';
-							if (page->type() == "TEXT")
-								printElement(page->content[j]->sval, BOXWIDTH);
+							if (page->type() == "TEXT") {
+								string text(page->content[j]->sval);
+								entry->attributeList.push_back(text);
+							}
 							else if (page->type() == "INT")
-								printElement(page->content[j]->ival, BOXWIDTH);
+								entry->attributeList.push_back(to_string(page->content[j]->ival));
 							else
-								printElement(page->content[j]->dval, BOXWIDTH);
+								entry->attributeList.push_back(to_string(page->content[j]->dval));
 						}
 						else satisfied = false;
 					}
 					else if (page_cond->type() == "DOUBLE") {
 						if (page_cond->content[j]->dval >= val) {
-							if (k == 0) cout << '|';
-							if (page->type() == "TEXT")
-								printElement(page->content[j]->sval, BOXWIDTH);
+							if (page->type() == "TEXT") {
+								string text(page->content[j]->sval);
+								entry->attributeList.push_back(text);
+							}
 							else if (page->type() == "INT")
-								printElement(page->content[j]->ival, BOXWIDTH);
+								entry->attributeList.push_back(to_string(page->content[j]->ival));
 							else
-								printElement(page->content[j]->dval, BOXWIDTH);
+								entry->attributeList.push_back(to_string(page->content[j]->dval));
 						}
 						else satisfied = false;
 					}
@@ -784,21 +471,18 @@ void QueryParser::SelectFilter(hsql::OperatorType op, int val, Attribute* attr, 
 						cerr << "Error: Invalid condition, text on the right side of operator.";
 						return;
 					}
-
 				}
-				if (satisfied) {
-					cout << endl;
-					if (j < num_tuples - 1)
-						PrintLineInner(BOXWIDTH, cols);
-					else
-						PrintLine(BOXWIDTH, cols);
-				}
+			}
+			if (satisfied) {
+				entries.push_back(entry);
 			}
 		}
 	}
-	else {
-		cerr << "Error: unsupported condition operator;" << endl;
-		return;
+
+	for (size_t i = 0; i < entries.size(); i++) {
+		entries[i]->print();
+		if (i < entries.size() - 1)
+			PrintLineInner(BOXWIDTH, cols);
 	}
 }
 
@@ -959,12 +643,19 @@ void QueryParser::ParseSELECT(const hsql::SQLStatement* statement) {
 	Table* fromTable = filesystem->tables[t_name];
 
 	vector<Attribute*> selectList;
+
 	for (auto column : *select->selectList) {
+		if (column->type == hsql::kExprStar) {
+			for (size_t i = 0; i < fromTable->attr_order.size() - 1; i++)
+				selectList.push_back(fromTable->attributes[fromTable->attr_order[i+1]]);
+			break;
+		}
 		string col(column->name);
+		cout << "col is: " << col << endl;
 
 		if (fromTable->attributes.find(col) == fromTable->attributes.end()) {
 			cout << "Error: table <" << TableName(t_name) << "> only has attributes: " << endl;
-			for (auto a : fromTable->attr_order) {
+			for (string a : fromTable->attr_order) {
 				cout << '<' << a << '>' << " ";
 			}
 			cout << endl;
@@ -987,13 +678,14 @@ void QueryParser::ParseSELECT(const hsql::SQLStatement* statement) {
 
 			PrintLine(BOXWIDTH, cols);
 			SelectFilter(select->whereClause->opType, condition_right, condition_col, selectList);
-
+			PrintLine(BOXWIDTH, cols);
 		}
 		else if (select->whereClause->expr2->type == hsql::kExprLiteralInt) {
 			int condition_right = select->whereClause->expr2->ival;
 
 			PrintLine(BOXWIDTH, cols);
 			SelectFilter(select->whereClause->opType, condition_right, condition_col, selectList);
+			PrintLine(BOXWIDTH, cols);
 		}
 		else {
 			cerr << "Error: Unsupport condition." << endl;
