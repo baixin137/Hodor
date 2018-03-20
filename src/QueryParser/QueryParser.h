@@ -11,9 +11,12 @@ using namespace std;
 
 class QueryParser {
 private:
+
 	FileManager* filesystem;
 	BufferManager* buffer;
 
+	void SelectFilter(hsql::OperatorType op, double val, Attribute* attr, vector<Attribute*> selectList);
+	void SelectFilter(hsql::OperatorType op, int val, Attribute* attr, vector<Attribute*> selectList);
 public:
 	QueryParser(FileManager* fs, BufferManager* bf);
 
