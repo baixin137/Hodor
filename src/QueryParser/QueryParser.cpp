@@ -1,5 +1,20 @@
 #include "QueryParser.h"
 
+Entry::Entry(size_t w) {
+	width = w;
+}
+
+size_t Entry::size() {
+	return width;
+}
+
+void Entry::print() {
+	cout << '|';
+	for (string item : attributeList)
+		cout << left << setw(width) << setfill(' ') << item << '|';
+	cout << endl;
+}
+
 void QueryParser::SelectFilter(hsql::OperatorType op, double val, Attribute* attr, vector<Attribute*> selectList) {
 	size_t num_pages = selectList[0]->pages.size();
 	size_t cols = selectList.size();
@@ -988,6 +1003,7 @@ void QueryParser::ParseSELECT(const hsql::SQLStatement* statement) {
 	else {
 		PrintLine(BOXWIDTH, cols);
 
+		vector<Entry*> entries;
 		for (size_t i = 0; i < num_pages; i++) {
 			int page_num = selectList[0]->page_order[i];
 			if (!buffer->iscached(page_num)) {
@@ -995,31 +1011,68 @@ void QueryParser::ParseSELECT(const hsql::SQLStatement* statement) {
 			}
 			Page* p = buffer->get(page_num);
 			size_t num_tuples = p->size();
-			// cout << 1 << endl;
+
 			for (size_t j = 0; j < num_tuples; j++) {
-				// cout << 2 << endl;
-				cout << '|';
+				Entry* entry = new Entry(BOXWIDTH);
+
 				for (size_t k = 0; k < cols; k++) {
-					// cout << 3 << endl;
 					int page_num = selectList[k]->page_order[i];
 					if (!buffer->iscached(page_num)) {
 						buffer->fetch(page_num);
 					}
 					Page* page = buffer->get(page_num);
 
-					if (page->type() == "TEXT")
-						printElement(page->content[j]->sval, BOXWIDTH);
+					if (page->type() == "TEXT") {
+						string text(page->content[j]->sval);
+						entry->attributeList.push_back(text);
+					}
 					else if (page->type() == "INT")
-						printElement(page->content[j]->ival, BOXWIDTH);
+						entry->attributeList.push_back(to_string(page->content[j]->ival));
 					else
-						printElement(page->content[j]->dval, BOXWIDTH);
+						entry->attributeList.push_back(to_string(page->content[j]->dval));
 				}
-				cout << endl;
+				entries.push_back(entry);
+				entry->print();
+
 				if (j < num_tuples - 1)
 					PrintLineInner(BOXWIDTH, cols);
 				else
 					PrintLine(BOXWIDTH, cols);
 			}
 		}
+
+		// for (size_t i = 0; i < num_pages; i++) {
+		// 	int page_num = selectList[0]->page_order[i];
+		// 	if (!buffer->iscached(page_num)) {
+		// 		buffer->fetch(page_num);
+		// 	}
+		// 	Page* p = buffer->get(page_num);
+		// 	size_t num_tuples = p->size();
+		// 	// cout << 1 << endl;
+		// 	for (size_t j = 0; j < num_tuples; j++) {
+		// 		// cout << 2 << endl;
+		// 		cout << '|';
+		// 		for (size_t k = 0; k < cols; k++) {
+		// 			// cout << 3 << endl;
+		// 			int page_num = selectList[k]->page_order[i];
+		// 			if (!buffer->iscached(page_num)) {
+		// 				buffer->fetch(page_num);
+		// 			}
+		// 			Page* page = buffer->get(page_num);
+
+		// 			if (page->type() == "TEXT")
+		// 				printElement(page->content[j]->sval, BOXWIDTH);
+		// 			else if (page->type() == "INT")
+		// 				printElement(page->content[j]->ival, BOXWIDTH);
+		// 			else
+		// 				printElement(page->content[j]->dval, BOXWIDTH);
+		// 		}
+		// 		cout << endl;
+		// 		if (j < num_tuples - 1)
+		// 			PrintLineInner(BOXWIDTH, cols);
+		// 		else
+		// 			PrintLine(BOXWIDTH, cols);
+		// 	}
+		// }
 	}
 }
