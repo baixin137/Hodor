@@ -643,12 +643,19 @@ void QueryParser::ParseSELECT(const hsql::SQLStatement* statement) {
 	Table* fromTable = filesystem->tables[t_name];
 
 	vector<Attribute*> selectList;
+
 	for (auto column : *select->selectList) {
+		if (column->type == hsql::kExprStar) {
+			for (size_t i = 0; i < fromTable->attr_order.size() - 1; i++)
+				selectList.push_back(fromTable->attributes[fromTable->attr_order[i+1]]);
+			break;
+		}
 		string col(column->name);
+		cout << "col is: " << col << endl;
 
 		if (fromTable->attributes.find(col) == fromTable->attributes.end()) {
 			cout << "Error: table <" << TableName(t_name) << "> only has attributes: " << endl;
-			for (auto a : fromTable->attr_order) {
+			for (string a : fromTable->attr_order) {
 				cout << '<' << a << '>' << " ";
 			}
 			cout << endl;
