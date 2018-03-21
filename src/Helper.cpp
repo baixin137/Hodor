@@ -124,6 +124,14 @@ string GetPageFile(int pn) {
 	return page_name;
 }
 
+string vtos(vector<string> v) {
+	string s;
+	for (string str : v) {
+		s += (str + '/');
+	}
+	return s;
+}
+
 void PrintLine(size_t width, size_t cols) {
 	size_t num = 1 + (width + 1) * cols;
 

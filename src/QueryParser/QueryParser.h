@@ -28,7 +28,7 @@ public:
 	QueryResult();
 	vector<Entry*> item;
 	vector<string> attrnames;
-	unordered_map<vector<string>, vector<vector<string>>> groups;
+	unordered_map<string, vector<vector<string>>> groups;
 };
 
 class QueryParser {

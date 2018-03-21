@@ -15,6 +15,8 @@ size_t Entry::size() {
 // 	cout << endl;
 // }
 
+QueryResult::QueryResult() {}
+
 template <class T> void QueryParser::filter(QueryResult* entries, hsql::OperatorType op, T val, Attribute* attr, vector<Attribute*> selectList) {
 	size_t num_pages = selectList[0]->pages.size();
 	size_t cols = selectList.size();
@@ -454,10 +456,17 @@ void QueryParser::ParseSELECT(const hsql::SQLStatement* statement) {
 
 	QueryResult* entries = new QueryResult();
 
+	// cout << "check group" << endl;
 	// group by list
 	bool groupby;
-	if (*select->groupBy) groupby = true;
-	else groupby = false;
+	if (select->groupBy != nullptr) {
+		groupby = true;
+		// cout << "Group by found" << endl;
+	}
+	else {
+		groupby = false;
+		// cout << "No group by found" << endl;
+	}
 	vector<Attribute*> groupbyList;
 
 	if (groupby) {
@@ -530,7 +539,6 @@ void QueryParser::ParseSELECT(const hsql::SQLStatement* statement) {
 		}
 	}
 	else {
-
 		for (size_t i = 0; i < num_pages; i++) {
 			int page_num = selectList[0]->page_order[i];
 			if (!buffer->iscached(page_num)) {
@@ -586,11 +594,25 @@ void QueryParser::ParseSELECT(const hsql::SQLStatement* statement) {
 
 		for (Entry* entry : entries->item) {
 			vector<string> groupkey;
+			vector<string> groupval;
 			for (string attr : entries->attrnames) {
-				groupkey.push_back(entry->attributeList[attr]);
+				if (glist.find(attr) != glist.end())
+					groupkey.push_back(entry->attributeList[attr]);
+				else
+					groupval.push_back(entry->attributeList[attr]);
 			}
-			entries->groups[groupkey] = entry->attributeList;
+			entries->groups[vtos(groupkey)].push_back(groupval);
 		}
 		// print group here
+		for (auto it = entries->groups.begin(); it != entries->groups.end(); it++) {
+			cout << "Key is: " << it->first << endl;
+			cout << "Value is: " << endl;
+			for (auto i : it->second) {
+				for (auto itj = i.begin(); itj != i.end(); itj++) {
+					cout << *itj << " ";
+				}
+				cout << endl;
+			}
+		}
 	}
 }

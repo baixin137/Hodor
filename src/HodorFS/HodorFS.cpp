@@ -24,7 +24,7 @@ FileManager::FileManager() {
 		}
 	}
 
-	cout << "avalable pages read." << endl;
+	// cout << "avalable pages read." << endl;
 
 	// fetch the table names from the table file
 	// use the tables hash table to store which table has which attributes
@@ -73,7 +73,7 @@ FileManager::FileManager() {
 		}
 	}
 
-	cout << "Tables read." << endl;
+	// cout << "Tables read." << endl;
 
 	// read meta info of databases
 	string path_DB = DATAPATH + DBCSV;
@@ -114,7 +114,7 @@ FileManager::FileManager() {
 		}
 	}
 
-	cout << "Databases read." << endl;
+	// cout << "Databases read." << endl;
 
 	// read pagestorage
 	string storage_path = (DATAPATH + STORAGECSV);
@@ -137,7 +137,7 @@ FileManager::FileManager() {
 			string tb_name = TableName(db_table);
 
 			if (pages.find(db_table) == pages.end() || !pages[db_table]) {
-				cout << db_table << " read to Hodor" << endl;
+				// cout << db_table << " read to Hodor" << endl;
 				pages[db_table] = new TableStorage(db_table, db_name);
 			}
 
@@ -171,7 +171,7 @@ FileManager::FileManager() {
 
 	}
 
-	cout << "Storage read." << endl;
+	// cout << "Storage read." << endl;
 	// display();
 }
 
@@ -179,7 +179,7 @@ void FileManager::add(Table* table) {
 	string t_name = table->name(); // database::table
 
 	if (tables.find(t_name) != tables.end()) {
-		cout << "Table already exists." << endl;
+		cerr << "Error: Table already exists." << endl;
 		return;
 	}
 

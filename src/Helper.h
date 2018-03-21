@@ -2,6 +2,7 @@
 #define HELPER_H
 
 #include <ctime>
+#include <vector>
 #include <string>
 #include <chrono>
 #include <sstream>
@@ -34,6 +35,7 @@ string DatabaseName(string name); // return database name from database:;table
 string GetTime(string timestamp, string unit);
 void Month2Int(string& month); // convert month to 1-12
 string GetPageFile(int pn);
+string vtos(vector<string> v);
 
 void PrintLine(size_t width, size_t cols);
 void PrintLineInner(size_t width, size_t cols);
