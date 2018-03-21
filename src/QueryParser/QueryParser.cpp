@@ -1,5 +1,21 @@
 #include "QueryParser.h"
 
+Column::Column(Attribute* attr, FuncType t, string s) {
+	attribute = attr;
+	type = t;
+	attrname = s;
+}
+
+Column::Column(Attribute* attr, string s) {
+	attribute = attr;
+	type = aFuncNA;
+	attrname = s;
+}
+
+Column::name() {
+	return attrname;
+}
+
 Entry::Entry(size_t w) {
 	width = w;
 }
@@ -467,7 +483,7 @@ void QueryParser::ParseSELECT(const hsql::SQLStatement* statement) {
 		groupby = false;
 		// cout << "No group by found" << endl;
 	}
-	vector<Attribute*> groupbyList;
+	vector<Column*> groupbyList;
 
 	if (groupby) {
 		for (auto column : *select->groupBy->columns) {
@@ -491,7 +507,7 @@ void QueryParser::ParseSELECT(const hsql::SQLStatement* statement) {
 	}
 
 	// select list
-	vector<Attribute*> selectList;
+	vector<Column*> selectList;
 
 	for (auto column : *select->selectList) {
 		if (column->type == hsql::kExprStar) {
@@ -592,6 +608,7 @@ void QueryParser::ParseSELECT(const hsql::SQLStatement* statement) {
 
 		entries->attrnames = neworder;
 
+		// group entries by given keys
 		for (Entry* entry : entries->item) {
 			vector<string> groupkey;
 			vector<string> groupval;
@@ -603,16 +620,20 @@ void QueryParser::ParseSELECT(const hsql::SQLStatement* statement) {
 			}
 			entries->groups[vtos(groupkey)].push_back(groupval);
 		}
+
 		// print group here
-		for (auto it = entries->groups.begin(); it != entries->groups.end(); it++) {
-			cout << "Key is: " << it->first << endl;
-			cout << "Value is: " << endl;
-			for (auto i : it->second) {
-				for (auto itj = i.begin(); itj != i.end(); itj++) {
-					cout << *itj << " ";
-				}
-				cout << endl;
-			}
-		}
+		// for (auto it = entries->groups.begin(); it != entries->groups.end(); it++) {
+		// 	cout << "Key is: " << it->first << endl;
+		// 	cout << "Value is: " << endl;
+		// 	for (auto i : it->second) {
+		// 		for (auto itj = i.begin(); itj != i.end(); itj++) {
+		// 			cout << *itj << " ";
+		// 		}
+		// 		cout << endl;
+		// 	}
+		// }
+
+		// parse functionref
+
 	}
 }

@@ -9,6 +9,28 @@
 
 using namespace std;
 
+enum FuncType { // function types
+	aFuncAVG,
+	aFuncCOUNT,
+	aFuncMIN,
+	aFuncMAX,
+	aFuncSUM,
+	aFuncNA
+};
+
+class Column { // select columns
+private:
+	string attrname;
+
+public:
+	Column(Attribute* attr, FuncType t, string s);
+	Column(Attribute* attr, string s);
+	string name();
+	
+	Attribute* attribute;
+	FuncType type;
+};
+
 class Entry { // each Entry stores a tuple to print
 private:
 	size_t width; // width of each box
