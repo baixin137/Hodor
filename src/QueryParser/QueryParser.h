@@ -18,8 +18,17 @@ public:
 	Entry(size_t w);
 
 	size_t size();
-	void print(); // print this entry
-	vector<string> attributeList;
+	// void print(); // print this entry
+
+	unordered_map<string, string> attributeList;
+};
+
+class QueryResult {
+public:
+	QueryResult();
+	vector<Entry*> item;
+	vector<string> attrnames;
+	unordered_map<vector<string>, vector<vector<string>>> groups;
 };
 
 class QueryParser {
@@ -28,8 +37,8 @@ private:
 	FileManager* filesystem;
 	BufferManager* buffer;
 
-	void SelectFilter(hsql::OperatorType op, double val, Attribute* attr, vector<Attribute*> selectList);
-	void SelectFilter(hsql::OperatorType op, int val, Attribute* attr, vector<Attribute*> selectList);
+	template <class T> void filter(QueryResult* entries, hsql::OperatorType op, T val, Attribute* attr, vector<Attribute*> selectList);
+
 public:
 	QueryParser(FileManager* fs, BufferManager* bf);
 
