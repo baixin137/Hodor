@@ -12,7 +12,7 @@ Column::Column(Attribute* attr, string s) {
 	attrname = s;
 }
 
-Column::name() {
+string Column::name() {
 	return attrname;
 }
 
@@ -24,6 +24,74 @@ size_t Entry::size() {
 	return width;
 }
 
+QueryResult::QueryResult() {}
+
+bool QueryParser::ConditionMet(hsql::OperatorType op, int target, int condition) {
+	if (op == hsql::kOpEquals) {
+		if (target == condition) return true;
+	}
+	else if (op == hsql::kOpNotEquals) {
+		if (target != condition) return true;
+	}
+	else if (op == hsql::kOpLess) {
+		if (target < condition) return true;
+	}
+	else if (op == hsql::kOpLessEq) {
+		if (target <= condition) return true;
+	}
+	else if (op == hsql::kOpGreater) {
+		if (target > condition) return true;
+	}
+	else if (op == hsql::kOpGreaterEq) {
+		if (target >= condition) return true;
+	}
+	else {
+		cerr << "Error: Unsupported operation." << endl;
+	}
+
+	return false;
+}
+
+bool QueryParser::ConditionMet(hsql::OperatorType op, double target, double condition) {
+	if (op == hsql::kOpEquals) {
+		if (target == condition) return true;
+	}
+	else if (op == hsql::kOpNotEquals) {
+		if (target != condition) return true;
+	}
+	else if (op == hsql::kOpLess) {
+		if (target < condition) return true;
+	}
+	else if (op == hsql::kOpLessEq) {
+		if (target <= condition) return true;
+	}
+	else if (op == hsql::kOpGreater) {
+		if (target > condition) return true;
+	}
+	else if (op == hsql::kOpGreaterEq) {
+		if (target >= condition) return true;
+	}
+	else {
+		cerr << "Error: Unsupported operation." << endl;
+	}
+
+	return false;
+}
+
+bool QueryParser::ConditionMet(hsql::OperatorType op, string target, string condition) {
+	if (op == hsql::kOpEquals) {
+		if (target == condition) return true;
+	}
+	else if (op == hsql::kOpNotEquals) {
+		if (target != condition) return true;
+	}
+	else {
+		cerr << "Error: Unsupported operation." << endl;
+	}
+
+	return false;
+}
+
 // void Entry::print() {
 // 	cout << '|';
 // 	for (string item : attributeList)
@@ -31,17 +99,18 @@ size_t Entry::size() {
 // 	cout << endl;
 // }
 
-QueryResult::QueryResult() {}
-
-template <class T> void QueryParser::filter(QueryResult* entries, hsql::OperatorType op, T val, Attribute* attr, vector<Attribute*> selectList) {
-	size_t num_pages = selectList[0]->pages.size();
-	size_t cols = selectList.size();
+void QueryParser::filter(QueryResult* entries, hsql::OperatorType op, int val, 
+						 Attribute* attr, unordered_map<string, Column*>& selectList,
+						 vector<string>& selectOrder, unordered_map<string, Column*>& groupbyList,
+						 vector<string>& totalList) {
+	size_t num_pages = selectList[selectOrder[0]]->attribute->pages.size();
+	size_t cols = totalList.size();
 
 	for (size_t i = 0; i < num_pages; i++) {
-		int page_num = selectList[0]->page_order[i];
-		if (!buffer->iscached(page_num)) {
+		int page_num = selectList[selectOrder[0]]->attribute->page_order[i];
+		if (!buffer->iscached(page_num))
 			buffer->fetch(page_num);
-		}
+
 		Page* p = buffer->get(page_num);
 		size_t num_tuples = p->size();
 
@@ -51,254 +120,244 @@ template <class T> void QueryParser::filter(QueryResult* entries, hsql::Operator
 
 			for (size_t k = 0; k < cols; k++) {
 				int page_condnum = attr->page_order[i];
-				if (!buffer->iscached(page_condnum)) {
+				if (!buffer->iscached(page_condnum))
 					buffer->fetch(page_condnum);
-				}
+
 				Page* page_cond = buffer->get(page_condnum);
 
-				int page_num = selectList[k]->page_order[i];
-				if (!buffer->iscached(page_num)) {
-					buffer->fetch(page_num);
+				if (selectList.find(totalList[k]) != selectList.end()) {
+					int page_num = selectList[totalList[k]]->attribute->page_order[i];
+					if (!buffer->iscached(page_num))
+						buffer->fetch(page_num);
+
+					Page* page = buffer->get(page_num);
+
+					int target = page_cond->content[j]->ival;
+					if (ConditionMet(op, target, val)) {
+						if (page->type() == "TEXT") {
+							string text(page->content[j]->sval);
+							entry->attributeList[page->attribute()] = text;
+							// if the column is also in group by list, push it into the list
+							if (groupbyList.find(totalList[k]) != groupbyList.end())
+								entry->attributeGroupby[page->attribute()] = text;
+						}
+						else if (page->type() == "INT") {
+							entry->attributeList[page->attribute()] = to_string(page->content[j]->ival);
+							if (groupbyList.find(totalList[k]) != groupbyList.end())
+								entry->attributeGroupby[page->attribute()] = to_string(page->content[j]->ival);
+						}
+						else {
+							entry->attributeList[page->attribute()] = to_string(page->content[j]->dval);
+							if (groupbyList.find(totalList[k]) != groupbyList.end())
+								entry->attributeGroupby[page->attribute()] = to_string(page->content[j]->dval);
+						}
+
+						if (i == 0 && j == 0)
+							entries->attrnames.push_back(page->attribute());
+					}
+					else
+						satisfied = false;
 				}
-				Page* page = buffer->get(page_num);
-				if (op == hsql::kOpEquals) {
-					if (page_cond->type() == "INT") {
-						if (page_cond->content[j]->ival == val) {
-							if (page->type() == "TEXT") {
-								string text(page->content[j]->sval);
-								entry->attributeList[page->attribute()] = text;
-							}
-							else if (page->type() == "INT")
-								entry->attributeList[page->attribute()] = to_string(page->content[j]->ival);
-							else
-								entry->attributeList[page->attribute()] = to_string(page->content[j]->dval);
+				else { // column in groupby list but not select list
+					int page_num = groupbyList[totalList[k]]->attribute->page_order[i];
+					if (!buffer->iscached(page_num))
+						buffer->fetch(page_num);
 
-							if (i == 0 && j == 0) {
-								entries->attrnames.push_back(page->attribute());
-							}
-						}
-						else satisfied = false;
-					}
-					else if (page_cond->type() == "DOUBLE") {
-						if (page_cond->content[j]->dval == val) {
-							if (page->type() == "TEXT") {
-								string text(page->content[j]->sval);
-								entry->attributeList[page->attribute()] = text;
-							}
-							else if (page->type() == "INT")
-								entry->attributeList[page->attribute()] = to_string(page->content[j]->ival);
-							else
-								entry->attributeList[page->attribute()] = to_string(page->content[j]->dval);
+					Page* page = buffer->get(page_num);
 
-							if (i == 0 && j == 0) {
-								entries->attrnames.push_back(page->attribute());
-							}
+					int target = page_cond->content[j]->ival;
+					if (ConditionMet(op, target, val)) {
+						if (page->type() == "TEXT") {
+							string text(page->content[j]->sval);
+							entry->attributeGroupby[page->attribute()] = text;
 						}
-						else satisfied = false;
-					}
-					else {
-						cerr << "Error: Invalid condition, text on the right side of operator.";
-						return;
-					}
-				}
-				else if (op == hsql::kOpNotEquals) {
-					if (page_cond->type() == "INT") {
-						if (page_cond->content[j]->ival != val) {
-							if (page->type() == "TEXT") {
-								string text(page->content[j]->sval);
-								entry->attributeList[page->attribute()] = text;
-							}
-							else if (page->type() == "INT")
-								entry->attributeList[page->attribute()] = to_string(page->content[j]->ival);
-							else
-								entry->attributeList[page->attribute()] = to_string(page->content[j]->dval);
-
-							if (i == 0 && j == 0) {
-								entries->attrnames.push_back(page->attribute());
-							}
-						}
-						else satisfied = false;
-					}
-					else if (page_cond->type() == "DOUBLE") {
-						if (page_cond->content[j]->dval != val) {
-							if (page->type() == "TEXT") {
-								string text(page->content[j]->sval);
-								entry->attributeList[page->attribute()] = text;
-							}
-							else if (page->type() == "INT")
-								entry->attributeList[page->attribute()] = to_string(page->content[j]->ival);
-							else
-								entry->attributeList[page->attribute()] = to_string(page->content[j]->dval);
-
-							if (i == 0 && j == 0) {
-								entries->attrnames.push_back(page->attribute());
-							}
-						}
-						else satisfied = false;
-					}
-					else {
-						cerr << "Error: Invalid condition, text on the right side of operator.";
-						return;
+						else if (page->type() == "INT")
+							entry->attributeGroupby[page->attribute()] = to_string(page->content[j]->ival);
+						else
+							entry->attributeGroupby[page->attribute()] = to_string(page->content[j]->dval);
 					}
 				}
-				else if (op == hsql::kOpLess) {
-					if (page_cond->type() == "INT") {
-						if (page_cond->content[j]->ival < val) {
-							if (page->type() == "TEXT") {
-								string text(page->content[j]->sval);
-								entry->attributeList[page->attribute()] = text;
-							}
-							else if (page->type() == "INT")
-								entry->attributeList[page->attribute()] = to_string(page->content[j]->ival);
-							else
-								entry->attributeList[page->attribute()] = to_string(page->content[j]->dval);
+			}
+			if (satisfied)
+				entries->item.push_back(entry);
+		}
+	}
+	// for (size_t i = 0; i < entries.size(); i++) {
+	// 	entries[i]->print();
+	// 	if (i < entries.size() - 1)
+	// 		PrintLineInner(BOXWIDTH, cols);
+	// }
+}
 
-							if (i == 0 && j == 0) {
-								entries->attrnames.push_back(page->attribute());
-							}
-						}
-						else satisfied = false;
-					}
-					else if (page_cond->type() == "DOUBLE") {
-						if (page_cond->content[j]->dval < val) {
-							if (page->type() == "TEXT") {
-								string text(page->content[j]->sval);
-								entry->attributeList[page->attribute()] = text;
-							}
-							else if (page->type() == "INT")
-								entry->attributeList[page->attribute()] = to_string(page->content[j]->ival);
-							else
-								entry->attributeList[page->attribute()] = to_string(page->content[j]->dval);
+void QueryParser::filter(QueryResult* entries, hsql::OperatorType op, double val, 
+						 Attribute* attr, unordered_map<string, Column*>& selectList,
+						 vector<string>& selectOrder, unordered_map<string, Column*>& groupbyList,
+						 vector<string>& totalList) {
+	size_t num_pages = selectList[selectOrder[0]]->attribute->pages.size();
+	size_t cols = totalList.size();
 
-							if (i == 0 && j == 0) {
-								entries->attrnames.push_back(page->attribute());
-							}
+	for (size_t i = 0; i < num_pages; i++) {
+		int page_num = selectList[selectOrder[0]]->attribute->page_order[i];
+		if (!buffer->iscached(page_num))
+			buffer->fetch(page_num);
+
+		Page* p = buffer->get(page_num);
+		size_t num_tuples = p->size();
+
+		for (size_t j = 0; j < num_tuples; j++) {
+			Entry* entry = new Entry(BOXWIDTH);
+			bool satisfied = true;
+
+			for (size_t k = 0; k < cols; k++) {
+				int page_condnum = attr->page_order[i];
+				if (!buffer->iscached(page_condnum))
+					buffer->fetch(page_condnum);
+
+				Page* page_cond = buffer->get(page_condnum);
+
+				if (selectList.find(totalList[k]) != selectList.end()) {
+					int page_num = selectList[totalList[k]]->attribute->page_order[i];
+					if (!buffer->iscached(page_num))
+						buffer->fetch(page_num);
+
+					Page* page = buffer->get(page_num);
+
+					double target = page_cond->content[j]->dval;
+					if (ConditionMet(op, target, val)) {
+						if (page->type() == "TEXT") {
+							string text(page->content[j]->sval);
+							entry->attributeList[page->attribute()] = text;
+							// if the column is also in group by list, push it into the list
+							if (groupbyList.find(totalList[k]) != groupbyList.end())
+								entry->attributeGroupby[page->attribute()] = text;
+
 						}
-						else satisfied = false;
+						else if (page->type() == "INT") {
+							entry->attributeList[page->attribute()] = to_string(page->content[j]->ival);
+							if (groupbyList.find(totalList[k]) != groupbyList.end())
+								entry->attributeGroupby[page->attribute()] = to_string(page->content[j]->ival);
+
+						}
+						else {
+							entry->attributeList[page->attribute()] = to_string(page->content[j]->dval);
+							if (groupbyList.find(totalList[k]) != groupbyList.end())
+								entry->attributeGroupby[page->attribute()] = to_string(page->content[j]->dval);
+
+						}
+
+						if (i == 0 && j == 0)
+							entries->attrnames.push_back(page->attribute());
 					}
-					else {
-						cerr << "Error: Invalid condition, text on the right side of operator.";
-						return;
+					else
+						satisfied = false;
+				}
+				else { // column in groupby list but not select list
+					int page_num = groupbyList[totalList[k]]->attribute->page_order[i];
+					if (!buffer->iscached(page_num))
+						buffer->fetch(page_num);
+
+					Page* page = buffer->get(page_num);
+
+					double target = page_cond->content[j]->dval;
+					if (ConditionMet(op, target, val)) {
+						if (page->type() == "TEXT") {
+							string text(page->content[j]->sval);
+							entry->attributeGroupby[page->attribute()] = text;
+						}
+						else if (page->type() == "INT")
+							entry->attributeGroupby[page->attribute()] = to_string(page->content[j]->ival);
+						else
+							entry->attributeGroupby[page->attribute()] = to_string(page->content[j]->dval);
 					}
 				}
-				else if (op == hsql::kOpLessEq) {
-					if (page_cond->type() == "INT") {
-						if (page_cond->content[j]->ival <= val) {
-							if (page->type() == "TEXT") {
-								string text(page->content[j]->sval);
-								entry->attributeList[page->attribute()] = text;
-							}
-							else if (page->type() == "INT")
-								entry->attributeList[page->attribute()] = to_string(page->content[j]->ival);
-							else
-								entry->attributeList[page->attribute()] = to_string(page->content[j]->dval);
+			}
+			if (satisfied)
+				entries->item.push_back(entry);
+		}
+	}
+	// for (size_t i = 0; i < entries.size(); i++) {
+	// 	entries[i]->print();
+	// 	if (i < entries.size() - 1)
+	// 		PrintLineInner(BOXWIDTH, cols);
+	// }
+}
 
-							if (i == 0 && j == 0) {
-								entries->attrnames.push_back(page->attribute());
-							}
-						}
-						else satisfied = false;
-					}
-					else if (page_cond->type() == "DOUBLE") {
-						if (page_cond->content[j]->dval <= val) {
-							if (page->type() == "TEXT") {
-								string text(page->content[j]->sval);
-								entry->attributeList[page->attribute()] = text;
-							}
-							else if (page->type() == "INT")
-								entry->attributeList[page->attribute()] = to_string(page->content[j]->ival);
-							else
-								entry->attributeList[page->attribute()] = to_string(page->content[j]->dval);
+void QueryParser::filter(QueryResult* entries, hsql::OperatorType op, string val, 
+						 Attribute* attr, unordered_map<string, Column*>& selectList,
+						 vector<string>& selectOrder, unordered_map<string, Column*>& groupbyList,
+						 vector<string>& totalList) {
+	size_t num_pages = selectList[selectOrder[0]]->attribute->pages.size();
+	size_t cols = totalList.size();
 
-							if (i == 0 && j == 0) {
-								entries->attrnames.push_back(page->attribute());
-							}
+	for (size_t i = 0; i < num_pages; i++) {
+		int page_num = selectList[selectOrder[0]]->attribute->page_order[i];
+		if (!buffer->iscached(page_num))
+			buffer->fetch(page_num);
+
+		Page* p = buffer->get(page_num);
+		size_t num_tuples = p->size();
+
+		for (size_t j = 0; j < num_tuples; j++) {
+			Entry* entry = new Entry(BOXWIDTH);
+			bool satisfied = true;
+
+			for (size_t k = 0; k < cols; k++) {
+				int page_condnum = attr->page_order[i];
+				if (!buffer->iscached(page_condnum))
+					buffer->fetch(page_condnum);
+
+				Page* page_cond = buffer->get(page_condnum);
+
+				if (selectList.find(totalList[k]) != selectList.end()) {
+					int page_num = selectList[totalList[k]]->attribute->page_order[i];
+					if (!buffer->iscached(page_num))
+						buffer->fetch(page_num);
+
+					Page* page = buffer->get(page_num);
+
+					string target = page_cond->content[j]->sval;
+					if (ConditionMet(op, target, val)) {
+						if (page->type() == "TEXT") {
+							string text(page->content[j]->sval);
+							entry->attributeList[page->attribute()] = text;
+							// if the column is also in group by list, push it into the list
+							if (groupbyList.find(totalList[k]) != groupbyList.end())
+								entry->attributeGroupby[page->attribute()] = text;
 						}
-						else satisfied = false;
+						else if (page->type() == "INT") {
+							entry->attributeList[page->attribute()] = to_string(page->content[j]->ival);
+							if (groupbyList.find(totalList[k]) != groupbyList.end())
+								entry->attributeGroupby[page->attribute()] = to_string(page->content[j]->ival);
+						}
+						else {
+							entry->attributeList[page->attribute()] = to_string(page->content[j]->dval);
+							if (groupbyList.find(totalList[k]) != groupbyList.end())
+								entry->attributeGroupby[page->attribute()] = to_string(page->content[j]->dval);
+						}
+
+						if (i == 0 && j == 0)
+							entries->attrnames.push_back(page->attribute());
 					}
-					else {
-						cerr << "Error: Invalid condition, text on the right side of operator.";
-						return;
-					}
+					else
+						satisfied = false;
 				}
-				else if (op == hsql::kOpGreater) {
-					if (page_cond->type() == "INT") {
-						if (page_cond->content[j]->ival > val) {
-							if (page->type() == "TEXT") {
-								string text(page->content[j]->sval);
-								entry->attributeList[page->attribute()] = text;
-							}
-							else if (page->type() == "INT")
-								entry->attributeList[page->attribute()] = to_string(page->content[j]->ival);
-							else
-								entry->attributeList[page->attribute()] = to_string(page->content[j]->dval);
+				else { // column in groupby list but not select list
+					int page_num = groupbyList[totalList[k]]->attribute->page_order[i];
+					if (!buffer->iscached(page_num)) {
+						buffer->fetch(page_num);
+					}
+					Page* page = buffer->get(page_num);
 
-							if (i == 0 && j == 0) {
-								entries->attrnames.push_back(page->attribute());
-							}
+					string target = page_cond->content[j]->sval;
+					if (ConditionMet(op, target, val)) {
+						if (page->type() == "TEXT") {
+							string text(page->content[j]->sval);
+							entry->attributeGroupby[page->attribute()] = text;
 						}
-						else satisfied = false;
-					}
-					else if (page_cond->type() == "DOUBLE") {
-						if (page_cond->content[j]->dval > val) {
-							if (page->type() == "TEXT") {
-								string text(page->content[j]->sval);
-								entry->attributeList[page->attribute()] = text;
-							}
-							else if (page->type() == "INT")
-								entry->attributeList[page->attribute()] = to_string(page->content[j]->ival);
-							else
-								entry->attributeList[page->attribute()] = to_string(page->content[j]->dval);
-
-							if (i == 0 && j == 0) {
-								entries->attrnames.push_back(page->attribute());
-							}
-						}
-						else satisfied = false;
-					}
-					else {
-						cerr << "Error: Invalid condition, text on the right side of operator.";
-						return;
-					}
-				}
-				else if (op == hsql::kOpGreaterEq) {
-					if (page_cond->type() == "INT") {
-						if (page_cond->content[j]->ival >= val) {
-							if (page->type() == "TEXT") {
-								string text(page->content[j]->sval);
-								entry->attributeList[page->attribute()] = text;
-							}
-							else if (page->type() == "INT")
-								entry->attributeList[page->attribute()] = to_string(page->content[j]->ival);
-							else
-								entry->attributeList[page->attribute()] = to_string(page->content[j]->dval);
-
-							if (i == 0 && j == 0) {
-								entries->attrnames.push_back(page->attribute());
-							}
-						}
-						else satisfied = false;
-					}
-					else if (page_cond->type() == "DOUBLE") {
-						if (page_cond->content[j]->dval >= val) {
-							if (page->type() == "TEXT") {
-								string text(page->content[j]->sval);
-								entry->attributeList[page->attribute()] = text;
-							}
-							else if (page->type() == "INT")
-								entry->attributeList[page->attribute()] = to_string(page->content[j]->ival);
-							else
-								entry->attributeList[page->attribute()] = to_string(page->content[j]->dval);
-
-							if (i == 0 && j == 0) {
-								entries->attrnames.push_back(page->attribute());
-							}
-						}
-						else satisfied = false;
-					}
-					else {
-						cerr << "Error: Invalid condition, text on the right side of operator.";
-						return;
+						else if (page->type() == "INT")
+							entry->attributeGroupby[page->attribute()] = to_string(page->content[j]->ival);
+						else
+							entry->attributeGroupby[page->attribute()] = to_string(page->content[j]->dval);
 					}
 				}
 			}
@@ -313,7 +372,6 @@ template <class T> void QueryParser::filter(QueryResult* entries, hsql::Operator
 	// 		PrintLineInner(BOXWIDTH, cols);
 	// }
 }
-
 QueryParser::QueryParser(FileManager* fs, BufferManager* bf) {
 	filesystem = fs;
 	buffer = bf;
@@ -483,53 +541,111 @@ void QueryParser::ParseSELECT(const hsql::SQLStatement* statement) {
 		groupby = false;
 		// cout << "No group by found" << endl;
 	}
-	vector<Column*> groupbyList;
+	unordered_map<string, Column*> groupbyList;
+	unordered_map<string, Column*> selectList;
+	vector<string> totalList;
+	vector<string> selectOrder;
 
+	// create groupby list
 	if (groupby) {
 		for (auto column : *select->groupBy->columns) {
-			if (column->type == hsql::kExprStar) {
-				for (size_t i = 0; i < fromTable->attr_order.size() - 1; i++)
-					groupbyList.push_back(fromTable->attributes[fromTable->attr_order[i+1]]);
+			if (column->type == hsql::kExprStar) { // there is a star in group by
+				for (size_t i = 0; i < fromTable->attr_order.size() - 1; i++) {
+					Column* col_group = new Column(fromTable->attributes[fromTable->attr_order[i+1]], fromTable->attr_order[i+1]);
+					groupbyList[fromTable->attr_order[i+1]] = col_group;
+					totalList.push_back(fromTable->attr_order[i+1]);
+				}
 				break;
 			}
-			string col(column->name);
+			else {
+				string col(column->name);
 
-			if (fromTable->attributes.find(col) == fromTable->attributes.end()) {
-				cout << "Error: table <" << TableName(t_name) << "> only has attributes: " << endl;
-				for (string a : fromTable->attr_order) {
-					cout << '<' << a << '>' << " ";
+				// if there is no such attribute in given table
+				if (fromTable->attributes.find(col) == fromTable->attributes.end()) {
+					cout << "Error: table <" << TableName(t_name) << "> only has attributes: " << endl;
+					for (string a : fromTable->attr_order) {
+						cout << '<' << a << '>' << " ";
+					}
+					cout << endl;
+					return;
 				}
-				cout << endl;
-				return;
+				else {
+					Column* col_group = new Column(fromTable->attributes[col], col);
+					groupbyList[col] = col_group;
+					totalList.push_back(col);
+				}
 			}
-			groupbyList.push_back(fromTable->attributes[col]);
 		}
 	}
 
-	// select list
-	vector<Column*> selectList;
-
+	// create select list
 	for (auto column : *select->selectList) {
 		if (column->type == hsql::kExprStar) {
-			for (size_t i = 0; i < fromTable->attr_order.size() - 1; i++)
-				selectList.push_back(fromTable->attributes[fromTable->attr_order[i+1]]);
+			// add every column to the select list
+			for (size_t i = 0; i < fromTable->attr_order.size() - 1; i++) {
+				Column* col_select = new Column(fromTable->attributes[fromTable->attr_order[i+1]], fromTable->attr_order[i+1]);
+				selectList[fromTable->attr_order[i+1]] = col_select;
+				totalList.push_back(fromTable->attr_order[i+1]);
+				selectOrder.push_back(fromTable->attr_order[i+1]);
+			}
 			break;
 		}
-		string col(column->name);
+		else {
+			if (column->type == hsql::kExprFunctionRef) { // aggregated
+				string func(column->name);
 
-		if (fromTable->attributes.find(col) == fromTable->attributes.end()) {
-			cout << "Error: table <" << TableName(t_name) << "> only has attributes: " << endl;
-			for (string a : fromTable->attr_order) {
-				cout << '<' << a << '>' << " ";
+				for (auto expr : *column->exprList) {
+					string col(expr->name);
+					Column* col_select = new Column(fromTable->attributes[col], col);
+					if (func == "AVG") {
+						col_select->type = aFuncAVG;
+					}
+					else if (func == "COUNT") {
+						col_select->type = aFuncCOUNT;
+					}
+					else if (func == "MIN") {
+						col_select->type = aFuncMIN;
+					}
+					else if (func == "MAX") {
+						col_select->type = aFuncMAX;
+					}
+					else if (func == "SUM") {
+						col_select->type = aFuncSUM;
+					}
+					else if (func == "NA") {
+						col_select->type = aFuncNA;
+					}
+					else{
+						cerr << "Error: Unsupported aggregation function \"" << func << "\"." << endl;
+						return; 
+					}
+					selectList[col] = col_select;
+					totalList.push_back(col);
+					selectOrder.push_back(col);
+				}
 			}
-			cout << endl;
-			return;
+			else { // regular column
+				string col(column->name);
+
+				if (fromTable->attributes.find(col) == fromTable->attributes.end()) {
+					cout << "Error: table <" << TableName(t_name) << "> only has attributes: " << endl;
+					for (string a : fromTable->attr_order) {
+						cout << '<' << a << '>' << " ";
+					}
+					cout << endl;
+					return;
+				}
+				Column* col_select = new Column(fromTable->attributes[col], col);
+				selectList[col] = col_select;
+				totalList.push_back(col);
+				selectOrder.push_back(col);
+			}
+
 		}
-		selectList.push_back(fromTable->attributes[col]);
 	}
 
-	size_t num_pages = selectList[0]->pages.size();
-	size_t cols = selectList.size();
+	size_t num_pages = selectList[selectOrder[0]]->attribute->pages.size();
+	size_t cols = totalList.size();
 
 	// filter first
 	if (select->whereClause) {
@@ -541,13 +657,20 @@ void QueryParser::ParseSELECT(const hsql::SQLStatement* statement) {
 		if (select->whereClause->expr2->type == hsql::kExprLiteralFloat) {
 			double condition_right = select->whereClause->expr2->fval;
 
-			filter(entries, select->whereClause->opType, condition_right, condition_col, selectList);
+			filter(entries, select->whereClause->opType, condition_right, 
+				   condition_col, selectList, selectOrder, groupbyList, totalList);
 		}
 		else if (select->whereClause->expr2->type == hsql::kExprLiteralInt) {
 			int condition_right = select->whereClause->expr2->ival;
 
-			filter(entries, select->whereClause->opType, condition_right, condition_col, selectList);
+			filter(entries, select->whereClause->opType, condition_right, 
+				   condition_col, selectList, selectOrder, groupbyList, totalList);
 			// PrintLine(BOXWIDTH, cols);
+		}
+		else if (select->whereClause->expr2->type == hsql::kExprLiteralString) {
+			string condition_right(select->whereClause->expr2->name);
+			filter(entries, select->whereClause->opType, condition_right, 
+				   condition_col, selectList, selectOrder, groupbyList, totalList);
 		}
 		else {
 			cerr << "Error: Unsupport condition." << endl;
@@ -556,7 +679,7 @@ void QueryParser::ParseSELECT(const hsql::SQLStatement* statement) {
 	}
 	else {
 		for (size_t i = 0; i < num_pages; i++) {
-			int page_num = selectList[0]->page_order[i];
+			int page_num = selectList[selectOrder[0]]->attribute->page_order[i];
 			if (!buffer->iscached(page_num)) {
 				buffer->fetch(page_num);
 			}
@@ -567,23 +690,59 @@ void QueryParser::ParseSELECT(const hsql::SQLStatement* statement) {
 				Entry* entry = new Entry(BOXWIDTH);
 
 				for (size_t k = 0; k < cols; k++) {
-					int page_num = selectList[k]->page_order[i];
-					if (!buffer->iscached(page_num)) {
-						buffer->fetch(page_num);
-					}
-					Page* page = buffer->get(page_num);
+					if (selectList.find(totalList[k]) != selectList.end()) {
+						int page_num = selectList[totalList[k]]->attribute->page_order[i];
+						if (!buffer->iscached(page_num)) {
+							buffer->fetch(page_num);
+						}
+						Page* page = buffer->get(page_num);
 
-					if (page->type() == "TEXT") {
-						string text(page->content[j]->sval);
-						entry->attributeList[page->attribute()] = text;
+						if (page->type() == "TEXT") {
+							string text(page->content[j]->sval);
+							entry->attributeList[page->attribute()] = text;
+							if (groupbyList.find(totalList[k]) != groupbyList.end()) {
+								entry->attributeGroupby[page->attribute()] = text;
+							}
+						}
+						else if (page->type() == "INT") {
+							entry->attributeList[page->attribute()] = to_string(page->content[j]->ival);
+							if (groupbyList.find(totalList[k]) != groupbyList.end()) {
+								entry->attributeGroupby[page->attribute()] = to_string(page->content[j]->ival);
+							}
+						}
+						else {
+							entry->attributeList[page->attribute()] = to_string(page->content[j]->dval);
+							if (groupbyList.find(totalList[k]) != groupbyList.end()) {
+								entry->attributeGroupby[page->attribute()] = to_string(page->content[j]->dval);
+							}
+						}
+						if (i == 0 && j == 0) {
+							entries->attrnames.push_back(page->attribute());
+						}
 					}
-					else if (page->type() == "INT")
-						entry->attributeList[page->attribute()] = to_string(page->content[j]->ival);
-					else
-						entry->attributeList[page->attribute()] = to_string(page->content[j]->dval);
+					else if (groupbyList.find(totalList[k]) != groupbyList.end()) {
+						int page_num = groupbyList[totalList[k]]->attribute->page_order[i];
+						if (!buffer->iscached(page_num)) {
+							buffer->fetch(page_num);
+						}
+						Page* page = buffer->get(page_num);
 
-					if (i == 0 && j == 0) {
-						entries->attrnames.push_back(page->attribute());
+						if (page->type() == "TEXT") {
+							string text(page->content[j]->sval);
+							entry->attributeGroupby[page->attribute()] = text;
+						}
+						else if (page->type() == "INT")
+							entry->attributeGroupby[page->attribute()] = to_string(page->content[j]->ival);
+						else
+							entry->attributeGroupby[page->attribute()] = to_string(page->content[j]->dval);
+
+						// if (i == 0 && j == 0) {
+						// 	entries->attrnames.push_back(page->attribute());
+						// }
+					}
+					else {
+						cerr << "I don't think this is possible." << endl;
+						return;
 					}
 				}
 			}
@@ -591,18 +750,24 @@ void QueryParser::ParseSELECT(const hsql::SQLStatement* statement) {
 	}
 
 	// group
+	set<string> glist;
+
+	// cols in the selectList but not groupbyList
+	// they need to be processed by aggregation functions
+	vector<string> cols_aggregated;
+
 	if (groupby) {
 		// reorder the columns, put groupby columns together
-		set<string> glist;
 		vector<string> neworder;
-		for (auto col : groupbyList) {
-			glist.insert(col->name());
-			neworder.push_back(col->name());
+		for (auto it = groupbyList.begin(); it != groupbyList.end(); it++) {
+			glist.insert(it->first);
+			neworder.push_back(it->first);
 		}
 
-		for (auto col : selectList) {
-			if (glist.find(col->name()) == glist.end()) {
-				neworder.push_back(col->name());
+		for (auto col : selectOrder) {
+			if (glist.find(col) == glist.end()) {
+				neworder.push_back(col);
+				cols_aggregated.push_back(col);
 			}
 		}
 
@@ -613,12 +778,117 @@ void QueryParser::ParseSELECT(const hsql::SQLStatement* statement) {
 			vector<string> groupkey;
 			vector<string> groupval;
 			for (string attr : entries->attrnames) {
-				if (glist.find(attr) != glist.end())
-					groupkey.push_back(entry->attributeList[attr]);
-				else
+				// cout << "attr is: " << attr;
+				if (glist.find(attr) != glist.end()) {
+					// cout << " in groupby!" << endl;
+					groupkey.push_back(entry->attributeGroupby[attr]);
+					// cout << "pushed: " << entry->attributeGroupby[attr] << endl;
+				}
+				else {
+					// cout << " not in groupby!" << endl;
 					groupval.push_back(entry->attributeList[attr]);
+					// cout << "pushed: " << entry->attributeList[attr] << endl;
+				}
 			}
-			entries->groups[vtos(groupkey)].push_back(groupval);
+			string key = vtos(groupkey);
+			// cout << "Key is: " << key << endl;
+
+			if (entries->groups.find(key) == entries->groups.end()) { // if this is a new key
+				// cout << "Key is new: " << key << endl;
+				//store it in entries
+				entries->groups[key] = make_pair(groupval, 1);
+				for (size_t i = 0; i < cols_aggregated.size(); i++) {
+					if (selectList[cols_aggregated[i]]->type == aFuncCOUNT)
+						entries->groups[key].first[i] = "1";
+				}
+			}
+			else { // update the entry according to the aggregate
+				// cout << "Key is old: " << key << endl;
+				for (size_t i = 0; i < cols_aggregated.size(); i++) {
+					entries->groups[key].second++;
+					if (selectList[cols_aggregated[i]]->attribute->type() == "INT") {
+						if (selectList[cols_aggregated[i]]->type == aFuncAVG) {
+							int temp = stoi(entries->groups[key].first[i]) * (entries->groups[key].second - 1);
+							temp += stoi(groupval[i]);
+							temp /= entries->groups[key].second;
+							entries->groups[key].first[i] = to_string(temp);
+
+						}
+						else if (selectList[cols_aggregated[i]]->type == aFuncCOUNT) {
+							entries->groups[key].first[i] = to_string(entries->groups[key].second);
+						}
+						else if (selectList[cols_aggregated[i]]->type == aFuncMIN) {
+							entries->groups[key].first[i] = to_string(min(stoi(entries->groups[key].first[i]), stoi(groupval[i])));
+						}
+						else if (selectList[cols_aggregated[i]]->type == aFuncMAX) {
+							entries->groups[key].first[i] = to_string(max(stoi(entries->groups[key].first[i]), stoi(groupval[i])));
+						}
+						else if (selectList[cols_aggregated[i]]->type == aFuncSUM) {
+							int temp = stoi(entries->groups[key].first[i]) + stoi(groupval[i]);
+							entries->groups[key].first[i] = to_string(temp);
+						}
+						else if (selectList[cols_aggregated[i]]->type == aFuncNA) {
+							cerr << "Error: Aggregation function not designated to this column." << endl;
+							return;
+						}
+						else {
+							cerr << "Error: Unsupported aggregation functions." << endl;
+							return;
+						}
+					}
+					else if (selectList[cols_aggregated[i]]->attribute->type() == "DOUBLE") {
+						if (selectList[cols_aggregated[i]]->type == aFuncAVG) {
+							int temp = stod(entries->groups[key].first[i]) * (entries->groups[key].second - 1);
+							temp += stod(groupval[i]);
+							temp /= entries->groups[key].second;
+							entries->groups[key].first[i] = to_string(temp);
+
+						}
+						else if (selectList[cols_aggregated[i]]->type == aFuncCOUNT) {
+							entries->groups[key].first[i] = to_string(entries->groups[key].second);
+						}
+						else if (selectList[cols_aggregated[i]]->type == aFuncMIN) {
+							entries->groups[key].first[i] = to_string(min(stod(entries->groups[key].first[i]), stod(groupval[i])));
+						}
+						else if (selectList[cols_aggregated[i]]->type == aFuncMAX) {
+							entries->groups[key].first[i] = to_string(max(stod(entries->groups[key].first[i]), stod(groupval[i])));
+						}
+						else if (selectList[cols_aggregated[i]]->type == aFuncSUM) {
+							int temp = stod(entries->groups[key].first[i]) + stod(groupval[i]);
+							entries->groups[key].first[i] = to_string(temp);
+						}
+						else if (selectList[cols_aggregated[i]]->type == aFuncNA) {
+							cerr << "Error: Aggregation function not designated to this column." << endl;
+							return;
+						}
+						else {
+							cerr << "Error: Unsupported aggregation functions." << endl;
+							return;
+						}
+					}
+					else if (selectList[cols_aggregated[i]]->attribute->type() == "TEXT") {
+						if (selectList[cols_aggregated[i]]->type == aFuncCOUNT) {
+							entries->groups[key].first[i] = to_string(entries->groups[key].second);
+						}
+						else {
+							cerr << "Error: Unsupported aggregation function for TEXT data type." << endl;
+							return;
+						}
+					}
+					else {
+						cerr << "Error: Unsupported data type." << endl;
+						return;
+					}
+				}
+			}
+		}
+	for (auto it : entries->groups) {
+			cout << "Key is: " << it.first << endl;
+			cout << "Values are: ";
+			for (string val : it.second.first) {
+				cout << val << " ";
+			}
+			cout << endl << endl;
 		}
 
 		// print group here
@@ -632,8 +902,5 @@ void QueryParser::ParseSELECT(const hsql::SQLStatement* statement) {
 		// 		cout << endl;
 		// 	}
 		// }
-
-		// parse functionref
-
 	}
 }

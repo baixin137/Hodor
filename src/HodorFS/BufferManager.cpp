@@ -246,35 +246,6 @@ void DoublePage::read(int pn, string page_name, vector<string> property) {
 	}
 }
 
-// void BooleanPage::read(int pn, string page_name, vector<string> property) {
-// 	page_num = pn;
-// 	table = property[0];
-// 	attribute = property[1];
-// 	slots = stoi(property[3]);
-
-// 	dirty = false; // fetched a new page, clean
-// 	pinned = 0; // new page, not pinned by any thread
-
-// 	ifstream infile(page_name);
-
-// 	if (!infile) {
-// 		cerr << "Unable to find page " << page_name << "." << endl;
-// 	}
-// 	else {
-// 		string line;
-
-// 		getline(infile, line); // get rid of the header
-// 		while (getline(infile, line)) {
-// 			if (line == "0") 
-// 				content.push_back(false);
-// 			else if (line == "NULL")
-// 				content.push_back(false);
-// 			else
-// 				content.push_back(true);
-// 		}
-// 	}
-// }
-
 void TextPage::write() {
 	string page_name = GetPageFile(page_num);
 
@@ -377,86 +348,6 @@ void DoublePage::write() {
 	outfile.close();
 }
 
-// void BooleanPage::write(string pn) {
-// 	ofstream outfile;
-// 	outfile.open(pn);
-// 	outfile << table << ',' << attribute << ','
-// 			<< type << ',' << to_string(slots)
-// 			<< endl;
-
-// 	for (size_t i = 0; i < content.size(); i++) {
-// 		if (i != content.size() - 1)
-// 			outfile << content[i] << endl;
-// 		else
-// 			outfile << content[i];
-// 	}
-// 	outfile.close();
-// }
-
-// void TextPage::display() {
-// 	cout << "Page number: " << page_num << endl;
-// 	cout << "Table: " << table << endl;;
-// 	cout << "Attribute: " << attribute << endl;
-// 	cout << "Type: " << type << endl;
-// 	cout << "Empty slots: " << slots << endl;
-// 	string d = dirty ? "true" : "false";
-// 	cout << "Dirty: " << d << endl;
-
-// 	for (auto c : content) 
-// 		cout << c->sval << endl;
-
-// 	cout << endl;
-// }
-
-// void IntPage::display() {
-// 	cout << "Page number: " << page_num << endl;
-// 	cout << "Table: " << table << endl;;
-// 	cout << "Attribute: " << attribute << endl;
-// 	cout << "Type: " << type << endl;
-// 	cout << "Empty slots: " << slots << endl;
-// 	string d = dirty ? "true" : "false";
-// 	cout << "Dirty: " << d << endl;
-
-// 	for (auto c : content) 
-// 		cout << c->ival << endl;
-
-// 	cout << endl;
-// }
-
-// void DoublePage::display() {
-// 	cout << "Page number: " << page_num << endl;
-// 	cout << "Table: " << table << endl;;
-// 	cout << "Attribute: " << attribute << endl;
-// 	cout << "Type: " << type << endl;
-// 	cout << "Empty slots: " << slots << endl;
-// 	string d = dirty ? "true" : "false";
-// 	cout << "Dirty: " << d << endl;
-
-// 	for (auto c : content) 
-// 		cout << c->dval << endl;
-
-// 	cout << endl;
-// }
-
-// void BooleanPage::display() {
-// 	cout << "Page number: " << page_num << endl;
-// 	cout << "Table: " << table << endl;;
-// 	cout << "Attribute: " << attribute << endl;
-// 	cout << "Type: " << type << endl;
-// 	cout << "Empty slots: " << slots << endl;
-// 	string d = dirty ? "true" : "false";
-// 	cout << "Dirty: " << d << endl;
-
-// 	for (auto c : content) {
-// 		if (c)
-// 			cout << "True" << endl;
-// 		else
-// 			cout << "False" << endl;
-// 	}
-
-// 	cout << endl;
-// }
-
 int IntPage::min() {return minval;}
 double DoublePage::min() {return minval;}
 
@@ -537,14 +428,6 @@ void LRUCache::remove(int key) {
 		map.erase(found_iter);
 	}
 }
-
-// void LRUCache::display() {
-// 	cout << "Buffer size: " << map.size() << endl << endl;
-
-// 	for (auto it = linkedlist.begin(); it != linkedlist.end(); it++) {
-// 		it->second->display();
-// 	}
-// }
 
 BufferManager::BufferManager(size_t c) {
 	buffer = new LRUCache(c);
