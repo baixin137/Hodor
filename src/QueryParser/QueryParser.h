@@ -54,6 +54,10 @@ public:
 	vector<Entry*> item;
 	vector<string> attrnames;
 	unordered_map<string, pair<vector<string>, size_t>> groups;
+
+	template<typename T> void PrintElement(T t, const int& width);
+	void PrintGroup(vector<string>& order, vector<string>& attrorder, unordered_map<string, string>& attributes);
+	void PrintAll();
 };
 
 class QueryParser {
@@ -79,7 +83,7 @@ private:
 public:
 	QueryParser(FileManager* fs, BufferManager* bf);
 
-	template<typename T> void printElement(T t, const int& width);
+	template<typename T> void PrintElement(T t, const int& width);
 
 	// parse incoming CREATE statement
 	void ParseCREATE(const hsql::SQLStatement* statement);

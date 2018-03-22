@@ -26,6 +26,57 @@ size_t Entry::size() {
 
 QueryResult::QueryResult() {}
 
+template<typename T> void QueryResult::PrintElement(T t, const int& width) {
+	cout << left << setw(width) << setfill(' ') << t << '|';
+}
+
+void QueryResult::PrintGroup(vector<string>& order, vector<string>& attrorder, unordered_map<string, string>& attributes) {
+	PrintLine(BOXWIDTH, groups[order[0]].first.size());
+	cout << '|';
+	for (string name : attrorder) {
+		if (attributes[name] == "")
+			PrintElement(name, BOXWIDTH);
+		else 
+			PrintElement(name + "_" + attributes[name], BOXWIDTH);
+	}
+	cout << endl;
+
+	PrintLineInner(BOXWIDTH, groups[order[0]].first.size());
+	for (size_t i = 0; i < order.size(); i++) {
+		cout << '|';
+		for (size_t j = 0; j < groups[order[i]].first.size(); j++) {
+			PrintElement(groups[order[i]].first[j], BOXWIDTH);
+		}
+		cout << endl;
+		if (i != order.size() - 1)
+			PrintLineInner(BOXWIDTH, groups[order[0]].first.size());
+	}
+	PrintLine(BOXWIDTH, groups[order[0]].first.size());
+}
+
+void QueryResult::PrintAll() {
+	PrintLine(BOXWIDTH, attrnames.size());
+
+	cout << '|';
+	for (string name : attrnames) {
+			PrintElement(name, BOXWIDTH);
+	}
+	cout << endl;
+	PrintLineInner(BOXWIDTH, attrnames.size());
+
+	for (size_t i = 0; i < item.size(); i++) {
+		Entry* entry = item[i];
+		cout << '|';
+		for (string attr : attrnames) {
+			PrintElement(entry->attributeList[attr], BOXWIDTH);
+		}
+		cout << endl;
+		if (i != item.size() - 1)
+			PrintLineInner(BOXWIDTH, attrnames.size());
+	}
+	PrintLine(BOXWIDTH, attrnames.size());
+}
+
 bool QueryParser::ConditionMet(hsql::OperatorType op, int target, int condition) {
 	if (op == hsql::kOpEquals) {
 		if (target == condition) return true;
@@ -377,7 +428,7 @@ QueryParser::QueryParser(FileManager* fs, BufferManager* bf) {
 	buffer = bf;
 }
 
-template <typename T> void QueryParser::printElement(T elem, const int& width) {
+template <typename T> void QueryParser::PrintElement(T elem, const int& width) {
 	cout << left << setw(width) << setfill(' ') << elem << '|';
 }
 
@@ -545,6 +596,7 @@ void QueryParser::ParseSELECT(const hsql::SQLStatement* statement) {
 	unordered_map<string, Column*> selectList;
 	vector<string> totalList;
 	vector<string> selectOrder;
+	unordered_map<string, string> attributeOrder;
 
 	// create groupby list
 	if (groupby) {
@@ -585,8 +637,11 @@ void QueryParser::ParseSELECT(const hsql::SQLStatement* statement) {
 			for (size_t i = 0; i < fromTable->attr_order.size() - 1; i++) {
 				Column* col_select = new Column(fromTable->attributes[fromTable->attr_order[i+1]], fromTable->attr_order[i+1]);
 				selectList[fromTable->attr_order[i+1]] = col_select;
-				totalList.push_back(fromTable->attr_order[i+1]);
+				if (groupbyList.find(fromTable->attr_order[i+1]) == groupbyList.end())
+					totalList.push_back(fromTable->attr_order[i+1]);
 				selectOrder.push_back(fromTable->attr_order[i+1]);
+				attributeOrder[fromTable->attr_order[i+1]] = "";
+
 			}
 			break;
 		}
@@ -597,20 +652,26 @@ void QueryParser::ParseSELECT(const hsql::SQLStatement* statement) {
 				for (auto expr : *column->exprList) {
 					string col(expr->name);
 					Column* col_select = new Column(fromTable->attributes[col], col);
+
 					if (func == "AVG") {
 						col_select->type = aFuncAVG;
+						attributeOrder[col] = "AVG";
 					}
 					else if (func == "COUNT") {
 						col_select->type = aFuncCOUNT;
+						attributeOrder[col] = "COUNT";
 					}
 					else if (func == "MIN") {
 						col_select->type = aFuncMIN;
+						attributeOrder[col] = "MIN";
 					}
 					else if (func == "MAX") {
 						col_select->type = aFuncMAX;
+						attributeOrder[col] = "MAX";
 					}
 					else if (func == "SUM") {
 						col_select->type = aFuncSUM;
+						attributeOrder[col] = "SUM";
 					}
 					else if (func == "NA") {
 						col_select->type = aFuncNA;
@@ -620,8 +681,13 @@ void QueryParser::ParseSELECT(const hsql::SQLStatement* statement) {
 						return; 
 					}
 					selectList[col] = col_select;
-					totalList.push_back(col);
 					selectOrder.push_back(col);
+					if (groupbyList.find(col) != groupbyList.end()) {
+						groupbyList[col] = col_select;
+					}
+					else {
+						totalList.push_back(col);
+					}
 				}
 			}
 			else { // regular column
@@ -637,7 +703,8 @@ void QueryParser::ParseSELECT(const hsql::SQLStatement* statement) {
 				}
 				Column* col_select = new Column(fromTable->attributes[col], col);
 				selectList[col] = col_select;
-				totalList.push_back(col);
+				if (groupbyList.find(col) == groupbyList.end())
+					totalList.push_back(col);
 				selectOrder.push_back(col);
 			}
 
@@ -690,6 +757,7 @@ void QueryParser::ParseSELECT(const hsql::SQLStatement* statement) {
 				Entry* entry = new Entry(BOXWIDTH);
 
 				for (size_t k = 0; k < cols; k++) {
+					// cout << "iterating total list: " << totalList[k] << endl;
 					if (selectList.find(totalList[k]) != selectList.end()) {
 						int page_num = selectList[totalList[k]]->attribute->page_order[i];
 						if (!buffer->iscached(page_num)) {
@@ -721,6 +789,7 @@ void QueryParser::ParseSELECT(const hsql::SQLStatement* statement) {
 						}
 					}
 					else if (groupbyList.find(totalList[k]) != groupbyList.end()) {
+						// cout << "please tell me you found something" << endl;
 						int page_num = groupbyList[totalList[k]]->attribute->page_order[i];
 						if (!buffer->iscached(page_num)) {
 							buffer->fetch(page_num);
@@ -745,6 +814,7 @@ void QueryParser::ParseSELECT(const hsql::SQLStatement* statement) {
 						return;
 					}
 				}
+				entries->item.push_back(entry);
 			}
 		}
 	}
@@ -754,7 +824,7 @@ void QueryParser::ParseSELECT(const hsql::SQLStatement* statement) {
 
 	// cols in the selectList but not groupbyList
 	// they need to be processed by aggregation functions
-	vector<string> cols_aggregated;
+	// vector<string> neworder;
 
 	if (groupby) {
 		// reorder the columns, put groupby columns together
@@ -767,7 +837,7 @@ void QueryParser::ParseSELECT(const hsql::SQLStatement* statement) {
 		for (auto col : selectOrder) {
 			if (glist.find(col) == glist.end()) {
 				neworder.push_back(col);
-				cols_aggregated.push_back(col);
+				// neworder.push_back(col);
 			}
 		}
 
@@ -777,130 +847,119 @@ void QueryParser::ParseSELECT(const hsql::SQLStatement* statement) {
 		for (Entry* entry : entries->item) {
 			vector<string> groupkey;
 			vector<string> groupval;
-			for (string attr : entries->attrnames) {
+			for (string attr : totalList) {
 				// cout << "attr is: " << attr;
 				if (glist.find(attr) != glist.end()) {
 					// cout << " in groupby!" << endl;
 					groupkey.push_back(entry->attributeGroupby[attr]);
-					// cout << "pushed: " << entry->attributeGroupby[attr] << endl;
-				}
-				else {
-					// cout << " not in groupby!" << endl;
-					groupval.push_back(entry->attributeList[attr]);
-					// cout << "pushed: " << entry->attributeList[attr] << endl;
 				}
 			}
 			string key = vtos(groupkey);
+
+			for (string attr : selectOrder) {
+				groupval.push_back(entry->attributeList[attr]);
+			}
 			// cout << "Key is: " << key << endl;
 
 			if (entries->groups.find(key) == entries->groups.end()) { // if this is a new key
 				// cout << "Key is new: " << key << endl;
 				//store it in entries
 				entries->groups[key] = make_pair(groupval, 1);
-				for (size_t i = 0; i < cols_aggregated.size(); i++) {
-					if (selectList[cols_aggregated[i]]->type == aFuncCOUNT)
+				for (size_t i = 0; i < selectOrder.size(); i++) {
+					if (selectList[selectOrder[i]]->type == aFuncCOUNT) {
 						entries->groups[key].first[i] = "1";
+					}
 				}
 			}
 			else { // update the entry according to the aggregate
-				// cout << "Key is old: " << key << endl;
-				for (size_t i = 0; i < cols_aggregated.size(); i++) {
-					entries->groups[key].second++;
-					if (selectList[cols_aggregated[i]]->attribute->type() == "INT") {
-						if (selectList[cols_aggregated[i]]->type == aFuncAVG) {
-							int temp = stoi(entries->groups[key].first[i]) * (entries->groups[key].second - 1);
-							temp += stoi(groupval[i]);
-							temp /= entries->groups[key].second;
-							entries->groups[key].first[i] = to_string(temp);
+				entries->groups[key].second++;
+				for (size_t i = 0; i < selectOrder.size(); i++) {
+					if (selectList.find(selectOrder[i]) != selectList.end()) {
 
-						}
-						else if (selectList[cols_aggregated[i]]->type == aFuncCOUNT) {
-							entries->groups[key].first[i] = to_string(entries->groups[key].second);
-						}
-						else if (selectList[cols_aggregated[i]]->type == aFuncMIN) {
-							entries->groups[key].first[i] = to_string(min(stoi(entries->groups[key].first[i]), stoi(groupval[i])));
-						}
-						else if (selectList[cols_aggregated[i]]->type == aFuncMAX) {
-							entries->groups[key].first[i] = to_string(max(stoi(entries->groups[key].first[i]), stoi(groupval[i])));
-						}
-						else if (selectList[cols_aggregated[i]]->type == aFuncSUM) {
-							int temp = stoi(entries->groups[key].first[i]) + stoi(groupval[i]);
-							entries->groups[key].first[i] = to_string(temp);
-						}
-						else if (selectList[cols_aggregated[i]]->type == aFuncNA) {
-							cerr << "Error: Aggregation function not designated to this column." << endl;
-							return;
-						}
-						else {
-							cerr << "Error: Unsupported aggregation functions." << endl;
-							return;
-						}
-					}
-					else if (selectList[cols_aggregated[i]]->attribute->type() == "DOUBLE") {
-						if (selectList[cols_aggregated[i]]->type == aFuncAVG) {
-							int temp = stod(entries->groups[key].first[i]) * (entries->groups[key].second - 1);
-							temp += stod(groupval[i]);
-							temp /= entries->groups[key].second;
-							entries->groups[key].first[i] = to_string(temp);
+						if (selectList[selectOrder[i]]->attribute->type() == "INT") {
+							if (selectList[selectOrder[i]]->type == aFuncAVG) {
+								int temp = stoi(entries->groups[key].first[i]) * (entries->groups[key].second - 1);
+								temp += stoi(groupval[i]);
+								temp /= entries->groups[key].second;
+								entries->groups[key].first[i] = to_string(temp);
 
+							}
+							else if (selectList[selectOrder[i]]->type == aFuncCOUNT) {
+								entries->groups[key].first[i] = to_string(entries->groups[key].second);
+							}
+							else if (selectList[selectOrder[i]]->type == aFuncMIN) {
+								entries->groups[key].first[i] = to_string(min(stoi(entries->groups[key].first[i]), stoi(groupval[i])));
+							}
+							else if (selectList[selectOrder[i]]->type == aFuncMAX) {
+								entries->groups[key].first[i] = to_string(max(stoi(entries->groups[key].first[i]), stoi(groupval[i])));
+							}
+							else if (selectList[selectOrder[i]]->type == aFuncSUM) {
+								int temp = stoi(entries->groups[key].first[i]) + stoi(groupval[i]);
+								entries->groups[key].first[i] = to_string(temp);
+							}
+							else if (selectList[selectOrder[i]]->type == aFuncNA) {
+								// don't need to do anything
+							}
+							else {
+								cerr << "Error: Unsupported aggregation functions." << endl;
+								return;
+							}
 						}
-						else if (selectList[cols_aggregated[i]]->type == aFuncCOUNT) {
-							entries->groups[key].first[i] = to_string(entries->groups[key].second);
+						else if (selectList[selectOrder[i]]->attribute->type() == "DOUBLE") {
+							if (selectList[selectOrder[i]]->type == aFuncAVG) {
+								double temp = stod(entries->groups[key].first[i]) * (entries->groups[key].second - 1);
+								temp += stod(groupval[i]);
+								temp /= entries->groups[key].second;
+								entries->groups[key].first[i] = to_string(temp);
+
+							}
+							else if (selectList[selectOrder[i]]->type == aFuncCOUNT) {
+								entries->groups[key].first[i] = to_string(entries->groups[key].second);
+							}
+							else if (selectList[selectOrder[i]]->type == aFuncMIN) {
+								entries->groups[key].first[i] = to_string(min(stod(entries->groups[key].first[i]), stod(groupval[i])));
+							}
+							else if (selectList[selectOrder[i]]->type == aFuncMAX) {
+								entries->groups[key].first[i] = to_string(max(stod(entries->groups[key].first[i]), stod(groupval[i])));
+							}
+							else if (selectList[selectOrder[i]]->type == aFuncSUM) {
+								double temp = stod(entries->groups[key].first[i]) + stod(groupval[i]);
+								entries->groups[key].first[i] = to_string(temp);
+							}
+							else if (selectList[selectOrder[i]]->type == aFuncNA) {
+								// don't need to do anything
+							}
+							else {
+								cerr << "Error: Unsupported aggregation functions." << endl;
+								return;
+							}
 						}
-						else if (selectList[cols_aggregated[i]]->type == aFuncMIN) {
-							entries->groups[key].first[i] = to_string(min(stod(entries->groups[key].first[i]), stod(groupval[i])));
-						}
-						else if (selectList[cols_aggregated[i]]->type == aFuncMAX) {
-							entries->groups[key].first[i] = to_string(max(stod(entries->groups[key].first[i]), stod(groupval[i])));
-						}
-						else if (selectList[cols_aggregated[i]]->type == aFuncSUM) {
-							int temp = stod(entries->groups[key].first[i]) + stod(groupval[i]);
-							entries->groups[key].first[i] = to_string(temp);
-						}
-						else if (selectList[cols_aggregated[i]]->type == aFuncNA) {
-							cerr << "Error: Aggregation function not designated to this column." << endl;
-							return;
+						else if (selectList[selectOrder[i]]->attribute->type() == "TEXT") {
+							if (selectList[selectOrder[i]]->type == aFuncCOUNT) {
+								entries->groups[key].first[i] = to_string(entries->groups[key].second);
+							}
+							else {
+								// don't need to do anything
+							}
 						}
 						else {
-							cerr << "Error: Unsupported aggregation functions." << endl;
+							cerr << "Error: Unsupported data type." << endl;
 							return;
 						}
-					}
-					else if (selectList[cols_aggregated[i]]->attribute->type() == "TEXT") {
-						if (selectList[cols_aggregated[i]]->type == aFuncCOUNT) {
-							entries->groups[key].first[i] = to_string(entries->groups[key].second);
-						}
-						else {
-							cerr << "Error: Unsupported aggregation function for TEXT data type." << endl;
-							return;
-						}
-					}
-					else {
-						cerr << "Error: Unsupported data type." << endl;
-						return;
 					}
 				}
 			}
 		}
-	for (auto it : entries->groups) {
-			cout << "Key is: " << it.first << endl;
-			cout << "Values are: ";
-			for (string val : it.second.first) {
-				cout << val << " ";
-			}
-			cout << endl << endl;
+		// print it
+		vector<string> entryorder;
+		for (auto it = entries->groups.begin(); it != entries->groups.end(); it++) {
+			entryorder.push_back(it->first);
 		}
+		sort(entryorder.begin(), entryorder.end());
 
-		// print group here
-		// for (auto it = entries->groups.begin(); it != entries->groups.end(); it++) {
-		// 	cout << "Key is: " << it->first << endl;
-		// 	cout << "Value is: " << endl;
-		// 	for (auto i : it->second) {
-		// 		for (auto itj = i.begin(); itj != i.end(); itj++) {
-		// 			cout << *itj << " ";
-		// 		}
-		// 		cout << endl;
-		// 	}
-		// }
+		entries->PrintGroup(entryorder, selectOrder, attributeOrder);
+	}
+	else { // no group by clause
+		entries->PrintAll();
 	}
 }
