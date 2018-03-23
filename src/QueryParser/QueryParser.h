@@ -56,7 +56,8 @@ public:
 	unordered_map<string, pair<vector<string>, size_t>> groups;
 
 	template<typename T> void PrintElement(T t, const int& width);
-	void PrintGroup(vector<string>& order, vector<string>& attrorder, unordered_map<string, string>& attributes);
+	void PrintGroup(vector<string>& order, vector<string>& attrorder, 
+					unordered_map<string, string>& attributes);
 	void PrintAll();
 };
 
@@ -65,6 +66,10 @@ private:
 
 	FileManager* filesystem;
 	BufferManager* buffer;
+
+	// TODO: figure out how to parse conditions with TEXT data type
+	string ConditionType(Table* table, hsql::Expr* expr); // return INT, DOUBLE or TEXT
+	// int ConditionParser(Expr* left, Expr* right);
 
 	bool ConditionMet(hsql::OperatorType op, int target, int condition);
 	bool ConditionMet(hsql::OperatorType op, double target, double condition);
