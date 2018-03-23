@@ -31,6 +31,7 @@ template<typename T> void QueryResult::PrintElement(T t, const int& width) {
 }
 
 void QueryResult::PrintGroup(vector<string>& order, vector<string>& attrorder, unordered_map<string, string>& attributes) {
+	size_t size = attributes.size();
 	PrintLine(BOXWIDTH, groups[order[0]].first.size());
 	cout << '|';
 	for (string name : attrorder) {
@@ -40,6 +41,11 @@ void QueryResult::PrintGroup(vector<string>& order, vector<string>& attrorder, u
 			PrintElement(name + "_" + attributes[name], BOXWIDTH);
 	}
 	cout << endl;
+
+	if (size == 0) {
+		PrintLine(BOXWIDTH, groups[order[0]].first.size());
+		return;
+	}
 
 	PrintLineInner(BOXWIDTH, groups[order[0]].first.size());
 	for (size_t i = 0; i < order.size(); i++) {
@@ -55,13 +61,21 @@ void QueryResult::PrintGroup(vector<string>& order, vector<string>& attrorder, u
 }
 
 void QueryResult::PrintAll() {
+	size_t size = item.size();
 	PrintLine(BOXWIDTH, attrnames.size());
 
 	cout << '|';
 	for (string name : attrnames) {
 			PrintElement(name, BOXWIDTH);
+			// cout << "name is:" << endl;
 	}
 	cout << endl;
+
+	if (size == 0) {
+		PrintLine(BOXWIDTH, attrnames.size());
+		return;
+	}
+
 	PrintLineInner(BOXWIDTH, attrnames.size());
 
 	for (size_t i = 0; i < item.size(); i++) {
@@ -69,12 +83,21 @@ void QueryResult::PrintAll() {
 		cout << '|';
 		for (string attr : attrnames) {
 			PrintElement(entry->attributeList[attr], BOXWIDTH);
+			// cout << "entry key is: " << attr << endl;
+			// cout << "entry val is: " << entry->attributeList[attr] << endl;
 		}
 		cout << endl;
 		if (i != item.size() - 1)
 			PrintLineInner(BOXWIDTH, attrnames.size());
 	}
 	PrintLine(BOXWIDTH, attrnames.size());
+}
+
+void QueryResult::AddAttribute(string attr) {
+	if (attrset.find(attr) == attrset.end()) {
+		attrnames.push_back(attr);
+		attrset.insert(attr);
+	}
 }
 
 bool QueryParser::ConditionMet(hsql::OperatorType op, int target, int condition) {
@@ -184,6 +207,8 @@ void QueryParser::filter(QueryResult* entries, hsql::OperatorType op, int val,
 					Page* page = buffer->get(page_num);
 
 					int target = page_cond->content[j]->ival;
+					entries->AddAttribute(page->attribute());
+
 					if (ConditionMet(op, target, val)) {
 						if (page->type() == "TEXT") {
 							string text(page->content[j]->sval);
@@ -203,10 +228,12 @@ void QueryParser::filter(QueryResult* entries, hsql::OperatorType op, int val,
 								entry->attributeGroupby[page->attribute()] = to_string(page->content[j]->dval);
 						}
 
-						if (i == 0 && j == 0)
-							entries->attrnames.push_back(page->attribute());
-						cout << "what the hell?" << endl;
-						cout << entry->attributeList[page->attribute()] << endl;
+						// if (i == 0 && j == 0) {
+						// 	entries->attrnames.push_back(page->attribute());
+						// 	cout << "what the hell?" << endl;
+						// 	cout << entry->attributeList[page->attribute()] << endl;
+						// }
+						// cout << "weird: " << i << ", " << j << endl;
 					}
 					else
 						satisfied = false;
@@ -276,6 +303,8 @@ void QueryParser::filter(QueryResult* entries, hsql::OperatorType op, double val
 					Page* page = buffer->get(page_num);
 
 					double target = page_cond->content[j]->dval;
+					entries->AddAttribute(page->attribute());
+
 					if (ConditionMet(op, target, val)) {
 						if (page->type() == "TEXT") {
 							string text(page->content[j]->sval);
@@ -297,9 +326,6 @@ void QueryParser::filter(QueryResult* entries, hsql::OperatorType op, double val
 								entry->attributeGroupby[page->attribute()] = to_string(page->content[j]->dval);
 
 						}
-
-						if (i == 0 && j == 0)
-							entries->attrnames.push_back(page->attribute());
 					}
 					else
 						satisfied = false;
@@ -369,6 +395,8 @@ void QueryParser::filter(QueryResult* entries, hsql::OperatorType op, string val
 					Page* page = buffer->get(page_num);
 
 					string target = page_cond->content[j]->sval;
+					entries->AddAttribute(page->attribute());
+
 					if (ConditionMet(op, target, val)) {
 						if (page->type() == "TEXT") {
 							string text(page->content[j]->sval);
@@ -387,9 +415,6 @@ void QueryParser::filter(QueryResult* entries, hsql::OperatorType op, string val
 							if (groupbyList.find(totalList[k]) != groupbyList.end())
 								entry->attributeGroupby[page->attribute()] = to_string(page->content[j]->dval);
 						}
-
-						if (i == 0 && j == 0)
-							entries->attrnames.push_back(page->attribute());
 					}
 					else
 						satisfied = false;
@@ -786,9 +811,8 @@ void QueryParser::ParseSELECT(const hsql::SQLStatement* statement) {
 								entry->attributeGroupby[page->attribute()] = to_string(page->content[j]->dval);
 							}
 						}
-						if (i == 0 && j == 0) {
-							entries->attrnames.push_back(page->attribute());
-						}
+					
+						entries->AddAttribute(page->attribute());
 					}
 					else if (groupbyList.find(totalList[k]) != groupbyList.end()) {
 						// cout << "please tell me you found something" << endl;

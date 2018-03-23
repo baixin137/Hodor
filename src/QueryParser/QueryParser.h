@@ -53,11 +53,14 @@ public:
 	QueryResult();
 	vector<Entry*> item;
 	vector<string> attrnames;
+	set<string> attrset;
 	unordered_map<string, pair<vector<string>, size_t>> groups;
 
 	template<typename T> void PrintElement(T t, const int& width);
 	void PrintGroup(vector<string>& order, vector<string>& attrorder, unordered_map<string, string>& attributes);
 	void PrintAll();
+
+	void AddAttribute(string attr);
 };
 
 class QueryParser {
