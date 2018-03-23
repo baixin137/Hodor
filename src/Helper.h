@@ -41,4 +41,10 @@ string vtos(vector<string> v);
 void PrintLine(size_t width, size_t cols);
 void PrintLineInner(size_t width, size_t cols);
 
+template<class T1> 
+// template<class T2>
+void print(vector<T1>& v);
+// void print(unordered_map<T1, T2>& m);
+
+
 #endif
