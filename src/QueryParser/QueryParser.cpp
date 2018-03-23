@@ -205,6 +205,8 @@ void QueryParser::filter(QueryResult* entries, hsql::OperatorType op, int val,
 
 						if (i == 0 && j == 0)
 							entries->attrnames.push_back(page->attribute());
+						cout << "what the hell?" << endl;
+						cout << entry->attributeList[page->attribute()] << endl;
 					}
 					else
 						satisfied = false;
