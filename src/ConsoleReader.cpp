@@ -68,6 +68,9 @@ void ConsoleReader::ReadCommand() {
 				SetDatabase(command);
 			else if (keyword == "partition")
 				PartitionTable(command);
+			else if (keyword == "scan") {
+				ScanFromCSV(command);
+			}
 		}
 		else if (result.size() > 0) {
 			if (!filesystem->user) {
@@ -195,4 +198,61 @@ void ConsoleReader::PartitionTable(string command) {
 		return;
 	}
 	filesystem->remove(tname_official, buffer);
+}
+
+void ConsoleReader::ScanFromCSV(string command) {
+	if (!filesystem->user) {
+		cout << "Please choose database first." << endl;
+		cout << "Usage: <USE> <USERNAME>" << endl;
+		return;
+	}
+
+	// command should look like:
+	// SCAN <table name> <filename>
+	istringstream iss(command);
+	string table_name;
+	string filename;
+
+	getline(iss, table_name, ' ');
+	getline(iss, table_name, ' '); // get table name
+	getline(iss, filename,  ' '); // get file directory
+
+	// int count = 0; // load X tuples and insert
+
+	ifstream infile(DATAPATH + filename);
+	if (!infile) {
+		cerr << "Error: file \"" << filename << "\" doesn't exist." << endl;
+		return;
+	}
+	else {
+		string line;
+		vector<vector<string>> tuples;
+		while (getline(infile, line)) {
+			// load x tuples from disk
+			istringstream tuple(line);
+
+			vector<string> t;
+			string attr;
+			while (getline(tuple, attr, ',')) {
+				t.push_back(attr);
+			}
+			tuples.push_back(t);
+		}
+		// insert x tuples
+		string head = "INSERT INTO " + table_name + " VALUES (";
+		for (auto tup : tuples) {
+			string istatement = head;
+			for (size_t i = 0; i < tup.size(); i++) {
+				if (i != tup.size() - 1)
+					istatement += (tup[i] + ", ");
+				else 
+					istatement += (tup[i] + ")");
+			}
+			// cout << "command is: " << istatement << endl;
+			hsql::SQLParserResult result;
+			hsql::SQLParser::parse(istatement, &result);
+			const hsql::SQLStatement* statement = result.getStatement(0);
+			parser->ParseINSERT(statement);
+		}
+	}
 }

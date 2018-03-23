@@ -20,6 +20,7 @@ public:
 
 	void SetDatabase(string command);
 	void PartitionTable(string command);
+	void ScanFromCSV(string command); // scan <table name> <filename>
 };
 
 #endif

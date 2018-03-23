@@ -9,7 +9,8 @@ string STORAGECSV    = "storage.csv";
 size_t PAGESIZE      = 1000;
 size_t CHECKPERIOD   = 5;
 size_t BUFFERSIZE    = 5000;
-size_t BOXWIDTH      = 20;
+size_t BOXWIDTH      = 28;
+size_t TUPLELOAD     = 1000;
 
 pthread_mutex_t Lock = PTHREAD_MUTEX_INITIALIZER;
 

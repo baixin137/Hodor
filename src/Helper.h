@@ -20,6 +20,7 @@ extern size_t PAGESIZE;
 extern size_t CHECKPERIOD;
 extern size_t BUFFERSIZE;
 extern size_t BOXWIDTH;
+extern size_t TUPLELOAD;
 
 extern pthread_mutex_t Lock;
 
