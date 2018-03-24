@@ -176,16 +176,16 @@ bool QueryParser::ConditionMet(hsql::OperatorType op, double target, double cond
 		if (abs(target - condition) > EPSILON) return true;
 	}
 	else if (op == hsql::kOpLess) {
-		if (condition - target > EPSILON) return true;
+		if (condition - target < EPSILON) return true;
 	}
 	else if (op == hsql::kOpLessEq) {
-		if (condition - target >= EPSILON) return true;
+		if (condition - target <= EPSILON) return true;
 	}
 	else if (op == hsql::kOpGreater) {
-		if (target - condition > EPSILON) return true;
+		if (target - condition < EPSILON) return true;
 	}
 	else if (op == hsql::kOpGreaterEq) {
-		if (target - condition >= EPSILON) return true;
+		if (target - condition <= EPSILON) return true;
 	}
 	else {
 		cerr << "Error: Unsupported operation." << endl;
@@ -396,8 +396,8 @@ void QueryParser::FilterDouble(vector<string>& leftList, vector<string>& rightLi
 		target = ParseExprDOUBLE(val_con, right);
 		val    = ParseExprDOUBLE(val_con, left );
 
-		// cout << "target: " << target << endl;
-		// cout << "value:  " << val << endl;
+		cout << "target: " << target << endl;
+		cout << "value:  " << val << endl << endl;;
 
 		entries->AddAttribute(page->attribute());
 		if (ConditionMet(op, target, val)) {
