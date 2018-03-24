@@ -5,6 +5,7 @@
 #include <vector>
 #include <string>
 #include <chrono>
+#include <cstdlib>
 #include <sstream>
 #include <iostream>
 #include <unordered_set>
@@ -21,6 +22,8 @@ extern size_t CHECKPERIOD;
 extern size_t BUFFERSIZE;
 extern size_t BOXWIDTH;
 extern size_t TUPLELOAD;
+
+extern double EPSILON;
 
 extern pthread_mutex_t Lock;
 

@@ -12,6 +12,8 @@ size_t BUFFERSIZE    = 5000;
 size_t BOXWIDTH      = 28;
 size_t TUPLELOAD     = 1000;
 
+double EPSILON       = 0.0001;
+
 pthread_mutex_t Lock = PTHREAD_MUTEX_INITIALIZER;
 
 void ToLower(string& data) {

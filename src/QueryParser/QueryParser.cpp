@@ -170,22 +170,22 @@ bool QueryParser::ConditionMet(hsql::OperatorType op, int target, int condition)
 
 bool QueryParser::ConditionMet(hsql::OperatorType op, double target, double condition) {
 	if (op == hsql::kOpEquals) {
-		if (target == condition) return true;
+		if (abs(target - condition) < EPSILON) return true;
 	}
 	else if (op == hsql::kOpNotEquals) {
-		if (target != condition) return true;
+		if (abs(target - condition) > EPSILON) return true;
 	}
 	else if (op == hsql::kOpLess) {
-		if (target < condition) return true;
+		if (condition - target > EPSILON) return true;
 	}
 	else if (op == hsql::kOpLessEq) {
-		if (target <= condition) return true;
+		if (condition - target >= EPSILON) return true;
 	}
 	else if (op == hsql::kOpGreater) {
-		if (target > condition) return true;
+		if (target - condition > EPSILON) return true;
 	}
 	else if (op == hsql::kOpGreaterEq) {
-		if (target >= condition) return true;
+		if (target - condition >= EPSILON) return true;
 	}
 	else {
 		cerr << "Error: Unsupported operation." << endl;
