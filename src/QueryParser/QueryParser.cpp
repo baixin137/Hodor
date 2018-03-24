@@ -250,11 +250,18 @@ double QueryParser::ParseExprDOUBLE(unordered_map<string, double>& map, hsql::Ex
 		string col(expr->name);
 		return map[col];
 	}
+	else if (expr->ival) {
+		return double(expr->ival);
+	}
 	else if (expr->fval) {
 		return expr->fval;
 	}
 
 	if (expr->opType == hsql::kOpPlus) {
+		// double a = ParseExprDOUBLE(map, expr->expr);
+		// double b = ParseExprDOUBLE(map, expr->expr2);
+		// cout << "a: " << a << ", b: " << b << endl;
+		// return a + b;
 		return ParseExprDOUBLE(map, expr->expr) + ParseExprDOUBLE(map, expr->expr2);
 	}
 	else if (expr->opType == hsql::kOpMinus) {
@@ -363,14 +370,20 @@ void QueryParser::FilterDouble(vector<string>& leftList, vector<string>& rightLi
 		if (!buffer->iscached(page_condnum))
 			buffer->fetch(page_condnum);
 		Page* page_cond = buffer->get(page_condnum);
-		val_con[col] = page_cond->content[j]->dval;
+		if (page_cond->type() == "DOUBLE")
+			val_con[col] = page_cond->content[j]->dval;
+		else
+			val_con[col] = page_cond->content[j]->ival;
 	}
 	for (string col : rightList) {
 		int page_condnum = table->attributes[col]->page_order[i];
 		if (!buffer->iscached(page_condnum))
 			buffer->fetch(page_condnum);
 		Page* page_cond = buffer->get(page_condnum);
-		val_con[col] = page_cond->content[j]->dval;
+		if (page_cond->type() == "DOUBLE")
+			val_con[col] = page_cond->content[j]->dval;
+		else
+			val_con[col] = page_cond->content[j]->ival;
 	}
 
 	if (selectList.find(totalList[k]) != selectList.end()) {
@@ -382,6 +395,9 @@ void QueryParser::FilterDouble(vector<string>& leftList, vector<string>& rightLi
 
 		target = ParseExprDOUBLE(val_con, right);
 		val    = ParseExprDOUBLE(val_con, left );
+
+		// cout << "target: " << target << endl;
+		// cout << "value:  " << val << endl;
 
 		entries->AddAttribute(page->attribute());
 		if (ConditionMet(op, target, val)) {
