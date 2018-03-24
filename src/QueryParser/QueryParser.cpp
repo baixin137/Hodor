@@ -150,16 +150,16 @@ bool QueryParser::ConditionMet(hsql::OperatorType op, int target, int condition)
 		if (target != condition) return true;
 	}
 	else if (op == hsql::kOpLess) {
-		if (target < condition) return true;
-	}
-	else if (op == hsql::kOpLessEq) {
-		if (target <= condition) return true;
-	}
-	else if (op == hsql::kOpGreater) {
 		if (target > condition) return true;
 	}
-	else if (op == hsql::kOpGreaterEq) {
+	else if (op == hsql::kOpLessEq) {
 		if (target >= condition) return true;
+	}
+	else if (op == hsql::kOpGreater) {
+		if (target < condition) return true;
+	}
+	else if (op == hsql::kOpGreaterEq) {
+		if (target <= condition) return true;
 	}
 	else {
 		cerr << "Error: Unsupported operation." << endl;
