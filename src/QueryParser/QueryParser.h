@@ -71,19 +71,31 @@ private:
 	BufferManager* buffer;
 
 	// TODO: figure out how to parse conditions with TEXT data type
-	string ConditionType(Table* table, hsql::Expr* expr); // return INT, DOUBLE or TEXT
+	string ConditionType(vector<string>& cols, Table* table, hsql::Expr* expr); // return INT, DOUBLE or TEXT
 	// int ConditionParser(Expr* left, Expr* right);
 
 	bool ConditionMet(hsql::OperatorType op, int target, int condition);
 	bool ConditionMet(hsql::OperatorType op, double target, double condition);
 	bool ConditionMet(hsql::OperatorType op, string target, string condition);
 
-	void filter(QueryResult* entries, hsql::OperatorType op, int val, Attribute* attr, 
-				unordered_map<string, Column*>& selectList, vector<string>& selectOrder,
-				unordered_map<string, Column*>& groupbyList, vector<string>& totalList);
-	void filter(QueryResult* entries, hsql::OperatorType op, double val, Attribute* attr, 
-				unordered_map<string, Column*>& selectList, vector<string>& selectOrder,
-				unordered_map<string, Column*>& groupbyList, vector<string>& totalList);
+	int    ParseExprINT(   unordered_map<string, int>& map,    hsql::Expr* expr);
+	double ParseExprDOUBLE(unordered_map<string, double>& map, hsql::Expr* expr);
+
+	void FilterInt(vector<string>& leftList, vector<string>& rightList, Table* table, 
+								unordered_map<string, Column*>& selectList, hsql::OperatorType op, 
+								vector<string>& totalList, size_t i, size_t j, size_t k, Entry* entry,
+								hsql::Expr* left, hsql::Expr* right, unordered_map<string, Column*>& groupbyList,
+								QueryResult* entries, bool& satisfied);
+	void FilterDouble(vector<string>& leftList, vector<string>& rightList, Table* table, 
+								   unordered_map<string, Column*>& selectList, hsql::OperatorType op, 
+							   	   vector<string>& totalList, size_t i, size_t j, size_t k, Entry* entry,
+							   	   hsql::Expr* left, hsql::Expr* right, unordered_map<string, Column*>& groupbyList,
+							   	   QueryResult* entries, bool& satisfied);
+
+	void filter(QueryResult* entries, hsql::Expr* left, hsql::Expr* right, string type, 
+				hsql::OperatorType op, unordered_map<string, Column*>& selectList, Table* table, 
+				vector<string>& selectOrder, unordered_map<string, Column*>& groupbyList, 
+				vector<string>& totalList, vector<string>& leftList, vector<string>& rightList);
 	void filter(QueryResult* entries, hsql::OperatorType op, string val, Attribute* attr, 
 				unordered_map<string, Column*>& selectList, vector<string>& selectOrder,
 				unordered_map<string, Column*>& groupbyList, vector<string>& totalList);

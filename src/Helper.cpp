@@ -156,7 +156,7 @@ template<class T1>
 // template<class T2>
 void print(vector<T1>& v) {
 	for (T1 elem : v) {
-		cout << v << ", "
+		cout << v << ", ";
 	}
 	cout << endl;
 }
