@@ -31,8 +31,8 @@ template<typename T> void QueryResult::PrintElement(T t, const int& width) {
 }
 
 void QueryResult::PrintGroup(vector<string>& order, vector<string>& attrorder, unordered_map<string, string>& attributes) {
-	size_t size = attributes.size();
-	PrintLine(BOXWIDTH, groups[order[0]].first.size());
+	size_t size = order.size();
+	PrintLine(BOXWIDTH, attrorder.size());
 	cout << '|';
 	for (string name : attrorder) {
 		if (attributes[name] == "")
@@ -43,54 +43,54 @@ void QueryResult::PrintGroup(vector<string>& order, vector<string>& attrorder, u
 	cout << endl;
 
 	if (size == 0) {
-		PrintLine(BOXWIDTH, groups[order[0]].first.size());
+		PrintLine(BOXWIDTH, attrorder.size());
 		return;
 	}
 
-	PrintLineInner(BOXWIDTH, groups[order[0]].first.size());
+	PrintLineInner(BOXWIDTH, attrorder.size());
 	for (size_t i = 0; i < order.size(); i++) {
 		cout << '|';
-		for (size_t j = 0; j < groups[order[i]].first.size(); j++) {
+		for (size_t j = 0; j < attrorder.size(); j++) {
 			PrintElement(groups[order[i]].first[j], BOXWIDTH);
 		}
 		cout << endl;
 		if (i != order.size() - 1)
-			PrintLineInner(BOXWIDTH, groups[order[0]].first.size());
+			PrintLineInner(BOXWIDTH, attrorder.size());
 	}
-	PrintLine(BOXWIDTH, groups[order[0]].first.size());
+	PrintLine(BOXWIDTH, attrorder.size());
 }
 
-void QueryResult::PrintAll() {
+void QueryResult::PrintAll(vector<string>& attrs) {
 	size_t size = item.size();
-	PrintLine(BOXWIDTH, attrnames.size());
+	PrintLine(BOXWIDTH, attrs.size());
 
 	cout << '|';
-	for (string name : attrnames) {
+	for (string name : attrs) {
 			PrintElement(name, BOXWIDTH);
 			// cout << "name is:" << endl;
 	}
 	cout << endl;
 
 	if (size == 0) {
-		PrintLine(BOXWIDTH, attrnames.size());
+		PrintLine(BOXWIDTH, attrs.size());
 		return;
 	}
 
-	PrintLineInner(BOXWIDTH, attrnames.size());
+	PrintLineInner(BOXWIDTH, attrs.size());
 
 	for (size_t i = 0; i < item.size(); i++) {
 		Entry* entry = item[i];
 		cout << '|';
-		for (string attr : attrnames) {
+		for (string attr : attrs) {
 			PrintElement(entry->attributeList[attr], BOXWIDTH);
 			// cout << "entry key is: " << attr << endl;
 			// cout << "entry val is: " << entry->attributeList[attr] << endl;
 		}
 		cout << endl;
 		if (i != item.size() - 1)
-			PrintLineInner(BOXWIDTH, attrnames.size());
+			PrintLineInner(BOXWIDTH, attrs.size());
 	}
-	PrintLine(BOXWIDTH, attrnames.size());
+	PrintLine(BOXWIDTH, attrs.size());
 }
 
 void QueryResult::AddAttribute(string attr) {
@@ -396,9 +396,6 @@ void QueryParser::FilterDouble(vector<string>& leftList, vector<string>& rightLi
 		target = ParseExprDOUBLE(val_con, right);
 		val    = ParseExprDOUBLE(val_con, left );
 
-		cout << "target: " << target << endl;
-		cout << "value:  " << val << endl << endl;;
-
 		entries->AddAttribute(page->attribute());
 		if (ConditionMet(op, target, val)) {
 			if (page->type() == "TEXT") {
@@ -618,7 +615,7 @@ void QueryParser::ParseINSERT(const hsql::SQLStatement* statement) {
 	// cout << "Ready to insert to table: " << table << endl;
 
 	if (filesystem->tables.find(table) == filesystem->tables.end()) {
-		cerr << "Trying to insert to non-existing table" << endl;
+		cerr << "Error: Trying to insert to non-existing table" << endl;
 		return;
 	}
 
@@ -1096,6 +1093,6 @@ void QueryParser::ParseSELECT(const hsql::SQLStatement* statement) {
 		entries->PrintGroup(entryorder, selectOrder, attributeOrder);
 	}
 	else { // no group by clause
-		entries->PrintAll();
+		entries->PrintAll(selectOrder);
 	}
 }

@@ -59,7 +59,7 @@ public:
 	template<typename T> void PrintElement(T t, const int& width);
 	void PrintGroup(vector<string>& order, vector<string>& attrorder, 
 					unordered_map<string, string>& attributes);
-	void PrintAll();
+	void PrintAll(vector<string>& attrs);
 
 	void AddAttribute(string attr);
 };

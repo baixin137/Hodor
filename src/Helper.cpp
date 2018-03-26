@@ -153,18 +153,3 @@ void PrintLineInner(size_t width, size_t cols) {
 	}
 	cout << '|' << endl;
 }
-
-template<class T1> 
-// template<class T2>
-void print(vector<T1>& v) {
-	for (T1 elem : v) {
-		cout << v << ", ";
-	}
-	cout << endl;
-}
-
-// void print(unordered_map<T1, T2>& m) {
-// 	for (auto it = m.begin(); it != m.end(); it++) {
-// 		cout << "key: " << it->first << " val: " << it->second << endl;
-// 	}
-// }
