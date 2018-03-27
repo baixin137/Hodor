@@ -70,6 +70,8 @@ private:
 	FileManager* filesystem;
 	BufferManager* buffer;
 
+	Attribute* FindAttribute(hsql::Expr* expr);
+
 	// TODO: figure out how to parse conditions with TEXT data type
 	string ConditionType(vector<string>& cols, Table* table, hsql::Expr* expr); // return INT, DOUBLE or TEXT
 	// int ConditionParser(Expr* left, Expr* right);
@@ -99,6 +101,17 @@ private:
 	void filter(QueryResult* entries, hsql::OperatorType op, string val, Attribute* attr, 
 				unordered_map<string, Column*>& selectList, vector<string>& selectOrder,
 				unordered_map<string, Column*>& groupbyList, vector<string>& totalList);
+
+	void AddtoJoinedTable(size_t i, size_t j, size_t jj, vector<Attribute*>& attr_left, vector<Attribute*>& attr_right,
+						  size_t cols_left, size_t cols_right, string tname, vector<string>& selectList);
+
+	Table* JoinTable(hsql::TableRef* fromTable, const hsql::SelectStatement* select);
+
+	Table* InnerJoin  (Table* left, Table* right, hsql::Expr* condition, const hsql::SelectStatement* select);
+	// Table* FullJoin   (Table* left, Table* right, hsql::Expr* condition, hsql::SelectStatement* select);
+	// Table* LeftJoin   (Table* left, Table* right, hsql::Expr* condition, hsql::SelectStatement* select);
+	// Table* CrossJoin  (Table* left, Table* right, hsql::Expr* condition, hsql::SelectStatement* select);
+	// Table* NaturalJoin(Table* left, Table* right, hsql::Expr* condition, hsql::SelectStatement* select);
 
 public:
 	QueryParser(FileManager* fs, BufferManager* bf);
