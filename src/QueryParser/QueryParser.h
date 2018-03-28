@@ -105,7 +105,7 @@ private:
 	void AddtoJoinedTable(size_t i, size_t j, size_t jj, vector<Attribute*>& attr_left, vector<Attribute*>& attr_right,
 						  size_t cols_left, size_t cols_right, string tname, vector<string>& selectList);
 
-	Table* JoinTable(hsql::TableRef* fromTable, const hsql::SelectStatement* select);
+	Table* JoinTable(hsql::TableRef* fromTable, const hsql::SelectStatement* select, bool& temporary);
 
 	Table* InnerJoin  (Table* left, Table* right, hsql::Expr* condition, const hsql::SelectStatement* select);
 	// Table* FullJoin   (Table* left, Table* right, hsql::Expr* condition, hsql::SelectStatement* select);

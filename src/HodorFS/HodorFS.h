@@ -44,6 +44,7 @@ public:
 	// void insert(string tuple, string table);
 	// void remove(vector<string> key, string table);
 	// void update(vector<string> key, string table);
+	void FlushPages(BufferManager* buffer); // flush dirty pages when you need to
 
 	PageSet* FindPageSet(string table, BufferManager* buffer);
 

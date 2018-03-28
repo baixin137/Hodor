@@ -1,6 +1,7 @@
 #include "QueryParser.h"
 
 void QueryParser::ParseCREATE(const hsql::SQLStatement* statement) {
+	pthread_mutex_lock(&Lock);
 	const hsql::CreateStatement* create = (const hsql::CreateStatement*) statement;
 
 	// traverse the columns
@@ -37,10 +38,13 @@ void QueryParser::ParseCREATE(const hsql::SQLStatement* statement) {
 	}
 	filesystem->add(table);
 	filesystem->user->IncrementSize(1);
+
+	pthread_mutex_unlock(&Lock);
 }
 
 void QueryParser::ParseINSERT(const hsql::SQLStatement* statement) {
 	// cout << "insert!" << endl;
+	pthread_mutex_lock(&Lock);
 	const hsql::InsertStatement* insert = (const hsql::InsertStatement*) statement;
 	string table(insert->tableName);
 	table = filesystem->user->name() + "::" + table;
@@ -55,7 +59,7 @@ void QueryParser::ParseINSERT(const hsql::SQLStatement* statement) {
 
 	// cout << "Table size incremented" << endl;
 
-	filesystem->tables[table]->IncrementSize(1);
+	// filesystem->tables[table]->IncrementSize(1);
 
 	// TODO: handle the error that data type doesn't match the correct order
 	if (!insert->columns) { // attributes not specified
@@ -138,13 +142,17 @@ void QueryParser::ParseINSERT(const hsql::SQLStatement* statement) {
 			}
 		}
 	}
+	pthread_mutex_unlock(&Lock);
 }
 
 void QueryParser::ParseSELECT(const hsql::SQLStatement* statement) {
 	const hsql::SelectStatement* select = (const hsql::SelectStatement*) statement;
 
 	// create table
-	Table* fromTable = JoinTable(select->fromTable, select);
+
+	// use the flag to check if the table is a temporary table created by join or an old one
+	bool temporary = false;
+	Table* fromTable = JoinTable(select->fromTable, select, temporary);
 	if (!fromTable) {
 		cerr << "Error: Table join failed." << endl;
 		return;
@@ -547,5 +555,9 @@ void QueryParser::ParseSELECT(const hsql::SQLStatement* statement) {
 	}
 	else { // no group by clause
 		entries->PrintAll(selectOrder);
+	}
+	if (temporary) {
+		filesystem->FlushPages(buffer); // flush temporary pages to disk then remove them
+		filesystem->remove(fromTable->name(), buffer);
 	}
 }

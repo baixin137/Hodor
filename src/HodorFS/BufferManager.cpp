@@ -156,6 +156,7 @@ void TextPage::read(int pn, string page_name, vector<string> property) {
 			content.push_back(tuple);
 		}
 	}
+	infile.close();
 }
 
 void IntPage::read(int pn, string page_name, vector<string> property) {
@@ -200,6 +201,7 @@ void IntPage::read(int pn, string page_name, vector<string> property) {
 			content.push_back(tuple);
 		}
 	}
+	infile.close();
 }
 
 void DoublePage::read(int pn, string page_name, vector<string> property) {
@@ -244,6 +246,7 @@ void DoublePage::read(int pn, string page_name, vector<string> property) {
 			content.push_back(tuple);
 		}
 	}
+	infile.close();
 }
 
 void TextPage::write() {
@@ -493,6 +496,7 @@ void BufferManager::fetch(int pn) {
 
 		buffer->set(pn, page); // put page into cache
 	}
+	infile.close();
 }
 
 void BufferManager::flush(int pn) {
@@ -522,7 +526,13 @@ void BufferManager::flush(int pn) {
 
 void BufferManager::erase(int pn) {
 	string path = GetPageFile(pn);
-	if (remove(path.c_str()) != 0) {
+	// int error1 = remove("src/HodorFS/data/gargage");
+	// if (error1 != 0) {
+	// 	cout << "what? " << error1 <<endl;
+	// }
+	int error = remove(path.c_str());
+	if (error != 0) {
+		cout << "Error number: " << error << endl;
 		cerr << "Unable to delete file: " << path << endl;
 	}
 	buffer->remove(pn);

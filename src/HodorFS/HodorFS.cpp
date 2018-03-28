@@ -257,6 +257,18 @@ void FileManager::remove(string tname, BufferManager* buffer) {
 	user->IncrementSize(-1);
 }
 
+void FileManager::FlushPages(BufferManager* buffer) {
+	LRUCache* cache = buffer->getbuffer();
+
+	for (auto it = cache->linkedlist.begin(); it != cache->linkedlist.end(); it++) {
+		Page* page = it->second;
+		if (page->dirty) {
+			page->write();
+			page->dirty = false;
+		}
+	}
+}
+
 PageSet* FileManager::FindPageSet(string table, BufferManager* buffer) {
 	PageSet* pset;
 	// string t_stamp = addTimeStamp();
@@ -482,8 +494,6 @@ void AutoSave::FlushBuffer() {
 			if (page->dirty) {
 				page->write();
 				page->dirty = false;
-
-				// cout << "Flushing page: " << page->getnum() << endl;
 			}
 		}
 		// cout << "Dirty pages auto flushed" << endl;

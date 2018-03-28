@@ -627,7 +627,7 @@ void QueryParser::AddtoJoinedTable(size_t i, size_t j, size_t jj, vector<Attribu
 	ParseINSERT(statement);
 }
 
-Table* QueryParser::JoinTable(hsql::TableRef* fromTable, const hsql::SelectStatement* select) {
+Table* QueryParser::JoinTable(hsql::TableRef* fromTable, const hsql::SelectStatement* select, bool& temporary) {
 	if (fromTable->type == hsql::kTableName) {
 		// return the content of the table
 		string tname(fromTable->name);
@@ -639,8 +639,10 @@ Table* QueryParser::JoinTable(hsql::TableRef* fromTable, const hsql::SelectState
 		return filesystem->tables[tablename];
 	}
 
-	Table* left = JoinTable(fromTable->join->left, select);
-	Table* right = JoinTable(fromTable->join->right, select);
+	temporary = true;
+
+	Table* left = JoinTable(fromTable->join->left, select, temporary);
+	Table* right = JoinTable(fromTable->join->right, select, temporary);
 
 	Table* JoinedTable = nullptr;
 
