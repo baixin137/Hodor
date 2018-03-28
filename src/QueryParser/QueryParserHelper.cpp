@@ -569,49 +569,217 @@ void QueryParser::filter(QueryResult* entries, hsql::OperatorType op, string val
 	}
 }
 
-void QueryParser::AddtoJoinedTable(size_t i, size_t j, size_t jj, vector<Attribute*>& attr_left, vector<Attribute*>& attr_right,
-					  			   size_t cols_left, size_t cols_right, string tname, vector<string>& selectList) {
+void QueryParser::SortPage(Page* page, vector<string>& order) {
+	vector<pair<string, Tuple*>> res;
+	for (size_t i = 0; i < page->size(); i++) {
+		res.push_back(make_pair(order[i], page->content[i]));
+	}
+	// sort
+	sort(res.begin(), res.end(), Compare());
+
+	for (size_t i = 0; i < page->size(); i++) {
+		page->content[i] = res[i].second;
+	}
+
+	// cout << "sorted " << page->attribute() << ": " << endl;
+
+	// if (page->type() == "INT") {
+	// 	for (auto a : page->content) {
+	// 		cout << a->ival << endl;
+	// 	}
+	// }
+	// else if (page->type() == "DOUBLE") {
+	// 	for (auto a : page->content) {
+	// 		cout << a->dval << endl;
+	// 	}
+	// }
+	// else {
+	// 	for (auto a : page->content) {
+	// 		cout << a->sval << endl;
+	// 	}
+	// }
+
+	// cout << endl;
+}
+
+void QueryParser::MergeSort(Table* table, Attribute* attr_cond) {
+	// sort
+	if (!table->attr_order.size() || !table->attributes[table->attr_order[0]]->page_order.size()) {
+		// empty table, no need to sort
+		return;
+	}
+	size_t num_pages = table->attributes[table->attr_order[0]]->page_order.size();
+	size_t cols = table->columns();
+
+	vector<int> page_size;
+
+	vector<string> order;
+
+	for (size_t i = 0; i < num_pages; i++) {
+		size_t pnum = attr_cond->page_order[i];
+		if (!buffer->iscached(pnum)) 
+			buffer->fetch(pnum);
+		Page* page = buffer->get(pnum);
+
+		for (auto tuple : page->content) {
+			if (page->type() == "TEXT") {
+				order.push_back(tuple->sval);
+			}
+			else if (page->type() == "DOUBLE") {
+				order.push_back(to_string(tuple->dval));
+			}
+			else {
+				order.push_back(to_string(tuple->ival));
+			}
+		}
+	}
+
+	for (size_t i = 0; i < num_pages; i++) {
+		for (size_t j = 0; j < cols; j++) {
+			size_t page_num = table->attributes[table->attr_order[j]]->page_order[i];
+			if (!buffer->iscached(page_num)) 
+				buffer->fetch(page_num);
+			Page* page = buffer->get(page_num);
+
+			if (j == 0) 
+				page_size.push_back(page->size());
+
+			SortPage(page, order);
+		}
+	}
+
+	// merge
+	Attribute* attronjoin = table->attributes[attr_cond->name()];
+	vector<Page*> join_attr;
+	for (size_t i = 0; i < num_pages; i++) {
+		size_t pnum = attronjoin->page_order[i];
+		if (!buffer->iscached(pnum)) 
+				buffer->fetch(pnum);
+			Page* p = buffer->get(pnum);
+		join_attr.push_back(p);
+	}
+
+	for (size_t i = 0; i < cols; i++) {
+		vector<Page*> column;
+		for (size_t j = 0; j < num_pages; j++) {
+			size_t page_num = table->attributes[table->attr_order[i]]->page_order[j];
+			if (!buffer->iscached(page_num)) 
+				buffer->fetch(page_num);
+			column.push_back(buffer->get(page_num));
+		}
+		// merge this column
+		string type = column[0]->type();
+		vector<int> page_pointer;
+		for (size_t j = 0; j < num_pages; j++) {
+			page_pointer.push_back(0);
+		}
+		vector<Page*> sortedpages;
+		for (size_t j = 0; j < num_pages; j++) {
+			size_t pnum = column[j]->number();
+			string ta = column[j]->table();
+			string at = column[j]->attribute();
+			size_t attr = page_size[j];
+
+			Page* page_sorted;
+			if (type == "TEXT") {
+				page_sorted = new TextPage(pnum, ta, at, attr);
+			}
+			else if (type == "INT") {
+				page_sorted = new IntPage(pnum, ta, at, attr);
+			}
+			else {
+				page_sorted = new DoublePage(pnum, ta, at, attr);
+			}
+
+			for (size_t k = 0; k < page_size[j]; k++) {
+				if (attr_cond->type() == "TEXT") {
+					string attr_min;
+					Tuple* tuple_min;
+					for (size_t h = 0; h < column.size(); h++) {
+						if (!tuple_min || join_attr[h]->content[page_pointer[h]]->sval < attr_min) {
+							attr_min = join_attr[h]->content[page_pointer[h]]->sval;
+							tuple_min = column[h]->content[page_pointer[h]];
+							page_pointer[h]++;
+						}
+					}
+					page_sorted->content.push_back(tuple_min);
+				}
+			}
+			sortedpages.push_back(page_sorted);
+		}
+		for (size_t j = 0; j < column.size(); j++) {
+			column[j] = sortedpages[j];
+		}
+	}
+}
+
+string QueryParser::GetVal(Attribute* attribute, size_t n) {
+	size_t page_num = attribute->page_order[n / PAGESIZE];
+	size_t line = n % PAGESIZE;
+
+	if (!buffer->iscached(page_num)) {
+		buffer->fetch(page_num);
+	}
+	Page* page = buffer->get(page_num);
+	if (page->type() == "TEXT")
+		return page->content[line]->sval;
+	else if (page->type() == "INT")
+		return to_string(page->content[line]->ival);
+	else 
+		return to_string(page->content[line]->dval);
+}
+
+void QueryParser::AddtoJoinedTable(Table* JoinedTable, size_t n_left, size_t n_right, vector<Attribute*>& attr_left, 
+								   vector<Attribute*>& attr_right, vector<string>& selectList, string tname) {
+	size_t page_num_left = n_left / PAGESIZE;
+	size_t page_num_right = n_right / PAGESIZE;
+
+	size_t line_left = n_left % PAGESIZE;
+	size_t line_right = n_right % PAGESIZE;
+
 	vector<string> elements;
+
 	for (string col : selectList) {
-		for (size_t k = 0; k < cols_left; k++) {
-			if (attr_left[k]->name() == col) {
-				size_t pnum_new = attr_left[k]->page_order[i];
+		for (size_t i = 0; i < attr_left.size(); i++) {
+			if (attr_left[i]->name() == col) {
+				size_t pnum_new = attr_left[i]->page_order[page_num_left];
 				if (!buffer->iscached(pnum_new))
 					buffer->fetch(pnum_new);
 				Page* pnew = buffer->get(pnum_new);
 				if (pnew->type() == "TEXT")
-					elements.push_back("'" + pnew->content[j]->sval + "'");
+					elements.push_back("'" + pnew->content[line_left]->sval + "'");
 				else if (pnew->type() == "DOUBLE") {
-					double val = pnew->content[j]->dval;
+					double val = pnew->content[line_left]->dval;
 					elements.push_back(to_string(val));
 				}
 				else {
-					int val = pnew->content[j]->ival;
+					int val = pnew->content[line_left]->ival;
 					elements.push_back(to_string(val));
 				}
 				break;
 			}
 		}
-		for (size_t kk = 0; kk < cols_right; kk++) {
-			if (attr_right[kk]->name() == col) {
-				size_t pnum_new = attr_right[kk]->page_order[i];
+		for (size_t i = 0; i < attr_right.size(); i++) {
+			if (attr_right[i]->name() == col) {
+				size_t pnum_new = attr_right[i]->page_order[page_num_right];
 				if (!buffer->iscached(pnum_new))
 					buffer->fetch(pnum_new);
 				Page* pnew = buffer->get(pnum_new);
 				if (pnew->type() == "TEXT")
-					elements.push_back("'" + pnew->content[jj]->sval + "'");
+					elements.push_back("'" + pnew->content[line_right]->sval + "'");
 				else if (pnew->type() == "DOUBLE") {
-					double val = pnew->content[jj]->dval;
+					double val = pnew->content[line_right]->dval;
 					elements.push_back(to_string(val));
 				}
 				else {
-					int val = pnew->content[jj]->ival;
+					int val = pnew->content[line_right]->ival;
 					elements.push_back(to_string(val));
 				}
 				break;
 			}
 		}
 	}
+
 	string head = "INSERT INTO " + TableName(tname) + " VALUES (";
 	for (size_t i = 0; i < elements.size(); i++) {
 		if (i != elements.size() - 1)
@@ -626,6 +794,64 @@ void QueryParser::AddtoJoinedTable(size_t i, size_t j, size_t jj, vector<Attribu
 	const hsql::SQLStatement* statement = result.getStatement(0);
 	ParseINSERT(statement);
 }
+
+// void QueryParser::AddtoJoinedTable(size_t i, size_t j, size_t jj, vector<Attribute*>& attr_left, vector<Attribute*>& attr_right,
+// 					  			   size_t cols_left, size_t cols_right, string tname, vector<string>& selectList) {
+// 	vector<string> elements;
+// 	for (string col : selectList) {
+// 		for (size_t k = 0; k < cols_left; k++) {
+// 			if (attr_left[k]->name() == col) {
+// 				size_t pnum_new = attr_left[k]->page_order[i];
+// 				if (!buffer->iscached(pnum_new))
+// 					buffer->fetch(pnum_new);
+// 				Page* pnew = buffer->get(pnum_new);
+// 				if (pnew->type() == "TEXT")
+// 					elements.push_back("'" + pnew->content[j]->sval + "'");
+// 				else if (pnew->type() == "DOUBLE") {
+// 					double val = pnew->content[j]->dval;
+// 					elements.push_back(to_string(val));
+// 				}
+// 				else {
+// 					int val = pnew->content[j]->ival;
+// 					elements.push_back(to_string(val));
+// 				}
+// 				break;
+// 			}
+// 		}
+// 		for (size_t kk = 0; kk < cols_right; kk++) {
+// 			if (attr_right[kk]->name() == col) {
+// 				size_t pnum_new = attr_right[kk]->page_order[i];
+// 				if (!buffer->iscached(pnum_new))
+// 					buffer->fetch(pnum_new);
+// 				Page* pnew = buffer->get(pnum_new);
+// 				if (pnew->type() == "TEXT")
+// 					elements.push_back("'" + pnew->content[jj]->sval + "'");
+// 				else if (pnew->type() == "DOUBLE") {
+// 					double val = pnew->content[jj]->dval;
+// 					elements.push_back(to_string(val));
+// 				}
+// 				else {
+// 					int val = pnew->content[jj]->ival;
+// 					elements.push_back(to_string(val));
+// 				}
+// 				break;
+// 			}
+// 		}
+// 	}
+// 	string head = "INSERT INTO " + TableName(tname) + " VALUES (";
+// 	for (size_t i = 0; i < elements.size(); i++) {
+// 		if (i != elements.size() - 1)
+// 			head += (elements[i] + ", ");
+// 		else 
+// 			head += (elements[i] + ")");
+// 	}
+// 	// cout << "command is: " << head << endl;
+
+// 	hsql::SQLParserResult result;
+// 	hsql::SQLParser::parse(head, &result);
+// 	const hsql::SQLStatement* statement = result.getStatement(0);
+// 	ParseINSERT(statement);
+// }
 
 Table* QueryParser::JoinTable(hsql::TableRef* fromTable, const hsql::SelectStatement* select, bool& temporary) {
 	if (fromTable->type == hsql::kTableName) {
@@ -644,11 +870,11 @@ Table* QueryParser::JoinTable(hsql::TableRef* fromTable, const hsql::SelectState
 	Table* left = JoinTable(fromTable->join->left, select, temporary);
 	Table* right = JoinTable(fromTable->join->right, select, temporary);
 
-	Table* JoinedTable = nullptr;
+	Table* JoinedTable = MergeSortJoin(left, right, fromTable->join->condition, select);
 
-	if (fromTable->join->type == hsql::kJoinInner) {
-		JoinedTable = InnerJoin(left, right, fromTable->join->condition, select);
-	}
+	// if (fromTable->join->type == hsql::kJoinInner) {
+	// 	JoinedTable = InnerJoin(left, right, fromTable->join->condition, select);
+	// }
 	// else if (join->type == hsql::kJoinFull) {
 	// 	JoinedTable = FullJoin(left, right, fromTable->join->condition, select);
 	// }
@@ -664,10 +890,10 @@ Table* QueryParser::JoinTable(hsql::TableRef* fromTable, const hsql::SelectState
 	// else if (join->type == hsql::kJoinNatural) {
 	// 	JoinedTable = NaturalJoin(left, right, fromTable->join->condition, select);
 	// }
-	else {
-		cerr << "Error: Unknown JOIN type." << endl;
-		return nullptr;
-	}
+	// else {
+	// 	cerr << "Error: Unknown JOIN type." << endl;
+	// 	return nullptr;
+	// }
 
 	return JoinedTable;
 }

@@ -31,6 +31,12 @@ public:
 	FuncType type;
 };
 
+struct Compare {
+    bool operator()(const pair<string, Tuple*> &left, const pair<string ,Tuple*> &right) {
+        return left.first < right.first;
+    }
+};
+
 class Entry { // each Entry stores a tuple to print
 private:
 	size_t width; // width of each box
@@ -102,10 +108,21 @@ private:
 				unordered_map<string, Column*>& selectList, vector<string>& selectOrder,
 				unordered_map<string, Column*>& groupbyList, vector<string>& totalList);
 
-	void AddtoJoinedTable(size_t i, size_t j, size_t jj, vector<Attribute*>& attr_left, vector<Attribute*>& attr_right,
-						  size_t cols_left, size_t cols_right, string tname, vector<string>& selectList);
+	void SortPage(Page* page, vector<string>& order);
+	void MergeSort(Table* table, Attribute* attr_cond);
+
+	string GetVal(Attribute* attribute, size_t n); // get the val in the nth line of this column
+	
+	void AddtoJoinedTable(Table* JoinedTable, size_t n_left, size_t n_right, vector<Attribute*>& attr_left, 
+						  vector<Attribute*>& attr_right, vector<string>& selectList, string tname);
+
+	// void AddtoJoinedTable(size_t i, size_t j, size_t jj, vector<Attribute*>& attr_left, vector<Attribute*>& attr_right,
+	// 					  size_t cols_left, size_t cols_right, string tname, vector<string>& selectList);
 
 	Table* JoinTable(hsql::TableRef* fromTable, const hsql::SelectStatement* select, bool& temporary);
+
+	Table* NestedLoopJoin(Table* left, Table* right, hsql::Expr* condition, const hsql::SelectStatement* select);
+	Table* MergeSortJoin(Table* left, Table* right, hsql::Expr* condition, const hsql::SelectStatement* select);
 
 	Table* InnerJoin  (Table* left, Table* right, hsql::Expr* condition, const hsql::SelectStatement* select);
 	// Table* FullJoin   (Table* left, Table* right, hsql::Expr* condition, hsql::SelectStatement* select);
