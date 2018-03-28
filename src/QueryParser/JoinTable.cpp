@@ -11,10 +11,40 @@ Table* QueryParser::InnerJoin(  Table* left, Table* right, hsql::Expr* condition
 
 	// selectList.push_back("TimeStamp");
 	vector<string> selectList;
-	for (auto attr : *select->selectList) {
-		string attrname(attr->name);
-		selectList.push_back(attrname);
+	// for (auto attr : *select->selectList) {
+	// 	string attrname(attr->name);
+	// 	selectList.push_back(attrname);
+	// }
+
+	for (auto column : *select->selectList) {
+		if (column->type == hsql::kExprStar) {
+			// add every column to the select list
+			for (size_t i = 0; i < left->attr_order.size() - 1; i++) {
+				selectList.push_back(left->attr_order[i+1]);
+			}
+			for (size_t i = 0; i < right->attr_order.size() - 1; i++) {
+				selectList.push_back(right->attr_order[i+1]);
+			}
+			break;
+		}
+		else {
+			if (column->type == hsql::kExprFunctionRef) { // aggregated
+				string func(column->name);
+
+				for (auto expr : *column->exprList) {
+					string col(expr->name);
+					selectList.push_back(col);
+				}
+			}
+			else { // regular column
+				string col(column->name);
+				selectList.push_back(col);
+			}
+
+		}
 	}
+
+	for (string a : selectList) cout << a << endl;
 
 	// build new table
 	Attribute* ts = new Attribute("TimeStamp", "TEXT", tname);
