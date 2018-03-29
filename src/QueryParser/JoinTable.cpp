@@ -159,23 +159,6 @@
 // }
 
 Table* QueryParser::MergeSortJoin(Table* left, Table* right, hsql::Expr* condition, const hsql::SelectStatement* select) {
-	// parse condition
-	Attribute* cond_left;
-	Attribute* cond_right;
-
-	if (condition) {
-		cond_left = FindAttribute(condition->expr);
-		cond_right = FindAttribute(condition->expr2);
-	}
-	if (cond_left->table() == left->name()) {
-		MergeSort(left, cond_left);
-		MergeSort(right, cond_right);
-	}
-	else {
-		MergeSort(right, cond_left);
-		MergeSort(left, cond_right);
-	}
-
 	string tablename = "Join" + TableName(left->name()) + TableName(right->name());
 	string tname = filesystem->user->name() + "::" + tablename;
 	string timestamp = addTimeStamp();
@@ -183,94 +166,202 @@ Table* QueryParser::MergeSortJoin(Table* left, Table* right, hsql::Expr* conditi
 
 	// selectList.push_back("TimeStamp");
 	vector<string> selectList;
-	// for (auto attr : *select->selectList) {
-	// 	string attrname(attr->name);
-	// 	selectList.push_back(attrname);
-	// }
 
-	for (auto column : *select->selectList) {
-		if (column->type == hsql::kExprStar) {
-			// add every column to the select list
-			for (size_t i = 0; i < left->attr_order.size() - 1; i++) {
-				selectList.push_back(left->attr_order[i+1]);
-			}
-			for (size_t i = 0; i < right->attr_order.size() - 1; i++) {
-				if (right->attr_order[i+1] != cond_left->name() && right->attr_order[i+1] != cond_right->name())
-					selectList.push_back(right->attr_order[i+1]);
-			}
-			break;
+	if (condition) {
+		// parse condition
+		Attribute* cond_left = FindAttribute(condition->expr);
+		Attribute* cond_right = FindAttribute(condition->expr2);
+	
+		if (cond_left->table() == left->name()) {
+			MergeSort(left, cond_left);
+			MergeSort(right, cond_right);
 		}
 		else {
-			if (column->type == hsql::kExprFunctionRef) { // aggregated
-				string func(column->name);
+			MergeSort(right, cond_left);
+			MergeSort(left, cond_right);
+		}
 
-				for (auto expr : *column->exprList) {
-					string col(expr->name);
+		for (auto column : *select->selectList) {
+			if (column->type == hsql::kExprStar) {
+				// add every column to the select list
+				for (size_t i = 0; i < left->attr_order.size() - 1; i++) {
+					selectList.push_back(left->attr_order[i+1]);
+				}
+				for (size_t i = 0; i < right->attr_order.size() - 1; i++) {
+					// if (right->attr_order[i+1] != cond_left->name() && right->attr_order[i+1] != cond_right->name())
+					selectList.push_back(right->attr_order[i+1]);
+				}
+				break;
+			}
+			else {
+				if (column->type == hsql::kExprFunctionRef) { // aggregated
+					string func(column->name);
+
+					for (auto expr : *column->exprList) {
+						string col(expr->name);
+						selectList.push_back(col);
+					}
+				}
+				else { // regular column
+					string col(column->name);
 					selectList.push_back(col);
 				}
 			}
-			else { // regular column
-				string col(column->name);
-				selectList.push_back(col);
+		}
+
+		// build new table
+		Attribute* ts = new Attribute("TimeStamp", "TEXT", tname);
+		JoinedTable->attr_order.push_back("TimeStamp");
+		JoinedTable->attributes["TimeStamp"] = ts;
+
+		vector<Attribute*> attr_left;
+		vector<Attribute*> attr_right;
+
+		for (string attr : selectList) {
+			if (left->attributes.find(attr) != left->attributes.end()) {
+				JoinedTable->attr_order.push_back(attr);
+				Attribute* attr_new = new Attribute(attr, left->attributes[attr]->type(), tname);
+				JoinedTable->attributes[attr] = attr_new;
+				attr_left.push_back(left->attributes[attr]);
+			}
+			else if (right->attributes.find(attr) != right->attributes.end()) {
+				JoinedTable->attr_order.push_back(attr);
+				Attribute* attr_new = new Attribute(attr, right->attributes[attr]->type(), tname);
+				JoinedTable->attributes[attr] = attr_new;
+				attr_right.push_back(right->attributes[attr]);
+			}
+			else {
+				cerr << "Error: Nonexisting attribute name \"" << attr << "\"." << endl;
+				return nullptr;
 			}
 		}
-	}
+		// add new table to database
+		filesystem->add(JoinedTable);
+		filesystem->user->IncrementSize(1);
 
-	// build new table
-	Attribute* ts = new Attribute("TimeStamp", "TEXT", tname);
-	JoinedTable->attr_order.push_back("TimeStamp");
-	JoinedTable->attributes["TimeStamp"] = ts;
+		// sorted, so the old pointer dosn't work anymore
 
-	vector<Attribute*> attr_left;
-	vector<Attribute*> attr_right;
+		Attribute* join_left = FindAttribute(condition->expr);
+		Attribute* join_right = FindAttribute(condition->expr2);
 
-	for (string attr : selectList) {
-		if (left->attributes.find(attr) != left->attributes.end()) {
-			JoinedTable->attr_order.push_back(attr);
-			Attribute* attr_new = new Attribute(attr, left->attributes[attr]->type(), tname);
-			JoinedTable->attributes[attr] = attr_new;
-			attr_left.push_back(left->attributes[attr]);
-		}
-		else if (right->attributes.find(attr) != right->attributes.end()) {
-			JoinedTable->attr_order.push_back(attr);
-			Attribute* attr_new = new Attribute(attr, right->attributes[attr]->type(), tname);
-			JoinedTable->attributes[attr] = attr_new;
-			attr_right.push_back(right->attributes[attr]);
+		if (select->fromTable->join->type == hsql::kJoinInner)
+			InnerJoin(JoinedTable, left, right, attr_left, attr_right, selectList, tname, join_left, join_right);
+		else if (select->fromTable->join->type == hsql::kJoinFull)
+			FullJoin(JoinedTable, left, right, attr_left, attr_right, selectList, tname, join_left, join_right);
+		else if (select->fromTable->join->type == hsql::kJoinLeft)
+			LeftJoin(JoinedTable, left, right, attr_left, attr_right, selectList, tname, join_left, join_right);
+		else if (select->fromTable->join->type == hsql::kJoinRight)
+			LeftJoin(JoinedTable, right, left, attr_right, attr_left, selectList, tname, join_right, join_left);
+		else if (select->fromTable->join->type == hsql::kJoinCross) {
+			CrossJoin(JoinedTable, left, right, attr_left, attr_right, selectList, tname, join_left, join_right);
 		}
 		else {
-			cerr << "Error: Nonexisting attribute name \"" << attr << "\"." << endl;
+			cerr << "Error: Unsupported JOIN type." << endl;
 			return nullptr;
 		}
 	}
-	// add new table to database
-	filesystem->add(JoinedTable);
-	filesystem->user->IncrementSize(1);
+	else { // natural join
+		string attrname;
+		bool found = false;
+		for (auto attr_i : left->attr_order) {
+			for (auto attr_j : right->attr_order) {
+				if (attr_i == attr_j && attr_i != "TimeStamp") {
+					attrname = attr_i;
+					found = true;
+					break;
+				}
+			}
+			if (found) break;
+		}
+		if (found) cout << "attrname: " << attrname << endl;
+		if (!found) {
+			cerr << "Error: NATURAL JOIN cannot be performed, associate column doesn't exist." << endl;
+			return nullptr;
+		}
 
-	// sorted, so the old pointer dosn't work anymore
-	Attribute* join_left;
-	Attribute* join_right;
+		Attribute* cond_left = left->attributes[attrname];
+		Attribute* cond_right = right->attributes[attrname];
 
-	if (condition) {
-		join_left = FindAttribute(condition->expr);
-		join_right = FindAttribute(condition->expr2);
+		if (cond_left->table() == left->name()) {
+			MergeSort(left, cond_left);
+			MergeSort(right, cond_right);
+		}
+		else {
+			MergeSort(right, cond_left);
+			MergeSort(left, cond_right);
+		}
+
+		for (auto column : *select->selectList) {
+			if (column->type == hsql::kExprStar) {
+				// add every column to the select list
+				for (size_t i = 0; i < left->attr_order.size() - 1; i++) {
+					selectList.push_back(left->attr_order[i+1]);
+				}
+				for (size_t i = 0; i < right->attr_order.size() - 1; i++) {
+					if (right->attr_order[i+1] != cond_left->name() && right->attr_order[i+1] != cond_right->name())
+						selectList.push_back(right->attr_order[i+1]);
+				}
+				break;
+			}
+			else {
+				if (column->type == hsql::kExprFunctionRef) { // aggregated
+					string func(column->name);
+
+					for (auto expr : *column->exprList) {
+						string col(expr->name);
+						selectList.push_back(col);
+					}
+				}
+				else { // regular column
+					string col(column->name);
+					selectList.push_back(col);
+				}
+			}
+		}
+
+		// build new table
+		Attribute* ts = new Attribute("TimeStamp", "TEXT", tname);
+		JoinedTable->attr_order.push_back("TimeStamp");
+		JoinedTable->attributes["TimeStamp"] = ts;
+
+		vector<Attribute*> attr_left;
+		vector<Attribute*> attr_right;
+
+		for (string attr : selectList) {
+			if (left->attributes.find(attr) != left->attributes.end()) {
+				JoinedTable->attr_order.push_back(attr);
+				Attribute* attr_new = new Attribute(attr, left->attributes[attr]->type(), tname);
+				JoinedTable->attributes[attr] = attr_new;
+				attr_left.push_back(left->attributes[attr]);
+			}
+			else if (right->attributes.find(attr) != right->attributes.end()) {
+				JoinedTable->attr_order.push_back(attr);
+				Attribute* attr_new = new Attribute(attr, right->attributes[attr]->type(), tname);
+				JoinedTable->attributes[attr] = attr_new;
+				attr_right.push_back(right->attributes[attr]);
+			}
+			else {
+				cerr << "Error: Nonexisting attribute name \"" << attr << "\"." << endl;
+				return nullptr;
+			}
+		}
+		// add new table to database
+		filesystem->add(JoinedTable);
+		filesystem->user->IncrementSize(1);
+
+		// sorted, so the old pointer dosn't work anymore
+
+		Attribute* join_left = left->attributes[attrname];
+		Attribute* join_right = right->attributes[attrname];
+
+		if (select->fromTable->join->type == hsql::kJoinNatural)
+			NaturalJoin(JoinedTable, left, right, attr_left, attr_right, selectList, tname, join_left, join_right);
+		else {
+			cerr << "Error: Unsupported JOIN type." << endl;
+			return nullptr;
+		}
+
 	}
-
-	if (select->fromTable->join->type == hsql::kJoinInner)
-		InnerJoin(JoinedTable, left, right, attr_left, attr_right, selectList, tname, join_left, join_right);
-	else if (select->fromTable->join->type == hsql::kJoinFull)
-		FullJoin(JoinedTable, left, right, attr_left, attr_right, selectList, tname, join_left, join_right);
-	else if (select->fromTable->join->type == hsql::kJoinLeft)
-		LeftJoin(JoinedTable, left, right, attr_left, attr_right, selectList, tname, join_left, join_right);
-	else if (select->fromTable->join->type == hsql::kJoinRight)
-		LeftJoin(JoinedTable, right, left, attr_right, attr_left, selectList, tname, join_right, join_left);
-	else if (select->fromTable->join->type == hsql::kJoinCross) {
-		CrossJoin(JoinedTable, left, right, attr_left, attr_right, selectList, tname, join_left, join_right);
-	}
-	else {
-		cerr << "Error: Unsupported JOIN type." << endl;
-		return nullptr;
-	}
-
 	return JoinedTable;
 }
 
@@ -370,6 +461,27 @@ void QueryParser::CrossJoin(Table* JoinedTable, Table* left, Table* right, vecto
 	}
 }
 
-// Table* QueryParser::NaturalJoin(Table* left, Table* right, hsql::Expr* condition, hsql::SelectStatement* select) {
+void QueryParser::NaturalJoin(Table* JoinedTable, Table* left, Table* right, vector<Attribute*>& attr_left, vector<Attribute*>& attr_right,
+							  vector<string>& selectList, string tname, Attribute* join_left, Attribute* join_right) {
+	size_t left_count = left->size();
+	size_t right_count = right->size();
 
-// }
+	while (left_count > 0 && right_count > 0) {
+		string val_left = GetVal(join_left, left->size() - left_count);
+		string val_right = GetVal(join_right, right->size() - right_count);
+
+		if (val_left == val_right) {
+			// create new entry to new joined table
+			AddtoJoinedTable(JoinedTable, left->size() - left_count, right->size() - right_count,
+							 attr_left, attr_right, selectList, tname);
+			left_count--;
+			right_count--;
+		}
+		else if (val_left < val_right) {
+			left_count--;
+		}
+		else {
+			right_count--;
+		}
+	}
+}

@@ -126,14 +126,15 @@ private:
 	Table* MergeSortJoin(Table* left, Table* right, hsql::Expr* condition, const hsql::SelectStatement* select);
 
 	void InnerJoin(Table* JoinedTable, Table* left, Table* right, vector<Attribute*>& attr_left, vector<Attribute*>& attr_right,
-					 vector<string>& selectList, string tname, Attribute* join_left, Attribute* join_right);
+				   vector<string>& selectList, string tname, Attribute* join_left, Attribute* join_right);
 	void FullJoin(Table* JoinedTable, Table* left, Table* right, vector<Attribute*>& attr_left, vector<Attribute*>& attr_right,
-					 vector<string>& selectList, string tname, Attribute* join_left, Attribute* join_right);
+				  vector<string>& selectList, string tname, Attribute* join_left, Attribute* join_right);
 	void LeftJoin(Table* JoinedTable, Table* left, Table* right, vector<Attribute*>& attr_left, vector<Attribute*>& attr_right,
-					 vector<string>& selectList, string tname, Attribute* join_left, Attribute* join_right);
+				  vector<string>& selectList, string tname, Attribute* join_left, Attribute* join_right);
 	void CrossJoin(Table* JoinedTable, Table* left, Table* right, vector<Attribute*>& attr_left, vector<Attribute*>& attr_right,
+				   vector<string>& selectList, string tname, Attribute* join_left, Attribute* join_right);
+	void NaturalJoin(Table* JoinedTable, Table* left, Table* right, vector<Attribute*>& attr_left, vector<Attribute*>& attr_right,
 					 vector<string>& selectList, string tname, Attribute* join_left, Attribute* join_right);
-	// void NaturalJoin(Table* left, Table* right, hsql::Expr* condition, hsql::SelectStatement* select);
 
 public:
 	QueryParser(FileManager* fs, BufferManager* bf);
