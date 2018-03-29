@@ -966,7 +966,7 @@ Table* QueryParser::JoinTable(hsql::TableRef* fromTable, const hsql::SelectState
 
 QueryParser::QueryParser(FileManager* fs, BufferManager* bf) {
 	filesystem = fs;
-	buffer = bf;
+	buffer     = bf;
 }
 
 template <typename T> void QueryParser::PrintElement(T elem, const int& width) {

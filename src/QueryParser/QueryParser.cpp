@@ -172,17 +172,6 @@ Table* QueryParser::ParseSELECT(const hsql::SQLStatement* statement, bool printt
 
 	string t_name = fromTable->name();
 
-	// if (select->fromTable->type == hsql::kTableName) {
-	// 	string t_name(select->fromTable->name);
-	// 	t_name = filesystem->user->name() + "::" + t_name;
-	// 	// cout << "table name is: " << t_name << endl;
-	// 	fromTable = filesystem->tables[t_name];
-	// }
-	// else if (select->fromTable->type == hsql::kTableJoin) {
-	// 	// do join
-	// 	fromTable = JoinTable(select->fromTable);
-	// }
-
 	QueryResult* entries = new QueryResult(printtable);
 
 	// cout << "check group" << endl;

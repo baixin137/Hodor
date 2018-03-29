@@ -87,10 +87,6 @@ void ConsoleReader::ReadCommand() {
 				// cout << "Insert!" << endl;
 				parser->ParseINSERT(statement);
 
-				// auto l = buffer->getbuffer()->linkedlist;
-				// for (auto it : l) {
-				// 	it.second->write();
-				// }
 			}
 			else if (statement->isType(hsql::kStmtSelect)) {
 				// cout << "Select!" << endl;
