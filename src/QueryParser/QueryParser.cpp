@@ -64,6 +64,7 @@ void QueryParser::ParseINSERT(const hsql::SQLStatement* statement) {
 	// TODO: handle the error that data type doesn't match the correct order
 	if (!insert->columns) { // attributes not specified
 		// find or create a pageset to store this tuple
+
 		PageSet* pset = filesystem->FindPageSet(table, buffer);
 		string t_stamp = addTimeStamp();
 
@@ -78,7 +79,6 @@ void QueryParser::ParseINSERT(const hsql::SQLStatement* statement) {
 				attribute->page_order.push_back(pset->pageset[i]);
 			}
 		}
-
 		pset->slots -= 1;
 
 		// cout << "pageset created, creating pages;" << endl;
@@ -117,7 +117,11 @@ void QueryParser::ParseINSERT(const hsql::SQLStatement* statement) {
 
 				if (val->type == hsql::kExprLiteralString) {
 					string sval(val->name);
-					newtup = new Tuple(false, sval, t_stamp);
+					if (sval == "NA") {
+						newtup = new Tuple(true, t_stamp);
+					}
+					else
+						newtup = new Tuple(false, sval, t_stamp);
 					// cout << "New tuple: " << sval << " type: " << newtup->type() << endl;
 				}
 				else if (val->type == hsql::kExprLiteralInt) {
@@ -131,13 +135,15 @@ void QueryParser::ParseINSERT(const hsql::SQLStatement* statement) {
 				else { // it's null
 					newtup = new Tuple(true, t_stamp);
 				}
+
 				page2modify->content.push_back(newtup);
 
-				if (page2modify->type() == "INT")
-					page2modify->UpdateMeta(val->ival);
-				else if (page2modify->type() == "DOUBLE")
-					page2modify->UpdateMeta(val->fval);
-
+				if (!newtup->isnull) {
+					if (page2modify->type() == "INT")
+						page2modify->UpdateMeta(val->ival);
+					else if (page2modify->type() == "DOUBLE")
+						page2modify->UpdateMeta(val->fval);
+				}
 				page2modify->IncrementSize(1);
 			}
 		}
@@ -358,24 +364,31 @@ void QueryParser::ParseSELECT(const hsql::SQLStatement* statement) {
 							buffer->fetch(page_num);
 						}
 						Page* page = buffer->get(page_num);
-
-						if (page->type() == "TEXT") {
-							string text(page->content[j]->sval);
-							entry->attributeList[page->attribute()] = text;
+						if (page->content[j]->isnull) {
+							entry->attributeList[page->attribute()] = "";
 							if (groupbyList.find(totalList[k]) != groupbyList.end()) {
-								entry->attributeGroupby[page->attribute()] = text;
-							}
-						}
-						else if (page->type() == "INT") {
-							entry->attributeList[page->attribute()] = to_string(page->content[j]->ival);
-							if (groupbyList.find(totalList[k]) != groupbyList.end()) {
-								entry->attributeGroupby[page->attribute()] = to_string(page->content[j]->ival);
+								entry->attributeGroupby[page->attribute()] = "NA";
 							}
 						}
 						else {
-							entry->attributeList[page->attribute()] = to_string(page->content[j]->dval);
-							if (groupbyList.find(totalList[k]) != groupbyList.end()) {
-								entry->attributeGroupby[page->attribute()] = to_string(page->content[j]->dval);
+							if (page->type() == "TEXT") {
+								string text(page->content[j]->sval);
+								entry->attributeList[page->attribute()] = text;
+								if (groupbyList.find(totalList[k]) != groupbyList.end()) {
+									entry->attributeGroupby[page->attribute()] = text;
+								}
+							}
+							else if (page->type() == "INT") {
+								entry->attributeList[page->attribute()] = to_string(page->content[j]->ival);
+								if (groupbyList.find(totalList[k]) != groupbyList.end()) {
+									entry->attributeGroupby[page->attribute()] = to_string(page->content[j]->ival);
+								}
+							}
+							else {
+								entry->attributeList[page->attribute()] = to_string(page->content[j]->dval);
+								if (groupbyList.find(totalList[k]) != groupbyList.end()) {
+									entry->attributeGroupby[page->attribute()] = to_string(page->content[j]->dval);
+								}
 							}
 						}
 					

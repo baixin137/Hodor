@@ -145,7 +145,7 @@ void TextPage::read(int pn, string page_name, vector<string> property) {
 
 			Tuple* tuple = new Tuple(t_stamp);
 
-			if (value == "NULL") {
+			if (value == "NA") {
 				tuple->isnull = true;
 			}
 			else {
@@ -190,7 +190,7 @@ void IntPage::read(int pn, string page_name, vector<string> property) {
 			getline(iss, t_stamp, ',');
 
 			Tuple* tuple = new Tuple(t_stamp);
-			if (value == "NULL") {
+			if (value == "NA") {
 				tuple->isnull = true;
 			}
 			else {
@@ -235,7 +235,7 @@ void DoublePage::read(int pn, string page_name, vector<string> property) {
 			getline(iss, t_stamp, ',');
 
 			Tuple* tuple = new Tuple(t_stamp);
-			if (value == "NULL") {
+			if (value == "NA") {
 				tuple->isnull = true;
 			}
 			else {
@@ -265,7 +265,7 @@ void TextPage::write() {
 						<< content[i]->timestamp() << endl;
 			}
 			else {
-				outfile << "NULL" << ","
+				outfile << "NA" << ","
 						<< content[i]->timestamp() << endl;
 			}
 		}
@@ -275,7 +275,7 @@ void TextPage::write() {
 						<< content[i]->timestamp();
 			}
 			else  {
-				outfile << "NULL" << ","
+				outfile << "NA" << ","
 						<< content[i]->timestamp();
 			}
 		}
@@ -300,7 +300,7 @@ void IntPage::write() {
 						<< content[i]->timestamp() << endl;
 			}
 			else {
-				outfile << "NULL" << ","
+				outfile << "NA" << ","
 						<< content[i]->timestamp() << endl;
 			}
 		}
@@ -310,7 +310,7 @@ void IntPage::write() {
 						<< content[i]->timestamp();
 			}
 			else {
-				outfile << "NULL" << ","
+				outfile << "NA" << ","
 						<< content[i]->timestamp();
 			}
 		}
@@ -335,7 +335,7 @@ void DoublePage::write() {
 						<< content[i]->timestamp() << endl;
 			}
 			else {
-				outfile << "NULL" << ","
+				outfile << "NA" << ","
 						<< content[i]->timestamp() << endl;
 			}
 		}
@@ -345,7 +345,7 @@ void DoublePage::write() {
 						<< content[i]->timestamp();
 			}
 			else
-				outfile << "NULL" << ","
+				outfile << "NA" << ","
 						<< content[i]->timestamp();
 	}
 	outfile.close();
@@ -461,7 +461,7 @@ void BufferManager::fetch(int pn) {
 
 	ifstream infile(page_name);
 	if (!infile) {
-		cerr << "Page not found from disk." << endl;
+		cerr << "Page " << pn << " not found from disk." << endl;
 	}
 	else {
 		string header;

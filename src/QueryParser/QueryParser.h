@@ -115,6 +115,7 @@ private:
 	
 	void AddtoJoinedTable(Table* JoinedTable, size_t n_left, size_t n_right, vector<Attribute*>& attr_left, 
 						  vector<Attribute*>& attr_right, vector<string>& selectList, string tname);
+	void AddtoJoinedTable(Table* JoinedTable, size_t n, vector<Attribute*>& attr, vector<string>& selectList, string tname);
 
 	// void AddtoJoinedTable(size_t i, size_t j, size_t jj, vector<Attribute*>& attr_left, vector<Attribute*>& attr_right,
 	// 					  size_t cols_left, size_t cols_right, string tname, vector<string>& selectList);
@@ -124,11 +125,14 @@ private:
 	Table* NestedLoopJoin(Table* left, Table* right, hsql::Expr* condition, const hsql::SelectStatement* select);
 	Table* MergeSortJoin(Table* left, Table* right, hsql::Expr* condition, const hsql::SelectStatement* select);
 
-	Table* InnerJoin  (Table* left, Table* right, hsql::Expr* condition, const hsql::SelectStatement* select);
-	// Table* FullJoin   (Table* left, Table* right, hsql::Expr* condition, hsql::SelectStatement* select);
-	// Table* LeftJoin   (Table* left, Table* right, hsql::Expr* condition, hsql::SelectStatement* select);
-	// Table* CrossJoin  (Table* left, Table* right, hsql::Expr* condition, hsql::SelectStatement* select);
-	// Table* NaturalJoin(Table* left, Table* right, hsql::Expr* condition, hsql::SelectStatement* select);
+	void InnerJoin(Table* JoinedTable, Table* left, Table* right, vector<Attribute*>& attr_left, vector<Attribute*>& attr_right,
+					 vector<string>& selectList, string tname, Attribute* join_left, Attribute* join_right);
+	void FullJoin(Table* JoinedTable, Table* left, Table* right, vector<Attribute*>& attr_left, vector<Attribute*>& attr_right,
+					 vector<string>& selectList, string tname, Attribute* join_left, Attribute* join_right);
+	void LeftJoin(Table* JoinedTable, Table* left, Table* right, vector<Attribute*>& attr_left, vector<Attribute*>& attr_right,
+					 vector<string>& selectList, string tname, Attribute* join_left, Attribute* join_right);
+	// void CrossJoin  (Table* left, Table* right, hsql::Expr* condition, hsql::SelectStatement* select);
+	// void NaturalJoin(Table* left, Table* right, hsql::Expr* condition, hsql::SelectStatement* select);
 
 public:
 	QueryParser(FileManager* fs, BufferManager* bf);

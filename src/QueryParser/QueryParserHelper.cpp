@@ -324,22 +324,29 @@ void QueryParser::FilterInt(vector<string>& leftList, vector<string>& rightList,
 
 		entries->AddAttribute(page->attribute());
 		if (ConditionMet(op, target, val)) {
-			if (page->type() == "TEXT") {
-				string text(page->content[j]->sval);
-				entry->attributeList[page->attribute()] = text;
-				// if the column is also in group by list, push it into the list
+			if (page->content[j]->isnull) {
+				entry->attributeList[page->attribute()] = "";
 				if (groupbyList.find(totalList[k]) != groupbyList.end())
-					entry->attributeGroupby[page->attribute()] = text;
-			}
-			else if (page->type() == "INT") {
-				entry->attributeList[page->attribute()] = to_string(page->content[j]->ival);
-				if (groupbyList.find(totalList[k]) != groupbyList.end())
-					entry->attributeGroupby[page->attribute()] = to_string(page->content[j]->ival);
+					entry->attributeGroupby[page->attribute()] = "NA";
 			}
 			else {
-				entry->attributeList[page->attribute()] = to_string(page->content[j]->dval);
-				if (groupbyList.find(totalList[k]) != groupbyList.end())
-					entry->attributeGroupby[page->attribute()] = to_string(page->content[j]->dval);
+				if (page->type() == "TEXT") {
+					string text(page->content[j]->sval);
+					entry->attributeList[page->attribute()] = text;
+					// if the column is also in group by list, push it into the list
+					if (groupbyList.find(totalList[k]) != groupbyList.end())
+						entry->attributeGroupby[page->attribute()] = text;
+				}
+				else if (page->type() == "INT") {
+					entry->attributeList[page->attribute()] = to_string(page->content[j]->ival);
+					if (groupbyList.find(totalList[k]) != groupbyList.end())
+						entry->attributeGroupby[page->attribute()] = to_string(page->content[j]->ival);
+				}
+				else {
+					entry->attributeList[page->attribute()] = to_string(page->content[j]->dval);
+					if (groupbyList.find(totalList[k]) != groupbyList.end())
+						entry->attributeGroupby[page->attribute()] = to_string(page->content[j]->dval);
+				}
 			}
 		}
 		else
@@ -407,22 +414,29 @@ void QueryParser::FilterDouble(vector<string>& leftList, vector<string>& rightLi
 
 		entries->AddAttribute(page->attribute());
 		if (ConditionMet(op, target, val)) {
-			if (page->type() == "TEXT") {
-				string text(page->content[j]->sval);
-				entry->attributeList[page->attribute()] = text;
-				// if the column is also in group by list, push it into the list
+			if (page->content[j]->isnull) {
+				entry->attributeList[page->attribute()] = "";
 				if (groupbyList.find(totalList[k]) != groupbyList.end())
-					entry->attributeGroupby[page->attribute()] = text;
-			}
-			else if (page->type() == "INT") {
-				entry->attributeList[page->attribute()] = to_string(page->content[j]->ival);
-				if (groupbyList.find(totalList[k]) != groupbyList.end())
-					entry->attributeGroupby[page->attribute()] = to_string(page->content[j]->ival);
+					entry->attributeGroupby[page->attribute()] = "NA";
 			}
 			else {
-				entry->attributeList[page->attribute()] = to_string(page->content[j]->dval);
-				if (groupbyList.find(totalList[k]) != groupbyList.end())
-					entry->attributeGroupby[page->attribute()] = to_string(page->content[j]->dval);
+				if (page->type() == "TEXT") {
+					string text(page->content[j]->sval);
+					entry->attributeList[page->attribute()] = text;
+					// if the column is also in group by list, push it into the list
+					if (groupbyList.find(totalList[k]) != groupbyList.end())
+						entry->attributeGroupby[page->attribute()] = text;
+				}
+				else if (page->type() == "INT") {
+					entry->attributeList[page->attribute()] = to_string(page->content[j]->ival);
+					if (groupbyList.find(totalList[k]) != groupbyList.end())
+						entry->attributeGroupby[page->attribute()] = to_string(page->content[j]->ival);
+				}
+				else {
+					entry->attributeList[page->attribute()] = to_string(page->content[j]->dval);
+					if (groupbyList.find(totalList[k]) != groupbyList.end())
+						entry->attributeGroupby[page->attribute()] = to_string(page->content[j]->dval);
+				}
 			}
 		}
 		else
@@ -521,22 +535,29 @@ void QueryParser::filter(QueryResult* entries, hsql::OperatorType op, string val
 					entries->AddAttribute(page->attribute());
 
 					if (ConditionMet(op, target, val)) {
-						if (page->type() == "TEXT") {
-							string text(page->content[j]->sval);
-							entry->attributeList[page->attribute()] = text;
-							// if the column is also in group by list, push it into the list
+						if (page->content[j]->isnull) {
+							entry->attributeList[page->attribute()] = "";
 							if (groupbyList.find(totalList[k]) != groupbyList.end())
-								entry->attributeGroupby[page->attribute()] = text;
-						}
-						else if (page->type() == "INT") {
-							entry->attributeList[page->attribute()] = to_string(page->content[j]->ival);
-							if (groupbyList.find(totalList[k]) != groupbyList.end())
-								entry->attributeGroupby[page->attribute()] = to_string(page->content[j]->ival);
+								entry->attributeGroupby[page->attribute()] = "NA";
 						}
 						else {
-							entry->attributeList[page->attribute()] = to_string(page->content[j]->dval);
-							if (groupbyList.find(totalList[k]) != groupbyList.end())
-								entry->attributeGroupby[page->attribute()] = to_string(page->content[j]->dval);
+							if (page->type() == "TEXT") {
+								string text(page->content[j]->sval);
+								entry->attributeList[page->attribute()] = text;
+								// if the column is also in group by list, push it into the list
+								if (groupbyList.find(totalList[k]) != groupbyList.end())
+									entry->attributeGroupby[page->attribute()] = text;
+							}
+							else if (page->type() == "INT") {
+								entry->attributeList[page->attribute()] = to_string(page->content[j]->ival);
+								if (groupbyList.find(totalList[k]) != groupbyList.end())
+									entry->attributeGroupby[page->attribute()] = to_string(page->content[j]->ival);
+							}
+							else {
+								entry->attributeList[page->attribute()] = to_string(page->content[j]->dval);
+								if (groupbyList.find(totalList[k]) != groupbyList.end())
+									entry->attributeGroupby[page->attribute()] = to_string(page->content[j]->dval);
+							}
 						}
 					}
 					else
@@ -746,15 +767,20 @@ void QueryParser::AddtoJoinedTable(Table* JoinedTable, size_t n_left, size_t n_r
 				if (!buffer->iscached(pnum_new))
 					buffer->fetch(pnum_new);
 				Page* pnew = buffer->get(pnum_new);
-				if (pnew->type() == "TEXT")
-					elements.push_back("'" + pnew->content[line_left]->sval + "'");
-				else if (pnew->type() == "DOUBLE") {
-					double val = pnew->content[line_left]->dval;
-					elements.push_back(to_string(val));
+				if (pnew->content[line_left]->isnull) {
+					elements.push_back("'NA'");
 				}
 				else {
-					int val = pnew->content[line_left]->ival;
-					elements.push_back(to_string(val));
+					if (pnew->type() == "TEXT")
+						elements.push_back("'" + pnew->content[line_left]->sval + "'");
+					else if (pnew->type() == "DOUBLE") {
+						double val = pnew->content[line_left]->dval;
+						elements.push_back(to_string(val));
+					}
+					else {
+						int val = pnew->content[line_left]->ival;
+						elements.push_back(to_string(val));
+					}
 				}
 				break;
 			}
@@ -765,21 +791,79 @@ void QueryParser::AddtoJoinedTable(Table* JoinedTable, size_t n_left, size_t n_r
 				if (!buffer->iscached(pnum_new))
 					buffer->fetch(pnum_new);
 				Page* pnew = buffer->get(pnum_new);
-				if (pnew->type() == "TEXT")
-					elements.push_back("'" + pnew->content[line_right]->sval + "'");
-				else if (pnew->type() == "DOUBLE") {
-					double val = pnew->content[line_right]->dval;
-					elements.push_back(to_string(val));
+				if (pnew->content[line_right]->isnull) {
+					elements.push_back("'NA'");
 				}
 				else {
-					int val = pnew->content[line_right]->ival;
-					elements.push_back(to_string(val));
+					if (pnew->type() == "TEXT")
+						elements.push_back("'" + pnew->content[line_right]->sval + "'");
+					else if (pnew->type() == "DOUBLE") {
+						double val = pnew->content[line_right]->dval;
+						elements.push_back(to_string(val));
+					}
+					else {
+						int val = pnew->content[line_right]->ival;
+						elements.push_back(to_string(val));
+					}
 				}
 				break;
 			}
 		}
 	}
 
+	string head = "INSERT INTO " + TableName(tname) + " VALUES (";
+	for (size_t i = 0; i < elements.size(); i++) {
+		if (i != elements.size() - 1)
+			head += (elements[i] + ", ");
+		else 
+			head += (elements[i] + ")");
+	}
+	// cout << "command is: " << head << endl;
+
+	hsql::SQLParserResult result;
+	hsql::SQLParser::parse(head, &result);
+	const hsql::SQLStatement* statement = result.getStatement(0);
+	ParseINSERT(statement);
+}
+
+void QueryParser::AddtoJoinedTable(Table* JoinedTable, size_t n, vector<Attribute*>& attr, 
+								   vector<string>& selectList, string tname) {
+	size_t page_num = n / PAGESIZE;
+	size_t line = n % PAGESIZE;
+
+	vector<string> elements;
+
+	for (string col : selectList) {
+		bool found = false;
+		for (size_t i = 0; i < attr.size(); i++) {
+			if (attr[i]->name() == col) {
+				size_t pnum_new = attr[i]->page_order[page_num];
+				if (!buffer->iscached(pnum_new))
+					buffer->fetch(pnum_new);
+				Page* pnew = buffer->get(pnum_new);
+				if (pnew->content[line]->isnull)
+					elements.push_back("'NA'");
+				else {
+					if (pnew->type() == "TEXT")
+						elements.push_back("'" + pnew->content[line]->sval + "'");
+					else if (pnew->type() == "DOUBLE") {
+						double val = pnew->content[line]->dval;
+						elements.push_back(to_string(val));
+					}
+					else {
+						int val = pnew->content[line]->ival;
+						elements.push_back(to_string(val));
+					}
+				}
+				found = true;
+				break;
+			}
+		}
+		if (!found)
+			elements.push_back("'NA'");
+	}
+
+	// cout << "ready to insert!" << endl;
 	string head = "INSERT INTO " + TableName(tname) + " VALUES (";
 	for (size_t i = 0; i < elements.size(); i++) {
 		if (i != elements.size() - 1)

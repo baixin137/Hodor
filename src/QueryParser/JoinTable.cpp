@@ -241,12 +241,30 @@ Table* QueryParser::MergeSortJoin(Table* left, Table* right, hsql::Expr* conditi
 	filesystem->add(JoinedTable);
 	filesystem->user->IncrementSize(1);
 
-	size_t left_count = left->size();
-	size_t right_count = right->size();
-
 	// sorted, so the old pointer dosn't work anymore
 	Attribute* join_left = FindAttribute(condition->expr);
 	Attribute* join_right = FindAttribute(condition->expr2);
+
+	if (select->fromTable->join->type == hsql::kJoinInner)
+		InnerJoin(JoinedTable, left, right, attr_left, attr_right, selectList, tname, join_left, join_right);
+	else if (select->fromTable->join->type == hsql::kJoinFull)
+		FullJoin(JoinedTable, left, right, attr_left, attr_right, selectList, tname, join_left, join_right);
+	else if (select->fromTable->join->type == hsql::kJoinLeft)
+		LeftJoin(JoinedTable, left, right, attr_left, attr_right, selectList, tname, join_left, join_right);
+	else if (select->fromTable->join->type == hsql::kJoinRight)
+		LeftJoin(JoinedTable, right, left, attr_right, attr_left, selectList, tname, join_right, join_left);
+	else {
+		cerr << "Error: Unsupported JOIN type." << endl;
+		return nullptr;
+	}
+
+	return JoinedTable;
+}
+
+void QueryParser::InnerJoin(Table* JoinedTable, Table* left, Table* right, vector<Attribute*>& attr_left, vector<Attribute*>& attr_right,
+							  vector<string>& selectList, string tname, Attribute* join_left, Attribute* join_right) {
+	size_t left_count = left->size();
+	size_t right_count = right->size();
 
 	while (left_count > 0 && right_count > 0) {
 		string val_left = GetVal(join_left, left->size() - left_count);
@@ -266,21 +284,66 @@ Table* QueryParser::MergeSortJoin(Table* left, Table* right, hsql::Expr* conditi
 			right_count--;
 		}
 	}
-
-	return JoinedTable;
 }
 
-Table* QueryParser::InnerJoin(  Table* left, Table* right, hsql::Expr* condition, const hsql::SelectStatement* select) {
-	return nullptr;
+void QueryParser::FullJoin(Table* JoinedTable, Table* left, Table* right, vector<Attribute*>& attr_left, vector<Attribute*>& attr_right,
+							 vector<string>& selectList, string tname, Attribute* join_left, Attribute* join_right) {
+	size_t left_count = left->size();
+	size_t right_count = right->size();
+
+	while (left_count > 0 && right_count > 0) {
+		string val_left = GetVal(join_left, left->size() - left_count);
+		string val_right = GetVal(join_right, right->size() - right_count);
+
+		if (val_left == val_right) {
+			// cout << "both! " << endl;
+			// create new entry to new joined table
+			AddtoJoinedTable(JoinedTable, left->size() - left_count, right->size() - right_count,
+							 attr_left, attr_right, selectList, tname);
+			left_count--;
+			right_count--;
+		}
+		else if (val_left < val_right) {
+			// cout << "left!" << endl;
+			AddtoJoinedTable(JoinedTable, left->size() - left_count, attr_left,selectList, tname);
+			left_count--;
+		}
+		else {
+			// cout << "right!" << endl;
+			AddtoJoinedTable(JoinedTable, right->size() - right_count, attr_right, selectList, tname);
+			right_count--;
+		}
+	}
 }
 
-// Table* QueryParser::FullJoin(   Table* left, Table* right, hsql::Expr* condition, hsql::SelectStatement* select) {
+void QueryParser::LeftJoin(Table* JoinedTable, Table* left, Table* right, vector<Attribute*>& attr_left, vector<Attribute*>& attr_right,
+							 vector<string>& selectList, string tname, Attribute* join_left, Attribute* join_right) {
+	size_t left_count = left->size();
+	size_t right_count = right->size();
 
-// }
+	while (left_count > 0 && right_count > 0) {
+		string val_left = GetVal(join_left, left->size() - left_count);
+		string val_right = GetVal(join_right, right->size() - right_count);
 
-// Table* QueryParser::LeftJoin(   Table* left, Table* right, hsql::Expr* condition, hsql::SelectStatement* select) {
-
-// }
+		if (val_left == val_right) {
+			// cout << "both! " << endl;
+			// create new entry to new joined table
+			AddtoJoinedTable(JoinedTable, left->size() - left_count, right->size() - right_count,
+							 attr_left, attr_right, selectList, tname);
+			left_count--;
+			right_count--;
+		}
+		else if (val_left < val_right) {
+			// cout << "left!" << endl;
+			AddtoJoinedTable(JoinedTable, left->size() - left_count, attr_left,selectList, tname);
+			left_count--;
+		}
+		else {
+			// cout << "right!" << endl;
+			right_count--;
+		}
+	}
+}
 
 // Table* QueryParser::CrossJoin(  Table* left, Table* right, hsql::Expr* condition, hsql::SelectStatement* select) {
 
