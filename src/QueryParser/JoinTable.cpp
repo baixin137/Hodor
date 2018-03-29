@@ -191,7 +191,8 @@ Table* QueryParser::MergeSortJoin(Table* left, Table* right, hsql::Expr* conditi
 				selectList.push_back(left->attr_order[i+1]);
 			}
 			for (size_t i = 0; i < right->attr_order.size() - 1; i++) {
-				selectList.push_back(right->attr_order[i+1]);
+				if (right->attr_order[i+1] != cond_left->name() && right->attr_order[i+1] != cond_right->name())
+					selectList.push_back(right->attr_order[i+1]);
 			}
 			break;
 		}
@@ -262,7 +263,7 @@ Table* QueryParser::MergeSortJoin(Table* left, Table* right, hsql::Expr* conditi
 }
 
 void QueryParser::InnerJoin(Table* JoinedTable, Table* left, Table* right, vector<Attribute*>& attr_left, vector<Attribute*>& attr_right,
-							  vector<string>& selectList, string tname, Attribute* join_left, Attribute* join_right) {
+							vector<string>& selectList, string tname, Attribute* join_left, Attribute* join_right) {
 	size_t left_count = left->size();
 	size_t right_count = right->size();
 
@@ -287,7 +288,7 @@ void QueryParser::InnerJoin(Table* JoinedTable, Table* left, Table* right, vecto
 }
 
 void QueryParser::FullJoin(Table* JoinedTable, Table* left, Table* right, vector<Attribute*>& attr_left, vector<Attribute*>& attr_right,
-							 vector<string>& selectList, string tname, Attribute* join_left, Attribute* join_right) {
+						   vector<string>& selectList, string tname, Attribute* join_left, Attribute* join_right) {
 	size_t left_count = left->size();
 	size_t right_count = right->size();
 
@@ -317,7 +318,7 @@ void QueryParser::FullJoin(Table* JoinedTable, Table* left, Table* right, vector
 }
 
 void QueryParser::LeftJoin(Table* JoinedTable, Table* left, Table* right, vector<Attribute*>& attr_left, vector<Attribute*>& attr_right,
-							 vector<string>& selectList, string tname, Attribute* join_left, Attribute* join_right) {
+						   vector<string>& selectList, string tname, Attribute* join_left, Attribute* join_right) {
 	size_t left_count = left->size();
 	size_t right_count = right->size();
 
@@ -345,10 +346,10 @@ void QueryParser::LeftJoin(Table* JoinedTable, Table* left, Table* right, vector
 	}
 }
 
-// Table* QueryParser::CrossJoin(  Table* left, Table* right, hsql::Expr* condition, hsql::SelectStatement* select) {
+// void QueryParser::CrossJoin(Table* JoinedTable, Table* left, Table* right, vector<Attribute*>& attr_left, vector<Attribute*>& attr_right,
+// 							vector<string>& selectList, string tname, Attribute* join_left, Attribute* join_right) {
 
 // }
-
 // Table* QueryParser::NaturalJoin(Table* left, Table* right, hsql::Expr* condition, hsql::SelectStatement* select) {
 
 // }
