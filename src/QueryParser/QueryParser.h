@@ -131,7 +131,8 @@ private:
 					 vector<string>& selectList, string tname, Attribute* join_left, Attribute* join_right);
 	void LeftJoin(Table* JoinedTable, Table* left, Table* right, vector<Attribute*>& attr_left, vector<Attribute*>& attr_right,
 					 vector<string>& selectList, string tname, Attribute* join_left, Attribute* join_right);
-	// void CrossJoin  (Table* left, Table* right, hsql::Expr* condition, hsql::SelectStatement* select);
+	void CrossJoin(Table* JoinedTable, Table* left, Table* right, vector<Attribute*>& attr_left, vector<Attribute*>& attr_right,
+					 vector<string>& selectList, string tname, Attribute* join_left, Attribute* join_right);
 	// void NaturalJoin(Table* left, Table* right, hsql::Expr* condition, hsql::SelectStatement* select);
 
 public:
