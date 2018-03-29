@@ -94,7 +94,7 @@ void ConsoleReader::ReadCommand() {
 			}
 			else if (statement->isType(hsql::kStmtSelect)) {
 				// cout << "Select!" << endl;
-				parser->ParseSELECT(statement);
+				parser->ParseSELECT(statement, true);
 			}
 			// write metainfo of new table to disk
 		}

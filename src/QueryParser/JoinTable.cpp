@@ -193,6 +193,10 @@ Table* QueryParser::MergeSortJoin(Table* left, Table* right, hsql::Expr* conditi
 	if (condition) {
 		cond_left = FindAttribute(condition->expr);
 		cond_right = FindAttribute(condition->expr2);
+		if (!cond_left || !cond_right) {
+			cerr << "Error: Attribute not found." << endl;
+			return nullptr;
+		}
 	}
 	else {
 		cond_left = left->attributes[attrname];
@@ -200,10 +204,12 @@ Table* QueryParser::MergeSortJoin(Table* left, Table* right, hsql::Expr* conditi
 	}
 
 	if (cond_left->table() == left->name()) {
+		cout << 1 << endl;
 		MergeSort(left, cond_left);
 		MergeSort(right, cond_right);
 	}
 	else {
+		cout << 2 << endl;
 		MergeSort(right, cond_left);
 		MergeSort(left, cond_right);
 	}
@@ -280,6 +286,8 @@ Table* QueryParser::MergeSortJoin(Table* left, Table* right, hsql::Expr* conditi
 		join_right = right->attributes[attrname];
 	}
 
+	// cout << "ready to join!" << endl;
+
 	if (select->fromTable->join->type == hsql::kJoinInner)
 		InnerJoin(JoinedTable, left, right, attr_left, attr_right, selectList, tname, join_left, join_right);
 	else if (select->fromTable->join->type == hsql::kJoinFull)
@@ -288,9 +296,8 @@ Table* QueryParser::MergeSortJoin(Table* left, Table* right, hsql::Expr* conditi
 		LeftJoin(JoinedTable, left, right, attr_left, attr_right, selectList, tname, join_left, join_right);
 	else if (select->fromTable->join->type == hsql::kJoinRight)
 		LeftJoin(JoinedTable, right, left, attr_right, attr_left, selectList, tname, join_right, join_left);
-	else if (select->fromTable->join->type == hsql::kJoinCross) {
+	else if (select->fromTable->join->type == hsql::kJoinCross)
 		CrossJoin(JoinedTable, left, right, attr_left, attr_right, selectList, tname, join_left, join_right);
-	}
 	else if (select->fromTable->join->type == hsql::kJoinNatural)
 		NaturalJoin(JoinedTable, left, right, attr_left, attr_right, selectList, tname, join_left, join_right);
 	else {

@@ -56,7 +56,8 @@ public:
 
 class QueryResult {
 public:
-	QueryResult();
+	QueryResult(bool printtable);
+	bool printtable;
 	vector<Entry*> item;
 	vector<string> attrnames;
 	set<string> attrset;
@@ -146,7 +147,7 @@ public:
 	// parse incoming INSERT statement
 	void ParseINSERT(const hsql::SQLStatement* statement);
 	// parse incoming SELECT statement
-	void ParseSELECT(const hsql::SQLStatement* statement);
+	Table* ParseSELECT(const hsql::SQLStatement* statement, bool printtable);
 };
 
 #endif

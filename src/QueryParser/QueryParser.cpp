@@ -151,17 +151,23 @@ void QueryParser::ParseINSERT(const hsql::SQLStatement* statement) {
 	pthread_mutex_unlock(&Lock);
 }
 
-void QueryParser::ParseSELECT(const hsql::SQLStatement* statement) {
+Table* QueryParser::ParseSELECT(const hsql::SQLStatement* statement, bool printtable) {
 	const hsql::SelectStatement* select = (const hsql::SelectStatement*) statement;
 
 	// create table
 
 	// use the flag to check if the table is a temporary table created by join or an old one
 	bool temporary = false;
-	Table* fromTable = JoinTable(select->fromTable, select, temporary);
+	Table* fromTable;
+
+	if (select->fromTable->type == hsql::kTableName || select->fromTable->type == hsql::kTableJoin)
+		fromTable = JoinTable(select->fromTable, select, temporary);
+	else if (select->fromTable->type == hsql::kTableSelect) 
+		fromTable = ParseSELECT(select->fromTable->select, false);
+
 	if (!fromTable) {
 		cerr << "Error: Table join failed." << endl;
-		return;
+		return nullptr;
 	}
 
 	string t_name = fromTable->name();
@@ -177,7 +183,7 @@ void QueryParser::ParseSELECT(const hsql::SQLStatement* statement) {
 	// 	fromTable = JoinTable(select->fromTable);
 	// }
 
-	QueryResult* entries = new QueryResult();
+	QueryResult* entries = new QueryResult(printtable);
 
 	// cout << "check group" << endl;
 	// group by list
@@ -217,7 +223,7 @@ void QueryParser::ParseSELECT(const hsql::SQLStatement* statement) {
 						cout << '<' << a << '>' << " ";
 					}
 					cout << endl;
-					return;
+					return nullptr;
 				}
 				else {
 					Column* col_group = new Column(fromTable->attributes[col], col);
@@ -276,7 +282,7 @@ void QueryParser::ParseSELECT(const hsql::SQLStatement* statement) {
 					}
 					else{
 						cerr << "Error: Unsupported aggregation function \"" << func << "\"." << endl;
-						return; 
+						return nullptr; 
 					}
 					selectList[col] = col_select;
 					selectOrder.push_back(col);
@@ -297,7 +303,7 @@ void QueryParser::ParseSELECT(const hsql::SQLStatement* statement) {
 						cout << '<' << a << '>' << " ";
 					}
 					cout << endl;
-					return;
+					return nullptr;
 				}
 				Column* col_select = new Column(fromTable->attributes[col], col);
 				selectList[col] = col_select;
@@ -328,7 +334,7 @@ void QueryParser::ParseSELECT(const hsql::SQLStatement* statement) {
 				left_type = "DOUBLE";
 			else { // one is text and the other is not
 				cerr << "Error: Invalid comparison between text and numerical." << endl;
-				return;
+				return nullptr;
 			}
 		}
 		if (left_type == "TEXT") {
@@ -341,7 +347,7 @@ void QueryParser::ParseSELECT(const hsql::SQLStatement* statement) {
 		}
 		else
 			filter(entries, left, right, left_type, select->whereClause->opType, selectList, fromTable, 
-			   selectOrder, groupbyList, totalList, ConditionLeftList, ConditionRightList);
+				   selectOrder, groupbyList, totalList, ConditionLeftList, ConditionRightList);
 	}
 	else {
 		for (size_t i = 0; i < num_pages; i++) {
@@ -413,7 +419,7 @@ void QueryParser::ParseSELECT(const hsql::SQLStatement* statement) {
 					}
 					else {
 						cerr << "I don't think this is possible." << endl;
-						return;
+						return nullptr;
 					}
 				}
 				entries->item.push_back(entry);
@@ -509,7 +515,7 @@ void QueryParser::ParseSELECT(const hsql::SQLStatement* statement) {
 							}
 							else {
 								cerr << "Error: Unsupported aggregation functions." << endl;
-								return;
+								return nullptr;
 							}
 						}
 						else if (selectList[selectOrder[i]]->attribute->type() == "DOUBLE") {
@@ -538,7 +544,7 @@ void QueryParser::ParseSELECT(const hsql::SQLStatement* statement) {
 							}
 							else {
 								cerr << "Error: Unsupported aggregation functions." << endl;
-								return;
+								return nullptr;
 							}
 						}
 						else if (selectList[selectOrder[i]]->attribute->type() == "TEXT") {
@@ -551,26 +557,30 @@ void QueryParser::ParseSELECT(const hsql::SQLStatement* statement) {
 						}
 						else {
 							cerr << "Error: Unsupported data type." << endl;
-							return;
+							return nullptr;
 						}
 					}
 				}
 			}
 		}
 		// print it
-		vector<string> entryorder;
-		for (auto it = entries->groups.begin(); it != entries->groups.end(); it++) {
-			entryorder.push_back(it->first);
-		}
-		sort(entryorder.begin(), entryorder.end());
+		if (entries->printtable) {
+			vector<string> entryorder;
+			for (auto it = entries->groups.begin(); it != entries->groups.end(); it++) {
+				entryorder.push_back(it->first);
+			}
+			sort(entryorder.begin(), entryorder.end());
 
-		entries->PrintGroup(entryorder, selectOrder, attributeOrder);
+			entries->PrintGroup(entryorder, selectOrder, attributeOrder);
+		}
 	}
 	else { // no group by clause
-		entries->PrintAll(selectOrder);
+		if (entries->printtable)
+			entries->PrintAll(selectOrder);
 	}
-	if (temporary) {
+	if (temporary) { // remove joined table
 		filesystem->FlushPages(buffer); // flush temporary pages to disk then remove them
 		filesystem->remove(fromTable->name(), buffer);
 	}
+	return fromTable;
 }

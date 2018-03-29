@@ -24,7 +24,9 @@ size_t Entry::size() {
 	return width;
 }
 
-QueryResult::QueryResult() {}
+QueryResult::QueryResult(bool p) {
+	printtable = p;
+}
 
 template<typename T> void QueryResult::PrintElement(T t, const int& width) {
 	cout << left << setw(width) << setfill(' ') << t << '|';
@@ -104,6 +106,9 @@ Attribute* QueryParser::FindAttribute(hsql::Expr* expr) {
 	string tablename = filesystem->user->name() + "::" + string(expr->table);
 	Table* table = filesystem->user->tables[tablename];
 	string col = string(expr->name);
+
+	if (table->attributes.find(col) == table->attributes.end())
+		return nullptr;
 
 	Attribute* attr = table->attributes[col];
 	return attr;
@@ -955,29 +960,6 @@ Table* QueryParser::JoinTable(hsql::TableRef* fromTable, const hsql::SelectState
 	Table* right = JoinTable(fromTable->join->right, select, temporary);
 
 	Table* JoinedTable = MergeSortJoin(left, right, fromTable->join->condition, select);
-
-	// if (fromTable->join->type == hsql::kJoinInner) {
-	// 	JoinedTable = InnerJoin(left, right, fromTable->join->condition, select);
-	// }
-	// else if (join->type == hsql::kJoinFull) {
-	// 	JoinedTable = FullJoin(left, right, fromTable->join->condition, select);
-	// }
-	// else if (join->type == hsql::kJoinLeft) {
-	// 	JoinedTable = LeftJoin(left, right, fromTable->join->condition, select);
-	// }
-	// else if (join->type == hsql::kJoinRight) {
-	// 	JoinedTable = LeftJoin(right, left, fromTable->join->condition, select);
-	// }
-	// else if (join->type == hsql::kJoinCross) {
-	// 	JoinedTable = CrossJoin(left, right, fromTable->join->condition, select);
-	// }
-	// else if (join->type == hsql::kJoinNatural) {
-	// 	JoinedTable = NaturalJoin(left, right, fromTable->join->condition, select);
-	// }
-	// else {
-	// 	cerr << "Error: Unknown JOIN type." << endl;
-	// 	return nullptr;
-	// }
 
 	return JoinedTable;
 }
