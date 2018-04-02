@@ -47,6 +47,7 @@ public:
 	void FlushPages(BufferManager* buffer); // flush dirty pages when you need to
 
 	PageSet* FindPageSet(string table, BufferManager* buffer);
+	size_t FindPage(); // find next avalable page to store new data
 
 	void display();
 };

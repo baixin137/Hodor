@@ -177,9 +177,8 @@ FileManager::FileManager() {
 
 void FileManager::add(Table* table) {
 	string t_name = table->name(); // database::table
-
 	if (tables.find(t_name) != tables.end()) {
-		cerr << "Error: Table already exists." << endl;
+		cerr << "Error: Table \"" << t_name << "\"already exists." << endl;
 		return;
 	}
 
@@ -352,6 +351,17 @@ PageSet* FileManager::FindPageSet(string table, BufferManager* buffer) {
 		}
 	}
 	return pset;
+}
+
+size_t FileManager::FindPage() {
+	if (!emptypages.size())
+		return nextpage++;
+	else {
+		auto p = emptypages.begin();
+		size_t page = *p;
+		emptypages.erase(p);
+		return page;
+	}
 }
 
 void FileManager::display() {

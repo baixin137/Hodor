@@ -26,6 +26,7 @@ public:
 	Tuple(bool n, double d, string t);
 	Tuple(bool n,           string t);
 	Tuple(                  string t);
+	Tuple(Tuple* fromTuple, string t);
 
 	string timestamp();
 	string type();
@@ -49,7 +50,7 @@ protected:
 	size_t attrs; // # of attributes stored in page
 
 public:
-	bool dirty; // the page is dirty of not
+	bool dirty; // the page is dirty or not
 	int threads; // the buffer manager shouldn't flush a paged pinned by some threads
 	vector<Tuple*> content;
 	int slots; // number of empty slots in this page
@@ -76,6 +77,7 @@ class TextPage : public Page {
 public:
 	TextPage();
 	TextPage(int pn, string ta, string at, size_t attr);
+	TextPage(Page* fromPage, size_t pn, string ta);
 
 	void read(int p, string pn, vector<string> property);
 	void write();
@@ -88,6 +90,7 @@ class IntPage : public Page {
 public:
 	IntPage();
 	IntPage(int pn, string ta, string at, size_t attr);
+	IntPage(Page* fromPage, size_t pn, string ta);
 
 	void read(int p, string pn, vector<string> property);
 	void write();
@@ -110,6 +113,7 @@ class DoublePage : public Page {
 public:
 	DoublePage();
 	DoublePage(int pn, string ta, string at, size_t attr);
+	DoublePage(Page* fromPage, size_t pn, string ta);
 
 	void read(int p, string pn, vector<string> property);
 	void write();

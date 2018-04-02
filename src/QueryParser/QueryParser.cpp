@@ -4,38 +4,118 @@ void QueryParser::ParseCREATE(const hsql::SQLStatement* statement) {
 	pthread_mutex_lock(&Lock);
 	const hsql::CreateStatement* create = (const hsql::CreateStatement*) statement;
 
-	// traverse the columns
 	string tablename(create->tableName);
 	tablename = filesystem->user->name() + "::" + tablename;
 	string user = filesystem->user->name();
 	string timestamp = addTimeStamp();
-	size_t cols = create->columns->size() + 1; // plus timestamp
 
-	Table* table = new Table(tablename, user, timestamp,0, cols);
+	Table* table;
 
-	// cout << "Creating new table: " << tablename << endl;
+	if (create->type == hsql::kCreateTable) {
+		// traverse the columns
+		size_t cols = create->columns->size() + 1; // plus timestamp
 
-	// add timestamp to table
-	Attribute* t_stamp = new Attribute("TimeStamp", "TEXT", tablename);
-	table->attributes["TimeStamp"] = t_stamp;
-	table->attr_order.push_back("TimeStamp");
+		table = new Table(tablename, user, timestamp, 0, cols);
 
-	for (auto col : *(create->columns)) {
-		string attr(col->name);
+		// cout << "Creating new table: " << tablename << endl;
 
-		string type;
-		if (col->type == hsql::ColumnDefinition::INT)
-			type = "INT";
-		else if (col->type == hsql::ColumnDefinition::DOUBLE)
-			type = "DOUBLE";
-		else
-			type = "TEXT";
+		// add timestamp to table
+		Attribute* t_stamp = new Attribute("TimeStamp", "TEXT", tablename);
+		table->attributes["TimeStamp"] = t_stamp;
+		table->attr_order.push_back("TimeStamp");
 
-		Attribute* attribute = new Attribute(attr, type, tablename);
-		table->attributes[attr] = attribute;
-		// cout << "Adding column " << attr << " to table" << endl;
-		table->attr_order.push_back(attr);
+		for (auto col : *(create->columns)) {
+			string attr(col->name);
+
+			string type;
+			if (col->type == hsql::ColumnDefinition::INT)
+				type = "INT";
+			else if (col->type == hsql::ColumnDefinition::DOUBLE)
+				type = "DOUBLE";
+			else
+				type = "TEXT";
+
+			Attribute* attribute = new Attribute(attr, type, tablename);
+			table->attributes[attr] = attribute;
+			// cout << "Adding column " << attr << " to table" << endl;
+			table->attr_order.push_back(attr);
+		}
 	}
+	else if (create->type == hsql::kCreateView) {
+		// create new table and add to database
+		Table* fromTable = ParseSELECT(create->select, false);
+		table = new Table(tablename, user, timestamp, fromTable->size(), create->select->selectList->size() + 1);
+
+		Attribute* t_stamp = new Attribute("TimeStamp", "TEXT", tablename);
+		table->attributes["TimeStamp"] = t_stamp;
+		table->attr_order.push_back("TimeStamp");
+
+		for (auto sel : *create->select->selectList) {
+			string col(sel->name);
+			Attribute* attribute = new Attribute(col, fromTable->attributes[col]->type(), tablename);
+			table->attr_order.push_back(col);
+			table->attributes[col] = attribute;
+		}
+
+		// copy data from old table
+		TableStorage* storage = new TableStorage(table->name(), filesystem->user->name());
+
+		vector<vector<int>> newpages;
+		for (string attr : table->attr_order) {
+			Attribute* attribute = fromTable->attributes[attr];
+			vector<int> np;
+			for (int p : attribute->page_order) {
+				int newp = filesystem->FindPage();
+				if (!buffer->iscached(p)) {
+					buffer->fetch(p);
+				}
+				Page* newpage;
+				Page* oldpage = buffer->get(p);
+				if (attribute->type() == "TEXT") {
+					newpage = new TextPage(oldpage, newp, table->name());
+				}
+				else if (attribute->type() == "INT") {
+					newpage = new IntPage(oldpage, newp, table->name());
+				}
+				else {
+					newpage = new DoublePage(oldpage, newp, table->name());
+				}
+				newpage->dirty = true;
+				//put new page in buffer
+				buffer->getbuffer()->set(newp, newpage);
+
+				table->attributes[attr]->page_order.push_back(newp);
+				table->attributes[attr]->pages.insert(newp);
+
+				np.push_back(newp);
+			}
+			newpages.push_back(np);
+		}
+
+		for (size_t i = 0; i < table->attributes[table->attr_order[0]]->page_order.size(); i++) {
+			size_t pagenum = fromTable->attributes[fromTable->attr_order[0]]->page_order[i];
+
+			if (!buffer->iscached(pagenum))
+				buffer->fetch(pagenum);
+			Page* page = buffer->get(pagenum);
+
+			size_t page_size = page->size();
+
+			PageSet* pset = new PageSet(PAGESIZE - page_size);
+
+			for (size_t j = 0; j < table->attributes.size(); j++) {
+				pset->pageset.push_back(newpages[j][i]);
+			}
+
+			storage->pageset.push_back(pset);
+		}
+		filesystem->pages[table->name()] = storage;
+	}
+	else {
+		cerr << "Error: CREATE type not supported." << endl;
+		return;
+	}
+
 	filesystem->add(table);
 	filesystem->user->IncrementSize(1);
 
@@ -160,10 +240,12 @@ Table* QueryParser::ParseSELECT(const hsql::SQLStatement* statement, bool printt
 	bool temporary = false;
 	Table* fromTable;
 
-	if (select->fromTable->type == hsql::kTableName || select->fromTable->type == hsql::kTableJoin)
+	if (select->fromTable->type == hsql::kTableName || select->fromTable->type == hsql::kTableJoin) {
 		fromTable = JoinTable(select->fromTable, select, temporary);
-	else if (select->fromTable->type == hsql::kTableSelect) 
+	}
+	else if (select->fromTable->type == hsql::kTableSelect) {
 		fromTable = ParseSELECT(select->fromTable->select, false);
+	}
 
 	if (!fromTable) {
 		cerr << "Error: Table join failed." << endl;
@@ -342,7 +424,7 @@ Table* QueryParser::ParseSELECT(const hsql::SQLStatement* statement, bool printt
 		for (size_t i = 0; i < num_pages; i++) {
 			int page_num = selectList[selectOrder[0]]->attribute->page_order[i];
 			if (!buffer->iscached(page_num)) {
-				cout << "fetching page " << page_num << " from disk!" << endl;
+				// cout << "fetching page " << page_num << " from disk!" << endl;
 				buffer->fetch(page_num);
 			}
 			Page* p = buffer->get(page_num);
