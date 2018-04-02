@@ -30,6 +30,19 @@ Tuple::Tuple(string t) {
 	time = t;
 }
 
+Tuple::Tuple(Tuple* fromTuple, string t) {
+	isnull = fromTuple->isnull;
+
+	if (fromTuple->type() == "TEXT")
+		sval = fromTuple->sval;
+	else if (fromTuple->type() == "INT")
+		ival = fromTuple->ival;
+	else
+		dval = fromTuple->dval;
+
+	time = t;
+}
+
 string Tuple::timestamp() {
 	return time;
 }
@@ -87,35 +100,90 @@ DoublePage::DoublePage() {
 }
 
 TextPage::TextPage(int pn, string ta, string at, size_t attr) {
-	attrtype = "TEXT";
-	page_num = pn;
+	attrtype  = "TEXT";
+	page_num  = pn;
 	tablename = ta;
-	attrname = at;
-	slots = PAGESIZE;
-	attrs = attr;
+	attrname  = at;
+	slots     = PAGESIZE;
+	attrs     = attr;
 }
 
 IntPage::IntPage(int pn, string ta, string at, size_t attr) {
-	attrtype = "INT";
-	page_num = pn;
+	attrtype  = "INT";
+	page_num  = pn;
 	tablename = ta;
-	attrname = at;
-	slots = PAGESIZE;
-	attrs = attr;
+	attrname  = at;
+	slots     = PAGESIZE;
+	attrs     = attr;
 }
 
 DoublePage::DoublePage(int pn, string ta, string at, size_t attr) {
-	attrtype = "DOUBLE";
-	page_num = pn;
+	attrtype  = "DOUBLE";
+	page_num  = pn;
 	tablename = ta;
-	attrname = at;
-	slots = PAGESIZE;
-	attr = attrs;
+	attrname  = at;
+	slots     = PAGESIZE;
+	attr      = attrs;
 }
 
-// BooleanPage::BooleanPage() {
-// 	type = "BNOOLEAN";
-// }
+TextPage::TextPage(Page* fromPage, size_t pn, string ta) {
+	attrtype  = "TEXT";
+	page_num  = pn;
+	tablename = ta;
+	attrname  = fromPage->attribute();
+	slots     = fromPage->slot();
+	attrs     = fromPage->size();
+	
+	dirty     = true;
+
+	for (auto tuple : fromPage->content) {
+		string timestamp = addTimeStamp();
+		Tuple* newtup = new Tuple(tuple, timestamp);
+		content.push_back(newtup);
+	}
+}
+
+IntPage::IntPage(Page* fromPage, size_t pn, string ta) {
+	attrtype  = "INT";
+	page_num  = pn;
+	tablename = ta;
+	attrname  = fromPage->attribute();
+	slots     = fromPage->slot();
+	attrs     = fromPage->size();
+	
+	dirty     = true;
+	
+	minval    = static_cast<IntPage*>(fromPage)->min();
+	maxval    = static_cast<IntPage*>(fromPage)->max();
+	meanval   = static_cast<IntPage*>(fromPage)->mean();
+
+	for (auto tuple : fromPage->content) {
+		string timestamp = addTimeStamp();
+		Tuple* newtup = new Tuple(tuple, timestamp);
+		content.push_back(newtup);
+	}
+}
+
+DoublePage::DoublePage(Page* fromPage, size_t pn, string ta) {
+	attrtype  = "DOUBLE";
+	page_num  = pn;
+	tablename = ta;
+	attrname  = fromPage->attribute();
+	slots     = fromPage->slot();
+	attrs     = fromPage->size();
+	
+	dirty     = true;
+	
+	minval    = static_cast<DoublePage*>(fromPage)->min();
+	maxval    = static_cast<DoublePage*>(fromPage)->max();
+	meanval   = static_cast<DoublePage*>(fromPage)->mean();
+
+	for (auto tuple : fromPage->content) {
+		string timestamp = addTimeStamp();
+		Tuple* newtup = new Tuple(tuple, timestamp);
+		content.push_back(newtup);
+	}
+}
 
 void TextPage::read(int pn, string page_name, vector<string> property) {
  	page_num = pn;

@@ -164,7 +164,6 @@ Table* QueryParser::MergeSortJoin(Table* left, Table* right, hsql::Expr* conditi
 	string timestamp = addTimeStamp();
 	Table* JoinedTable = new Table(tname, filesystem->user->name(), timestamp, 0, select->selectList->size() + 1);
 
-	// selectList.push_back("TimeStamp");
 	vector<string> selectList;
 
 	string attrname;
@@ -204,12 +203,10 @@ Table* QueryParser::MergeSortJoin(Table* left, Table* right, hsql::Expr* conditi
 	}
 
 	if (cond_left->table() == left->name()) {
-		cout << 1 << endl;
 		MergeSort(left, cond_left);
 		MergeSort(right, cond_right);
 	}
 	else {
-		cout << 2 << endl;
 		MergeSort(right, cond_left);
 		MergeSort(left, cond_right);
 	}
@@ -286,7 +283,6 @@ Table* QueryParser::MergeSortJoin(Table* left, Table* right, hsql::Expr* conditi
 		join_right = right->attributes[attrname];
 	}
 
-	// cout << "ready to join!" << endl;
 
 	if (select->fromTable->join->type == hsql::kJoinInner)
 		InnerJoin(JoinedTable, left, right, attr_left, attr_right, selectList, tname, join_left, join_right);
@@ -343,7 +339,6 @@ void QueryParser::FullJoin(Table* JoinedTable, Table* left, Table* right, vector
 		string val_right = GetVal(join_right, right->size() - right_count);
 
 		if (val_left == val_right) {
-			// cout << "both! " << endl;
 			// create new entry to new joined table
 			AddtoJoinedTable(JoinedTable, left->size() - left_count, right->size() - right_count,
 							 attr_left, attr_right, selectList, tname);
@@ -351,12 +346,10 @@ void QueryParser::FullJoin(Table* JoinedTable, Table* left, Table* right, vector
 			right_count--;
 		}
 		else if (val_left < val_right) {
-			// cout << "left!" << endl;
 			AddtoJoinedTable(JoinedTable, left->size() - left_count, attr_left,selectList, tname);
 			left_count--;
 		}
 		else {
-			// cout << "right!" << endl;
 			AddtoJoinedTable(JoinedTable, right->size() - right_count, attr_right, selectList, tname);
 			right_count--;
 		}
@@ -373,7 +366,6 @@ void QueryParser::LeftJoin(Table* JoinedTable, Table* left, Table* right, vector
 		string val_right = GetVal(join_right, right->size() - right_count);
 
 		if (val_left == val_right) {
-			// cout << "both! " << endl;
 			// create new entry to new joined table
 			AddtoJoinedTable(JoinedTable, left->size() - left_count, right->size() - right_count,
 							 attr_left, attr_right, selectList, tname);
@@ -381,12 +373,10 @@ void QueryParser::LeftJoin(Table* JoinedTable, Table* left, Table* right, vector
 			right_count--;
 		}
 		else if (val_left < val_right) {
-			// cout << "left!" << endl;
 			AddtoJoinedTable(JoinedTable, left->size() - left_count, attr_left,selectList, tname);
 			left_count--;
 		}
 		else {
-			// cout << "right!" << endl;
 			right_count--;
 		}
 	}

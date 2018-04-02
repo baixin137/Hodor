@@ -52,8 +52,8 @@ void ConsoleReader::ReadCommand() {
 		hsql::SQLParser::parse(command, &result);
 
 		if (!result.isValid()) { // database command
-			// cout << "Invalid statement" << endl;
-			// cout << result.errorMsg() << endl;
+			cout << "Invalid statement" << endl;
+			cout << result.errorMsg() << endl;
 			
 			istringstream iss(command);
 			string keyword;
