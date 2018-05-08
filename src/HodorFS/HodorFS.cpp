@@ -477,7 +477,6 @@ AutoSave::AutoSave(BufferManager* bf, FileManager* fs) {
 
 bool AutoSave::StartInternalThread() {
 	return (pthread_create(&_thread, NULL, FlushBufferFunc, this) == 0);
-
 }
 
 void AutoSave::FlushBuffer() {

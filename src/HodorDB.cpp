@@ -1,4 +1,5 @@
 #include "QueryParser/QueryParser.h"
+#include "HodorFS/FailureDetector.h"
 #include "ConsoleReader.h"
 
 int main() {
@@ -18,6 +19,9 @@ int main() {
 	QueryParser* parser = new QueryParser(filesystem, buffer);
 
 	// cout << "Parser Started." << endl;
+
+	CmdReceiver* recver = new CmdReceiver();
+	recver->StartInternalThread();
 
 	// Periodically flush dirty pages to disk
 	AutoSave* save = new AutoSave(buffer, filesystem);

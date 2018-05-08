@@ -73,4 +73,5 @@ private:
 	BufferManager* buffer;
 	FileManager* filesystem;
 };
+
 #endif

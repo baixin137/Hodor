@@ -11,8 +11,14 @@ size_t CHECKPERIOD   = 5;
 size_t BUFFERSIZE    = 5000;
 size_t BOXWIDTH      = 28;
 size_t TUPLELOAD     = 1000;
+size_t PORT          = 8080;
 
 double EPSILON       = 0.0001;
+
+// read by failuredetector
+// read and write by listen, so don't need a lock?
+bool   ISMASTER      = true;
+bool   ISBACKUP      = true;
 
 pthread_mutex_t Lock = PTHREAD_MUTEX_INITIALIZER;
 
