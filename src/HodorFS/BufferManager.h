@@ -10,6 +10,7 @@
 #include <cstdio>
 #include <vector>
 #include <string>
+#include <algorithm>
 #include <fstream>
 #include <sstream>
 #include <iostream>

@@ -7,6 +7,7 @@
 #include <chrono>
 #include <cstdlib>
 #include <sstream>
+#include <algorithm>
 #include <iostream>
 #include <unordered_set>
 
