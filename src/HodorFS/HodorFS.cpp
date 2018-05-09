@@ -470,16 +470,24 @@ string TableStorage::table() {
 	return tablename;
 }
 
-AutoSave::AutoSave(BufferManager* bf, FileManager* fs) {
+FailureDetector::FailureDetector(BufferManager* bf, FileManager* fs) {
 	buffer = bf;
 	filesystem = fs;
+
+	if (ISMASTER) {
+		CmdMaster* ListenToAck = new CmdMaster(kServerListen);
+		CmdMaster* SendPing    = new CmdMaster(kServerSend);
+	}
+	else { // is slave
+		CmdSlave* ReportStatus = new CmdSlave();
+	}
 }
 
-bool AutoSave::StartInternalThread() {
+bool FailureDetector::StartInternalThread() {
 	return (pthread_create(&_thread, NULL, FlushBufferFunc, this) == 0);
 }
 
-void AutoSave::FlushBuffer() {
+void FailureDetector::FlushBuffer() {
 	LRUCache* cache = buffer->getbuffer();
 
 	while (true) {

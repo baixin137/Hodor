@@ -38,6 +38,8 @@ void ConsoleReader::AddDatabase(string username) {
 }
 
 void ConsoleReader::ReadCommand() {
+	bool roleSet = false;
+
 	while (true) {
 		string command;
 
@@ -46,14 +48,32 @@ void ConsoleReader::ReadCommand() {
 		else
 			cout << "HodorDB$ ";
 
+		if (!roleSet) {
+			cout << '\r' << "Set up this node as master or slave?" << endl;
+			string role;
+			cout << "HodorDB$ ";
+			
+			getline(cin, role);
+			ToLower(role);
+			if (role == "master") {
+				ISMASTER = true;
+				roleSet = true;
+			}
+			else if (role == "slave") {
+				ISMASTER = false;
+				roleSet = true;
+			}
+			continue;
+		}
+
 		getline(cin, command);
 
 		hsql::SQLParserResult result;
 		hsql::SQLParser::parse(command, &result);
 
 		if (!result.isValid()) { // database command
-			cout << "Invalid statement" << endl;
-			cout << result.errorMsg() << endl;
+			// cout << "Invalid statement" << endl;
+			// cout << result.errorMsg() << endl;
 			
 			istringstream iss(command);
 			string keyword;

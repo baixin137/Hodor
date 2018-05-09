@@ -20,15 +20,12 @@ int main() {
 
 	// cout << "Parser Started." << endl;
 
-	CmdReceiver* recver = new CmdReceiver();
-	recver->StartInternalThread();
-
 	// Periodically flush dirty pages to disk
-	AutoSave* save = new AutoSave(buffer, filesystem);
+	FailureDetector* detector = new FailureDetector(buffer, filesystem);
 
 	// cout << "Console Reader started." << endl;
 
-	save->StartInternalThread();
+	detector->StartInternalThread();
 
 	ConsoleReader* input = new ConsoleReader(filesystem, buffer, parser);
 	input->ReadCommand();

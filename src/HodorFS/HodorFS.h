@@ -4,6 +4,7 @@
 #include "NameSpace.h"
 #include "BufferManager.h"
 #include "../Helper.h"
+#include "FailureDetector.h"
 
 #include <vector>
 #include <string>
@@ -52,9 +53,9 @@ public:
 	void display();
 };
 
-class AutoSave { // periodically save data to disk
+class FailureDetector { // periodically save data to disk
 public:
-	AutoSave(BufferManager* bf, FileManager* fs);
+	FailureDetector(BufferManager* bf, FileManager* fs);
 
 	// Returns true if the thread was successfully started
 	bool StartInternalThread();
@@ -67,7 +68,7 @@ public:
 	void FlushBuffer();
 
 private:
-	static void * FlushBufferFunc(void * This) {((AutoSave *)This)->FlushBuffer(); return NULL;}
+	static void * FlushBufferFunc(void * This) {((FailureDetector *)This)->FlushBuffer(); return NULL;}
 
 	pthread_t _thread;
 	BufferManager* buffer;

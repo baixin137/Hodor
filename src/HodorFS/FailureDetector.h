@@ -15,14 +15,47 @@
 
 #include "BufferManager.h"
 
+// class Message {
+// public:
+// 	Message(CommandType t, string m);
+
+// 	CommandType type;
+// 	string message;
+// };
+
 class ClusterNode {
 public:
 	struct sockaddr_in nodeAddr;
 };
 
-class CmdReceiver {
+class CmdMaster {
 public:
-	CmdReceiver();
+	CmdMaster(JobType type);
+
+	bool StartInternalThreadListen();
+	bool StartInternalThreadSend();
+
+	void WaitForInternalThreadToExit() {
+		(void) pthread_join(_thread, NULL);
+	}
+
+	void Listen();
+	void Send();
+
+private:
+	static void * ListenFunc(void * This) {((CmdMaster *)This)->Listen(); return NULL;}
+	static void * SendFunc(void * This) {((CmdMaster *)This)->Send(); return NULL;}
+
+	void MessageSerialize(char* message);
+	void SendToClient(string des, char* msg);
+
+	string readMessage(char* buffer, size_t& pos);
+	pthread_t _thread;
+};
+
+class CmdSlave {
+public:
+	CmdSlave();
 
 	bool StartInternalThread();
 
@@ -33,39 +66,10 @@ public:
 	void Listen();
 
 private:
-	static void * ListenFunc(void * This) {((CmdReceiver *)This)->Listen(); return NULL;}
+	static void * ListenFunc(void * This) {((CmdSlave *)This)->Listen(); return NULL;}
 
+	string readMessage(char* buffer, size_t& pos);
 	pthread_t _thread;
 };
-
-class CmdSender {
-public:
-	CmdSender();
-
-	bool StartInternalThread();
-
-	void WaitForInternalThreadToExit() {
-		(void) pthread_join(_thread, NULL);
-	}
-
-	void Send();
-
-private:
-	static void * SendFunc(void * This) {((CmdSender *)This)->Send(); return NULL;}
-
-	pthread_t _thread;
-};
-
-// class FailureDetector {
-// private:
-// 	bool ismaster;
-// 	bool isbackup;
-// 	ClusterNode* master;
-// 	ClusterNode* backupMaster;
-
-// public:
-// 	FailureDetector(bool m, bool s); // is master/backup master
-// 	unordered_map<string, ClusterNode*> MembershipList;
-// };
 
 #endif
