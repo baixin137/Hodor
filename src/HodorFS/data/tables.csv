@@ -1,5 +1,0 @@
-baixinz2::NEWTABLE,baixinz2,Fri May  4 14:19:44 2018,26,3,TimeStamp,Title,Rating,TEXT,TEXT,DOUBLE
-baixinz2::Movie,baixinz2,Wed Mar 28 14:13:50 2018,26,4,TimeStamp,Title,Year,Rating,TEXT,TEXT,INT,DOUBLE
-baixinz2::Director,baixinz2,Mon Mar 26 10:35:34 2018,7,4,TimeStamp,Director,Movie,Age,TEXT,TEXT,TEXT,INT
-baixinz2::DEMO,baixinz2,Fri May  4 14:20:03 2018,3,4,TimeStamp,COL1,COL2,COL3,TEXT,TEXT,INT,DOUBLE
-baixinz2::Actor,baixinz2,Thu Mar 29 11:47:43 2018,1,4,TimeStamp,Movie,Country,Name,TEXT,TEXT,TEXT,TEXT
