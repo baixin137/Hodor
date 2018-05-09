@@ -52,7 +52,7 @@ void ConsoleReader::ReadCommand() {
 			cout << '\r' << "Set up this node as master or slave?" << endl;
 			string role;
 			cout << "HodorDB$ ";
-			
+
 			getline(cin, role);
 			ToLower(role);
 			if (role == "master") {
@@ -63,6 +63,8 @@ void ConsoleReader::ReadCommand() {
 				ISMASTER = false;
 				roleSet = true;
 			}
+			FailureDetector* detector = new FailureDetector(buffer, filesystem);
+			detector->StartInternalThread();
 			continue;
 		}
 

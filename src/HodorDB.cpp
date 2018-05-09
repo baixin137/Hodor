@@ -18,15 +18,6 @@ int main() {
 	// parse incoming queries and act accordingly
 	QueryParser* parser = new QueryParser(filesystem, buffer);
 
-	// cout << "Parser Started." << endl;
-
-	// Periodically flush dirty pages to disk
-	FailureDetector* detector = new FailureDetector(buffer, filesystem);
-
-	// cout << "Console Reader started." << endl;
-
-	detector->StartInternalThread();
-
 	ConsoleReader* input = new ConsoleReader(filesystem, buffer, parser);
 	input->ReadCommand();
 
