@@ -114,6 +114,7 @@ void CmdMaster::SendToClient(string des, char* msg) {
 }
 
 void CmdMaster::Listen() {
+	cout << "Master starts to listen" << endl;
     int server_fd, new_socket, valread, bd;
     struct sockaddr_in address;
     int opt = 1;
@@ -278,6 +279,7 @@ bool CmdSlave::StartInternalThread() {
 }
 
 void CmdSlave::Listen() {
+	cout << "Slave starts to listen" << endl;
     int server_fd, new_socket, valread, bd;
     struct sockaddr_in address;
     int opt = 1;

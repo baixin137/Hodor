@@ -475,10 +475,12 @@ FailureDetector::FailureDetector(BufferManager* bf, FileManager* fs) {
 	filesystem = fs;
 
 	if (ISMASTER) {
+		cout << "Start master." << endl;
 		CmdMaster* ListenToAck = new CmdMaster(kServerListen);
 		CmdMaster* SendPing    = new CmdMaster(kServerSend);
 	}
 	else { // is slave
+		cout << "Start slave." << endl;
 		CmdSlave* ReportStatus = new CmdSlave();
 	}
 }
