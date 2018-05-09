@@ -46,7 +46,7 @@ void CmdReceiver::Listen() {
         exit(EXIT_FAILURE);
     }
 
-    while ((new_socket = accept(server_fd, (struct sockaddr *)&address, (socklen_t*)&addrlen)) < 0) {
+    while ((new_socket = accept(server_fd, (struct sockaddr *)&address, (socklen_t*)&addrlen)) > 0) {
 
 	    valread = read(new_socket , buffer, 1024);
 	    cout << "Commend received: " << buffer << endl;
