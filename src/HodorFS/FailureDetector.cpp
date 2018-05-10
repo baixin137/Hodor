@@ -62,11 +62,13 @@ void CmdMaster::MessageSerialize(char* message) {
 			memcpy(message + pos, "JON", 3);
 		}
 		else if (change.second->type == kLeave) {
-			memcpy(message + pos, "JON", 3);
+			memcpy(message + pos, "LEV", 3);
 		}
 		else {
 			cout << "I don't think this is going to happen unless we have a new command type." << endl;
 		}
+		pos += 3;
+
 		memcpy(message + (pos++), &c1, 1);
 		memcpy(message + (pos++), &c2, 1);
 		memcpy(message + (pos++), &c3, 1);
@@ -211,15 +213,15 @@ void CmdMaster::Send() {
 }
 
 string CmdMaster::readMessage(char* buffer, size_t& pos) {
-	pos += 3;
-	string address;
-	for (size_t i = 0; i < 4; i++) {
-		address += to_string((unsigned int)(buffer[pos++]));
-		if (i != 3)
-			address += ".";
-	}
-	cout << address << endl;
-	return address;
+    pos += 3;
+    string address;
+    for (size_t i = 0; i < 4; i++) {
+            address += to_string((unsigned int)((unsigned char)(buffer[pos++])));
+            if (i != 3)
+                    address += ".";
+    }
+    cout << address << endl;
+    return address;
 }
 
 CmdSlave::CmdSlave() {
@@ -266,10 +268,9 @@ CmdSlave::CmdSlave() {
 
     close(sock);
 
-    return;
-
-
 	StartInternalThread();
+
+	return;
 }
 
 bool CmdSlave::StartInternalThread() {
@@ -282,7 +283,7 @@ void CmdSlave::Listen() {
     struct sockaddr_in address;
     int opt = 1;
     int addrlen = sizeof(address);
-    char buffer[2048] = {0};
+    char buffer[2048];
 
     char ack[100];
     
@@ -324,6 +325,7 @@ void CmdSlave::Listen() {
 	    		memcpy(myaddress + 6, &A1, 1);
 
 	    		send(new_socket, myaddress, strlen(myaddress), 0);
+	    		cout << "sent ack back to master" << endl;
 	    		pos += 7;
 	    	}
 	    	else if (!strncmp(buffer + pos, "JON", 3)) {
@@ -333,6 +335,7 @@ void CmdSlave::Listen() {
 	    		newChanges[address] = new Change(kJoin, address);
 	    		membershipList.insert(address);
 	    		pthread_mutex_unlock(&NewChangeLock);
+	    		cout << "received new join: " << address << endl;
 	    	}
 	    	else if (!strncmp(buffer + pos, "LEV", 3)) {
 	    		string address = readMessage(buffer, pos);
@@ -341,6 +344,7 @@ void CmdSlave::Listen() {
 	    		newChanges[address] = new Change(kLeave, address);
 	    		membershipList.erase(address);
 	    		pthread_mutex_unlock(&NewChangeLock);
+	    		cout << "received new leave: " << address << endl;
 	    	}
 	    	else {
 	    		cout << "Unrecognized message type from master." << endl;
@@ -353,13 +357,13 @@ void CmdSlave::Listen() {
 }
 
 string CmdSlave::readMessage(char* buffer, size_t& pos) {
-	pos += 3;
-	string address;
-	for (size_t i = 0; i < 4; i++) {
-		address += to_string((unsigned int)(buffer[pos++]));
-		if (i != 3)
-			address += ".";
-	}
-	cout << address << endl;
-	return address;
+    pos += 3;
+    string address;
+    for (size_t i = 0; i < 4; i++) {
+            address += to_string((unsigned int)((unsigned char)(buffer[pos++])));
+            if (i != 3)
+                    address += ".";
+    }
+    cout << address << endl;
+    return address;
 }
