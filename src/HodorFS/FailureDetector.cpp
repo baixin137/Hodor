@@ -148,7 +148,7 @@ void CmdMaster::Listen() {
     while ((new_socket = accept(server_fd, (struct sockaddr *)&address, (socklen_t*)&addrlen)) > 0) {
 
 	    valread = read(new_socket , buffer, 2048);
-	    cout << "Commend received: " << buffer << endl;
+	    cout << "Command received: " << buffer << endl;
 	    size_t pos = 0;
 
 	    while (pos < valread) {
@@ -320,9 +320,9 @@ void CmdSlave::Listen() {
 	    		char myaddress[100];
 	    		memcpy(myaddress, "ACK", 3);
 	    		memcpy(myaddress + 3, &A1, 1);
-	    		memcpy(myaddress + 4, &A1, 1);
-	    		memcpy(myaddress + 5, &A1, 1);
-	    		memcpy(myaddress + 6, &A1, 1);
+	    		memcpy(myaddress + 4, &A2, 1);
+	    		memcpy(myaddress + 5, &A3, 1);
+	    		memcpy(myaddress + 6, &A4, 1);
 
 	    		send(new_socket, myaddress, strlen(myaddress), 0);
 	    		cout << "sent ack back to master" << endl;
