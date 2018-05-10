@@ -74,6 +74,7 @@ void CmdMaster::MessageSerialize(char* message) {
 		memcpy(message + (pos++), &c3, 1);
 		memcpy(message + (pos++), &c4, 1);
 	}
+	newChanges.clear();
 	pthread_mutex_unlock(&NewChangeLock);
 	return;
 }
