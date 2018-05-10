@@ -121,8 +121,6 @@ void CmdMaster::Listen() {
     int addrlen = sizeof(address);
     char buffer[2048] = {0};
 
-    char const *hello = "Hello from the outside";
-
     // Creating socket file descriptor
     if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) == 0)
     {
@@ -216,11 +214,11 @@ string CmdMaster::readMessage(char* buffer, size_t& pos) {
 	pos += 3;
 	string address;
 	for (size_t i = 0; i < 4; i++) {
-		int byte = ntohs(*((int *)(buffer + (pos++))));
-		address += to_string(byte);
+		address += to_string((unsigned int)(buffer[pos++]));
 		if (i != 3)
 			address += ".";
 	}
+	cout << address << endl;
 	return address;
 }
 
@@ -358,10 +356,10 @@ string CmdSlave::readMessage(char* buffer, size_t& pos) {
 	pos += 3;
 	string address;
 	for (size_t i = 0; i < 4; i++) {
-		int byte = ntohs(*((int *)(buffer + (pos++))));
-		address += to_string(byte);
+		address += to_string((unsigned int)(buffer[pos++]));
 		if (i != 3)
 			address += ".";
 	}
+	cout << address << endl;
 	return address;
 }
