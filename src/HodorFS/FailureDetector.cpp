@@ -107,6 +107,12 @@ void CmdMaster::SendToClient(string des, char* msg) {
     if (connect(sock, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0)
     {
         perror("Connection Failed");
+        // fail the node
+        pthread_mutex_lock(&NewChangeLock);
+        newChanges[des] = new Change(kLeave, des);
+        membershipList.erase(des);
+        pthread_mutex_unlock(&NewChangeLock);
+        
         return;
     }
     send(sock, msg, strlen(msg), 0);
@@ -159,7 +165,6 @@ void CmdMaster::Listen() {
 	    		string address = readMessage(buffer, pos);
 
 	    		pthread_mutex_lock(&NewChangeLock);
-	    		recvacks.insert(address);
 	    		newChanges[address] = new Change(kJoin, address);
 	    		membershipList.insert(address);
 	    		pthread_mutex_unlock(&NewChangeLock);
@@ -194,22 +199,13 @@ void CmdMaster::Send() {
 		sleep(HEARTBEATPERIOD);
 
 		// check timeout
-		pthread_mutex_lock(&NewChangeLock);
-		for (auto slave : sentacks) {
-			if (recvacks.find(slave) == recvacks.end()) {
-				newChanges[slave] = new Change(kLeave, slave);
-				membershipList.erase(slave);
-			}
-		}
-
-		sentacks.clear();
-		recvacks.clear();
-		pthread_mutex_unlock(&NewChangeLock);
+		// use tcp connection to check time out
 
 		// send pings to slaves
+		char message[2048];
+		MessageSerialize(message);
+
 		for (auto slave : membershipList) {
-			char message[2048];
-			MessageSerialize(message);
 			SendToClient(slave, message);
 		}
 	}

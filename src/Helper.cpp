@@ -36,8 +36,6 @@ pthread_mutex_t NewChangeLock = PTHREAD_MUTEX_INITIALIZER;
 
 unordered_set<string> membershipList;
 unordered_map<string, Change*> newChanges;
-unordered_set<string> recvacks;
-unordered_set<string> sentacks;
 
 void ToLower(string& data) {
 	transform(data.begin(), data.end(), data.begin(), ::tolower);

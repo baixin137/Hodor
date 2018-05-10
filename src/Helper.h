@@ -63,8 +63,6 @@ extern pthread_mutex_t NewChangeLock;
 
 extern unordered_set<string> membershipList;
 extern unordered_map<string, Change*> newChanges;
-extern unordered_set<string> recvacks;
-extern unordered_set<string> sentacks;
 
 void ToLower(string& data);
 
