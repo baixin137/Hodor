@@ -74,6 +74,7 @@ void CmdMaster::MessageSerialize(char* message) {
 		memcpy(message + (pos++), &c3, 1);
 		memcpy(message + (pos++), &c4, 1);
 	}
+	pthread_mutex_unlock(&NewChangeLock);
 	return;
 }
 
@@ -108,7 +109,8 @@ void CmdMaster::SendToClient(string des, char* msg) {
         return;
     }
     send(sock, msg, strlen(msg), 0);
-    cout << "sendBuffer message sent" << endl;
+    cout << "sendBuffer message sent: " << msg << endl;
+    cout << "destination: " << des << endl;
 
     close(sock);
 
@@ -264,7 +266,7 @@ CmdSlave::CmdSlave() {
         return;
     }
     send(sock, msg, strlen(msg), 0);
-    cout << "sendBuffer message sent" << endl;
+    cout << "Join message sent" << endl;
 
     close(sock);
 
